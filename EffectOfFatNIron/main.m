@@ -1,9 +1,9 @@
 clear all;
 close all;
 %%
-addpath('D:\Data\Exvivo_Phantom\lib\')
-addpath('D:\Data\Exvivo_Phantom\EPGX-src')
-addpath('D:\Data\Exvivo_Phantom');
+addpath('../lib_EPGX/')
+addpath('../EPGX-src/')
+%addpath('D:\Data\Exvivo_Phantom');
 
 TI_array = [102, 182, 935, 1010, 1762, 1840, 2587, 3410];
 figure();
@@ -39,8 +39,8 @@ rectangle('Position', [(trigger2+TI_array(8))/1000 -b1 acq_win/1000 b1*2], 'Face
 xlabel('Time (s)')
 ylabel('B_1 (Hz)')
 
-%% Fig. B (without MT)
-addpath('D:\src\BlochSimDemo');
+%% Fig. B Remote (without MT)
+addpath('../BlochSimDemo/');
 TI_array = [102, 935, 1762, 182, 1010, 1840, 2587, 3410];
 npulse = 60 + num_rampup; % Single-shot 
 % A final half-alpha 'restore pulse' to return the magnetization into Mz
@@ -164,6 +164,7 @@ PLOT_EACHSPIN = 0;
 PLOT_SS = 0;
 T1 = 400;
 T2 = 100;
+f_vec = [-600:10:600];
 
 [MxyTE, BSIM, plotTEidx, bSSFPcat, Msimf] = bSSFP_engine(M0, T1, T2, df, TR, FA, NTR, dt, f_vec, PLOT_EACHSPIN, PLOT_SS);
 % plot signal at TE, over all TRs, for specific df
