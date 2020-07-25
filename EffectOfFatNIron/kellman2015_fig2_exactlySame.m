@@ -2,6 +2,7 @@ clear all;
 close all;
 % Using bloch simulator for Adiabatic pulse simulation
 % TR is 2.4 for the consistency with kellman 2015
+% The most up-to-date kellman fig2 simulation
 
 addpath('../lib_EPGX/')
 addpath('../EPGX-src/')
