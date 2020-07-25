@@ -1,10 +1,15 @@
 clear all;
 close all;
 
-addpath('D:\Data\Exvivo_Phantom\lib\')
-addpath('D:\Data\Exvivo_Phantom\EPGX-src')
-addpath('D:\Data\Exvivo_Phantom');
-addpath('D:\src\BlochSimDemo');
+addpath('../lib-EPGX/')
+addpath('../EPGX-src/')
+%addpath('D:\Data\Exvivo_Phantom');
+addpath('../BlochSimDemo/');
+% Resolved issues from kellman2015.m
+% Fitting more accurately and resolved second breath-hold opposite sign
+% problem
+
+% using different set of parameters (same as kellman's)
 %%
 
 % npulse = 60; % Single-shot 
