@@ -5,7 +5,7 @@ addpath('D:\Data\Exvivo_Phantom\lib\')
 addpath('D:\Data\Exvivo_Phantom\EPGX-src')
 addpath('D:\Data\Exvivo_Phantom');
 addpath('D:\src\BlochSimDemo');
-
+addpath('D:\src\M219')
 %% T1 mapping MOLLI
 TI_array = [102, 182, 935, 1010, 1762, 1840, 2587, 3410];
 figure();
@@ -177,9 +177,9 @@ end
 text(x_text, y_text, txt,'HorizontalAlignment','right', 'FontSize', 16)
 end
 
-%%
-%figure();
-%plot(t_total/1000, Mz_total_total, 'LineWidth', 2.5)
+%% OPTIONAL FROM BELOW
+% OPTIONAL FROM BELOW
+% WRITE MOVIES
 %%
 Mxy = M_total_total_fat15t(1,:) + 1i * (M_total_total_fat15t(2,:));
 Mxy_PhaseEnc_array = Mxy_PhaseEnc(Mxy);
