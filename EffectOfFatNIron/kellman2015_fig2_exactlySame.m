@@ -1,11 +1,15 @@
 clear all;
 close all;
+% Using bloch simulator for Adiabatic pulse simulation
+% TR is 2.4 for the consistency with kellman 2015
+% The most up-to-date kellman fig2 simulation
 
-addpath('D:\Data\Exvivo_Phantom\lib\')
-addpath('D:\Data\Exvivo_Phantom\EPGX-src')
-addpath('D:\Data\Exvivo_Phantom');
-addpath('D:\src\BlochSimDemo');
-addpath('D:\src\M219')
+addpath('../lib_EPGX/')
+addpath('../EPGX-src/')
+%addpath('D:\Data\Exvivo_Phantom');
+addpath('../BlochSimDemo/');
+addpath('../M219/');
+
 %% T1 mapping MOLLI
 TI_array = [102, 182, 935, 1010, 1762, 1840, 2587, 3410];
 figure();
@@ -177,9 +181,11 @@ end
 text(x_text, y_text, txt,'HorizontalAlignment','right', 'FontSize', 16)
 end
 
-%% OPTIONAL FROM BELOW
-% OPTIONAL FROM BELOW
-% WRITE MOVIES
+
+%% OPTIONAL FROM BELOW %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% WRITE MOVIES FOR DISPLAY
+
 %%
 Mxy = M_total_total_fat15t(1,:) + 1i * (M_total_total_fat15t(2,:));
 Mxy_PhaseEnc_array = Mxy_PhaseEnc(Mxy);
@@ -209,6 +215,8 @@ for i = 1:length(t_total)
     pause(0.0025)
 end
 
+%% Be careful %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The two section below takes a few minutes to process %%%%%%%%%%%%%%%%%%%
 %%
 figure();
 
@@ -234,7 +242,8 @@ end
  writeVideo(myWriter, movieVector);
  close(myWriter);
  
-%%
+%% This one should be avoided
+
 figure();
 set(gca, 'XLim', [0 10], 'YLim', [-1 1]);
 grid on;
