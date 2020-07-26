@@ -1,13 +1,11 @@
-clear all;
 close all;
-% Using bloch simulator for Adiabatic pulse simulation
-% TR is 2.4 for the consistency with kellman 2015
-% The most up-to-date kellman fig2 simulation
-% This script can show TR is sensitive factor for 1.5T scans
+clear all;
+
+% 1. To plot fat fraction vs estimated T1 
+% 2. Save simulated results for estimated T1 mapping - ff_map_t1
 
 addpath('../lib_EPGX/')
 addpath('../EPGX-src/')
-%addpath('D:\Data\Exvivo_Phantom');
 addpath('../BlochSimDemo/');
 addpath('../M219/');
 
@@ -15,7 +13,7 @@ addpath('../M219/');
 TI_array = [102, 182, 935, 1010, 1762, 1840, 2587, 3410];
 figure();
 b1 = 750;
-TR = 2.4;
+TR = 2.65;
 PhaseEnc = 58;
 num_rampup = 5;
 
@@ -56,8 +54,7 @@ half_readout(5) = (trigger2+TI_array(4))/1000 + center_k;
 half_readout(6) = (trigger2+TI_array(6))/1000 + center_k;
 half_readout(7) = (trigger2+TI_array(7))/1000 + center_k;
 half_readout(8) = (trigger2+TI_array(8))/1000 + center_k;
-
-%% Fig. 2
+%% main body simulation
 TI_array = [102, 935, 1762, 182, 1010, 1840, 2587, 3410];
 num_rampup = 5;
 % npulse = 58 + num_rampup; % Single-shot 
@@ -131,136 +128,57 @@ plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc_fat15t, '*-', 'LineWidth',
 legend({'Myocardium', 'Fat 1.5T'}, 'Location', 'SouthEast');
 xlabel('TI (s)'); ylabel('Signal')
 grid on;
-%% Kellman figure 2 (change between 1.5T and 3T here)
-FF = [0:1:8]/8;
-figure();
-Mxy_readout_array_PhaseEnc = zeros(numel(FF), numel(Mxy_readout));
-for i = 1:numel(FF)
-    ff = FF(i);
-    Mxy_readout_comp = (1-ff) * Mxy_readout + ff * Mxy_readout_fat15t;
-    Mxy_readout_array = MOLLI_readout_reorder(Mxy_readout_comp);
-    Mxy_readout_array_PhaseEnc(i, :) = Mxy_PhaseEnc(Mxy_readout_array);
-    subplot(3,3,i);
-    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc(i, :), 'r-', 'LineWidth', 2)
-    hold on;
-    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc(i, :), 'o', 'LineWidth', 2)
-    ylim([-0.4 0.3])
-    grid on;
-    xlabel('Inversion Time (s)'); ylabel('Mxy');
-    title(cat(2, 'FF = ', num2str(ff)));
-    set(gca,'fontsize', 18) 
-end
 
-%% Exp fitting (kellman figure 2)
+%% Kellman figure 4 (computing)
+FF = 0:0.01:1;
+Mxy_readout_array_PhaseEnc = zeros(numel(FF), numel(Mxy_readout));
 x=TI_array_sorted';
 native_t1_noMT_array = zeros(1, numel(FF));
-figure();
+
 for i = 1:numel(FF)
-y=Mxy_readout_array_PhaseEnc(i, :).';
-g = fittype('a-b*exp(-c*x)');
-f0 = fit(x,y,g,'StartPoint',[.0;.0; 0.001]);
-xx = linspace(1,3500,100);
+    ff = FF(i);
+    Mxy_readout_comp = (1-ff) * Mxy_readout + ff * Mxy_readout_fat3t;
+    Mxy_readout_array = MOLLI_readout_reorder(Mxy_readout_comp);
+    Mxy_readout_array_PhaseEnc(i, :) = Mxy_PhaseEnc(Mxy_readout_array);
+    
+    % Fitting intialization
+    y=Mxy_readout_array_PhaseEnc(i, :).';
+    g = fittype('a-b*exp(-c*x)');
+    f0 = fit(x,y,g,'StartPoint',[.0;.0; 0.001]);
+    
+    coef = coeffvalues(f0);
+    native_t1_noMT_array(i) = 1/coef(3) * (coef(2) / coef(1) - 1);
+end
 
-subplot(3,3,i)
-plot(x,y,'ro',xx,f0(xx),'b-', 'LineWidth', 1.5);
+% Plot figure 4
+figure();
+subplot(1,2,1);
+plot(FF*100, native_t1_noMT_array, '-', 'LineWidth', 2)
 grid on;
-ylim([-0.4 0.3]);
-xlabel('Inversion Time (s)'); ylabel('Mxy');
-title(cat(2, 'FF = ', num2str(FF(i))));
+xlabel('Fat Fraction (%)'); ylabel('Estiamted T1 (ms)');
+title('FF vs Estimated T1');
 set(gca,'fontsize', 18)
-coef = coeffvalues(f0);
-native_t1_noMT_array(i) = 1/coef(3) * (coef(2) / coef(1) - 1);
-
-txt = cat(2, 'T1 = ', num2str(round(native_t1_noMT_array(i))), ' ms');
-if i == 4 || i == 5
-    x_text = 3000;
-    y_text = 0.1;
-else
-    x_text = 3000;
-    y_text = 0;
-end
-text(x_text, y_text, txt,'HorizontalAlignment','right', 'FontSize', 16)
-end
-
-
-%% OPTIONAL FROM BELOW %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% WRITE MOVIES FOR DISPLAY
-
-%%
-Mxy = M_total_total_fat15t(1,:) + 1i * (M_total_total_fat15t(2,:));
-Mxy_PhaseEnc_array = Mxy_PhaseEnc(Mxy);
-figure();
-curve = animatedline('Color', 'k');
-curve2 = animatedline('Color', 'r');
-set(gca, 'XLim', [0 10], 'YLim', [-1 1]);
-%legend({'Mz', 'Mxy'})
+subplot(1,2,2);
+plot(FF*100, native_t1_noMT_array, '-', 'LineWidth', 2)
+ylim([0 2500])
 grid on;
-for i = 1:length(t_total)
-    addpoints(curve, t_total(i)/1000, Mz_total_total(i));
-    addpoints(curve2, t_total(i)/1000, Mxy_PhaseEnc_array(i));
-    drawnow limitrate
-    pause(0.002)
+xlabel('Fat Fraction (%)'); ylabel('Estiamted T1 (ms)');
+title('FF vs Estimated T1');
+set(gca,'fontsize', 18)
+
+%% Save simulated results
+addpath('../function/')
+ff_map_t1 = struct;
+ff_map_t1.FF = FF;
+ff_map_t1.native_t1_noMT_array = native_t1_noMT_array;
+
+save_dir_L1 = GetFullPath(cat(2, pwd, '/../../T1_Fat_Project/'));
+if ~exist(save_dir_L1, 'dir')
+   mkdir(save_dir_L1); 
 end
 
-%% Mxy
-Mxy = M_total_total(1,:) + 1i * (M_total_total(2,:));
-Mxy_PhaseEnc_array = Mxy_PhaseEnc(Mxy);
-figure();
-curve = animatedline('Color', 'k');
-set(gca, 'XLim', [0 10], 'YLim', [-1 1]);
-grid on;
-for i = 1:length(t_total)
-    addpoints(curve, t_total(i)/1000, Mxy_PhaseEnc_array(i));
-    drawnow limitrate
-    pause(0.0025)
+save_dir_L2 = GetFullPath(cat(2, save_dir_L1, 'simulation/'));
+if ~exist(save_dir_L2, 'dir')
+   mkdir(save_dir_L2); 
 end
-
-%% Be careful %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% The two section below takes a few minutes to process %%%%%%%%%%%%%%%%%%%
-%%
-figure();
-
-for i = 1:length(t_total)
-    plot(t_total(1:i)/1000, Mz_total_total(1:i), 'b-');
-    set(gca, 'XLim', [0 10], 'YLim', [-1 1.05]);
-    hold on;
-    plot(t_total(1:i)/1000, Mz_total_total_fat15t(1:i), 'r--');
-    hold off;
-    legend({'Myocardium', 'Fat 1.5T'}, 'Location', 'SouthEast');
-    grid on;
-    %hold on;
-    % drawnow limitrate
-    % pause(0.002)
-    movieVector(i) = getframe;
-end
-
- myWriter = VideoWriter('curve');
- myWriter.FrameRate = 200;
- 
- % Open the videowriter object, write the movie and close the file
- open(myWriter);
- writeVideo(myWriter, movieVector);
- close(myWriter);
- 
-%% This one should be avoided
-
-figure();
-set(gca, 'XLim', [0 10], 'YLim', [-1 1]);
-grid on;
-hold on;
-for i = 1:length(t_total)
-    plot(t_total(i)/1000, Mz_total_total(i), 'o');
-    %hold on;
-    % drawnow limitrate
-    % pause(0.002)
-    movieVector(i) = getframe;
-end
-
- myWriter = VideoWriter('curve');
- myWriter.FrameRate = 200;
- 
- % Open the videowriter object, write the movie and close the file
- open(myWriter);
- writeVideo(myWriter, movieVector);
- close(myWriter);
+save(cat(2, save_dir_L2, 'kellman2015_fig4.mat'), 'ff_map_t1');
