@@ -59,6 +59,7 @@ if any(idx_array)
     
 end
 
+% Where does this roi2.mat coming from?
 roi_dir = GetFullPath(cat(2, base_dir, '\..\roi2.mat'));
 if exist(roi_dir, 'file')
     roi = load(roi_dir);
@@ -191,7 +192,7 @@ figure(); imagesc(myo_mask2.*mask_mi2.*img2); caxis([0 50]);
 figure(); imagesc(myo_mask3.*img3.*mask_mi3); caxis([0 50]);
 figure(); imagesc(myo_mask4.*img4.*mask_mi4); caxis([0 50]);
 
-%%
+%% AHA
 
 addpath('D:\src\AHA16Segment');
 Segn = 50;
