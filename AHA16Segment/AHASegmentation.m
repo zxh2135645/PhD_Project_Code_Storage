@@ -1,10 +1,19 @@
-function [Segmentpix, stats, Mask_Segn] =AHASegmentation(Imgin,Maskin,Segn,Groove)
-
+function [Segmentpix, stats, Mask_Segn] =AHASegmentation(Imgin,Maskin,Segn,Groove,Endoin)
+% Modified by Xinheng Zhang on 07/30/2020
+% Added an alternative way to find center, esp useful for imbalanced
+% myocardium shape
 for m=1:size(Imgin,3)
     %find center
     Mask=Maskin(:,:,m);
-    [X,Y] = meshgrid(1:size(Mask,2),1:size(Mask,1));
-    center=[sum(reshape(Mask.*X,1,[]))/sum(Mask(:)),sum(reshape(Mask.*Y,1,[]))/sum(Mask(:))];
+    if nargin == 5 % 5 input arguments
+        Endo = Endoin(:,:,m);
+        C = regionprops(Endo);
+        center = C.Centroid;
+    else
+        [X,Y] = meshgrid(1:size(Mask,2),1:size(Mask,1));
+        center=[sum(reshape(Mask.*X,1,[]))/sum(Mask(:)),sum(reshape(Mask.*Y,1,[]))/sum(Mask(:))];
+    end
+    
     %derive angle
     [X,Y] = meshgrid(1:size(Mask,2),1:size(Mask,1));
     X=X-center(1);
