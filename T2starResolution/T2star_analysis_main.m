@@ -147,9 +147,8 @@ end
 img_size_truth = size(img);
 mask_save = cat(2, subject_data_dir, 'mask.mat');
 
-figure();
-
 if ~exist(mask_save, 'file')
+    figure();
     mask_struct = struct;
     for i = 1:length(whatsinit)
         img2 = whatsinit{i};
@@ -199,6 +198,7 @@ end
 figure('Position', [100 0 1600 1600]);
 for i = 1:length(whatsinit)
     forhist = nonzeros(mask_struct(i).myo_mask .* whatsinit{i});
+    forhist(forhist > 100) = 100;
     subplot(4,7,i)
     histogram(forhist,20);xlabel('T2* (ms)'); ylabel('Count');
     set(gca, 'FontSize', 16); % title('0.4x0.4 mm^2')
@@ -250,7 +250,7 @@ end
 
 res = perc_array > 0.1;
 
-%% COnfusion Matrix
+%% Confusion Matrix
 figure('Position', [100 0 1600 1600]);
 sens = zeros(length(whatsinit),1);
 spec = zeros(length(whatsinit),1);
