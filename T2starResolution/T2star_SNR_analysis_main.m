@@ -224,27 +224,27 @@ imagesc(snr_remote); axis image;
 %%
 snr_air_reshape = permute(reshape(snr_air, 7, 4, []), [2,1,3]);
 snr_remote_reshape = permute(reshape(snr_remote, 7, 4, []), [2,1,3]);
-figure();
+figure('Position', [100 0 800 1600]);
 subplot(5,2,1);
-imagesc(snr_air_reshape(:,:,1)); axis image; colorbar;
+imagesc(snr_air_reshape(:,:,1)); axis image; caxis([0 2500]); colorbar;
 subplot(5,2,2);
-imagesc(snr_remote_reshape(:,:,1)); axis image;colorbar;
+imagesc(snr_remote_reshape(:,:,1)); axis image; caxis([0 20]);colorbar;
 subplot(5,2,3);
-imagesc(snr_air_reshape(:,:,2)); axis image;colorbar;
+imagesc(snr_air_reshape(:,:,2)); axis image; caxis([0 2500]);colorbar;
 subplot(5,2,4);
-imagesc(snr_remote_reshape(:,:,2)); axis image;colorbar;
+imagesc(snr_remote_reshape(:,:,2)); axis image; caxis([0 20]);colorbar;
 subplot(5,2,5);
-imagesc(snr_air_reshape(:,:,3)); axis image;colorbar;
+imagesc(snr_air_reshape(:,:,3)); axis image; caxis([0 2500]);colorbar;
 subplot(5,2,6);
-imagesc(snr_remote_reshape(:,:,3)); axis image;colorbar;
+imagesc(snr_remote_reshape(:,:,3)); axis image; caxis([0 20]);colorbar;
 subplot(5,2,7);
-imagesc(snr_air_reshape(:,:,4)); axis image;colorbar;
+imagesc(snr_air_reshape(:,:,4)); axis image; caxis([0 2500]);colorbar;
 subplot(5,2,8);
-imagesc(snr_remote_reshape(:,:,4)); axis image;colorbar;
+imagesc(snr_remote_reshape(:,:,4)); axis image; caxis([0 20]);colorbar;
 subplot(5,2,9);
-imagesc(snr_air_reshape(:,:,5)); axis image;colorbar;
+imagesc(snr_air_reshape(:,:,5)); axis image; caxis([0 2500]);colorbar;
 subplot(5,2,10);
-imagesc(snr_remote_reshape(:,:,5)); axis image;colorbar;
+imagesc(snr_remote_reshape(:,:,5)); axis image; caxis([0 20]);colorbar;
 %% Line shape
 figure();
 for j = 1:size(snr_air_reshape, 3)
