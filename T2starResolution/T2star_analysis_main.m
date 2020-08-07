@@ -192,6 +192,61 @@ if ~exist(mask_save, 'file')
 else
     load(mask_save);
 end
+
+%% Display image overlay with Mean-2SD mask
+save_array = 1:1:length(whatsinit);
+for i = 1:length(whatsinit)
+    save_idx = save_array(i);
+    figure();
+    img2 = whatsinit{save_idx};
+    thresh = mean(nonzeros(img2 .* mask_struct(save_idx).remote_mask)) - 2*std(nonzeros(img2 .* mask_struct(save_idx).remote_mask));
+    hemo_mask = img2 < thresh;
+    subplot(1,2,1);
+    imagesc(img2); caxis([0 50]); axis image; colorbar;
+    subplot(1,2,2);
+    imagesc(img2 + hemo_mask*50.*mask_struct(save_idx).mi_mask); caxis([0 100]); axis image; colorbar;
+    
+    
+    mean2sd_dir = cat(2, subject_dir, 'Mean2SD/');
+    if ~exist(mean2sd_dir, 'dir')
+        mkdir(mean2sd_dir)
+    end
+    saveas(gcf, cat(2, mean2sd_dir, num2str(save_idx), '.png'));
+end
+
+%% Otsu segmentation
+num_cluster = 3;
+
+for i = 1:length(whatsinit)
+    Img = whatsinit{i};
+    img_to_otsu = Img .* mask_struct(i).mi_mask;
+    img_to_otsu(img_to_otsu == 0) = NaN;
+    img_to_otsu(img_to_otsu > 50) = 50;
+    
+    [IDX, seg] = otsu(img_to_otsu, num_cluster);
+    % Cluster1 - water; Cluster2 - myocardium; Cluster3 - hemorrhage
+    
+    otsu_mean = zeros(num_cluster, 1);
+    for c = 1:num_cluster
+        otsu_mean(c) = mean(Img(IDX == c));
+    end
+    
+    [M,I] = min(otsu_mean);
+    
+    mask_struct(i).hemo_mask = IDX == I;
+    
+    figure();
+    subplot(1,2,1);
+    imagesc(Img); caxis([0 50]); axis image; colorbar;
+    subplot(1,2,2);
+    imagesc(Img + 50.*mask_struct(i).hemo_mask); caxis([0 100]); axis image; colorbar;
+    
+    otsu_dir = cat(2, subject_dir, 'Otsu_', num2str(num_cluster), '/');
+    if ~exist(otsu_dir, 'dir')
+        mkdir(otsu_dir)
+    end
+    saveas(gcf, cat(2, otsu_dir, num2str(i), '.png'));
+end
 %% Analysis starts here
 % Histogram analysis
 % Myocardium
@@ -508,3 +563,217 @@ set(gca, 'FontSize', 18); colorbar;
 %% Save the aha analysis
 aha_analysis_save = cat(2, subject_data_dir, 'aha_analysis.mat');
 save(aha_analysis_save, 'aha_analysis');
+
+%% Try 50 Segments in MI 
+%% This part is optional
+aha_mi2 = struct;
+for i = 1:length(whatsinit)
+    Mipix = cell(Segn, 1);
+    Img = whatsinit{i};
+    for j = 1:Segn
+        Mipix{j,1} = Img(aha50(i).Mask_Segn .* mask_struct(i).mi_mask == j);
+    end
+    aha_mi2(i).Mipix = Mipix;
+end
+
+Mipix_flat = {};
+for i = 1:length(whatsinit)
+    idx = 1;
+        for j = 1:Segn
+            if ~isempty(aha_mi2(1).Mipix{j,1})
+                Mipix_flat{idx} = aha_mi2(i).Mipix{j,1};
+                idx = idx + 1;
+            end
+        end
+    aha_mi2(i).Mipix_flat = Mipix_flat;
+end
+
+% AHA analysis
+perc_array_mi2 = zeros(length(whatsinit),length(Mipix_flat));
+
+for i = 1:length(whatsinit)
+    for j = 1:length(Mipix_flat)
+        thresh = mean(nonzeros(whatsinit{i} .* mask_struct(i).remote_mask)) - 2*std(nonzeros(whatsinit{i} .* mask_struct(i).remote_mask));
+        perc_array_mi2(i,j) = sum(aha_mi2(i).Mipix_flat{j}<thresh) / length(aha_mi2(i).Mipix_flat{j});
+    end
+end
+
+
+res_mi2 = perc_array_mi2 > 0.1;
+
+%%
+figure(); imagesc(aha50(1).Mask_Segn.* mask_struct(1).mi_mask);
+%% Confusion Matrix
+figure('Position', [100 0 1600 1600]);
+sens_mi2 = zeros(length(whatsinit),1);
+spec_mi2 = zeros(length(whatsinit),1);
+for i = 1:length(whatsinit)
+    [cm, order] = confusionmat(res_mi2(1,:),res_mi2(i,:));
+    subplot(4,7,i);confusionchart(cm, order); 
+    set(gca, 'FontSize', 18);
+    sens_mi2(i) = cm(2,2) / (cm(2,2) + cm(2,1));
+    spec_mi2(i) = cm(1,1) / (cm(1,1) + cm(1,2));
+end
+
+%% Plot sensitivity and specificity
+sens_reshape = reshape(sens_mi2, [7, 4])';
+spec_reshape = reshape(spec_mi2, [7, 4])';
+figure();
+subplot(2,1,1);
+imagesc(sens_reshape); axis image
+title('Sensitivity');
+set(gca, 'FontSize', 18); colorbar;
+subplot(2,1,2);
+imagesc(spec_reshape); axis image
+title('Specificity');
+set(gca, 'FontSize', 18); colorbar;
+
+aha_analysis2.perc_array_mi = perc_array_mi2;
+aha_analysis2.sens_mi = sens_mi2;
+aha_analysis2.spec_mi = spec_mi2;
+aha_analysis2.aha_mi = aha_mi2;
+
+%% ROC analysis %%
+auc_array_mi2 = zeros(length(whatsinit),1);
+figure('Position', [100 0 1600 1600]);
+for i = 1:length(whatsinit)
+    [X,Y,T,AUC,OPTROCPT] = perfcurve(res_mi2(1,:),perc_array_mi2(i,:), 1);
+    subplot(4,7,i);
+    plot(X,Y, 'LineWidth', 2);
+    xlabel('FPR');
+    ylabel('TPR');
+    text(0.5,0.5,num2str(round(AUC, 2)),'FontSize',24);
+    % title('ROC for Classification')
+    set(gca, 'FontSize', 16);
+    auc_array_mi2(i) = AUC;
+end
+
+aha_analysis.auc_array_mi = auc_array_mi2;
+%% Plot AUC %%
+auc_reshape = reshape(auc_array_mi2, [7, 4])';
+figure();
+imagesc(auc_reshape); axis image
+title('Area Under Curve');
+set(gca, 'FontSize', 18); colorbar;
+
+%% Initiated by 20P11 where hemo cannot be picked up by Mean-2SD method
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% This part is optional
+%% Otsu segmentation
+num_cluster = 3;
+
+for i = 1:length(whatsinit)
+    Img = whatsinit{i};
+    img_to_otsu = Img .* mask_struct(i).mi_mask;
+    img_to_otsu(img_to_otsu == 0) = NaN;
+    img_to_otsu(img_to_otsu > 50) = 50;
+    
+    [IDX, seg] = otsu(img_to_otsu, num_cluster);
+    % Cluster1 - water; Cluster2 - myocardium; Cluster3 - hemorrhage
+    
+    otsu_mean = zeros(num_cluster, 1);
+    for c = 1:num_cluster
+        otsu_mean(c) = mean(Img(IDX == c));
+    end
+    
+    [M,I] = min(otsu_mean);
+    
+    mask_struct(i).hemo_mask = IDX == I;
+end
+%%
+aha_mi2 = struct;
+
+for i = 1:length(whatsinit)
+    Mipix = cell(Segn, 1);
+    Hemopix = cell(Segn, 1);
+    Img = whatsinit{i};
+    for j = 1:Segn
+        Mipix{j,1} = Img(aha50(i).Mask_Segn .* mask_struct(i).mi_mask == j);
+        Hemopix{j,1} = Img(aha50(i).Mask_Segn .* mask_struct(i).hemo_mask == j);
+    end
+    aha_mi2(i).Mipix = Mipix;
+    aha_mi2(i).Hemopix = Hemopix;
+end
+
+Mipix_flat = {};
+Hemopix_flat = {};
+for i = 1:length(whatsinit)
+    idx = 1;
+        for j = 1:Segn
+            if ~isempty(aha_mi2(1).Mipix{j,1})
+                Mipix_flat{idx} = aha_mi2(i).Mipix{j,1};
+                Hemopix_flat{idx} = aha_mi2(i).Hemopix{j,1};
+                idx = idx + 1;
+            end
+        end
+    aha_mi2(i).Mipix_flat = Mipix_flat;
+    aha_mi2(i).Hemopix_flat = Hemopix_flat;
+end
+
+% AHA analysis
+perc_array_mi2 = zeros(length(whatsinit),length(Mipix_flat));
+
+for i = 1:length(whatsinit)
+    for j = 1:length(Mipix_flat)
+        perc_array_mi2(i,j) = length(aha_mi2(i).Hemopix_flat{j}) / length(aha_mi2(i).Mipix_flat{j});
+    end
+end
+
+
+res_mi2 = perc_array_mi2 > 0.1;
+%%
+figure(); imagesc(aha50(1).Mask_Segn);
+figure(); imagesc(aha50(1).Mask_Segn.* mask_struct(1).hemo_mask);
+%% Confusion Matrix
+figure('Position', [100 0 1600 1600]);
+sens_mi2 = zeros(length(whatsinit),1);
+spec_mi2 = zeros(length(whatsinit),1);
+for i = 1:length(whatsinit)
+    [cm, order] = confusionmat(res_mi2(1,:),res_mi2(i,:));
+    subplot(4,7,i);confusionchart(cm, order); 
+    set(gca, 'FontSize', 18);
+    sens_mi2(i) = cm(2,2) / (cm(2,2) + cm(2,1));
+    spec_mi2(i) = cm(1,1) / (cm(1,1) + cm(1,2));
+end
+%% Plot sensitivity and specificity
+sens_reshape = reshape(sens_mi2, [7, 4])';
+spec_reshape = reshape(spec_mi2, [7, 4])';
+figure();
+subplot(2,1,1);
+imagesc(sens_reshape); axis image
+title('Sensitivity');
+set(gca, 'FontSize', 18); colorbar;
+subplot(2,1,2);
+imagesc(spec_reshape); axis image
+title('Specificity');
+set(gca, 'FontSize', 18); colorbar;
+
+aha_analysis2.perc_array_mi = perc_array_mi2;
+aha_analysis2.sens_mi = sens_mi2;
+aha_analysis2.spec_mi = spec_mi2;
+aha_analysis2.aha_mi = aha_mi2;
+
+%% ROC analysis %%
+auc_array_mi2 = zeros(length(whatsinit),1);
+figure('Position', [100 0 1600 1600]);
+for i = 1:length(whatsinit)
+    [X,Y,T,AUC,OPTROCPT] = perfcurve(res_mi2(1,:),perc_array_mi2(i,:), 1);
+    subplot(4,7,i);
+    plot(X,Y, 'LineWidth', 2);
+    xlabel('FPR');
+    ylabel('TPR');
+    text(0.5,0.5,num2str(round(AUC, 2)),'FontSize',24);
+    % title('ROC for Classification')
+    set(gca, 'FontSize', 16);
+    auc_array_mi2(i) = AUC;
+end
+
+aha_analysis.auc_array_mi = auc_array_mi2;
+%% Plot AUC %%
+auc_reshape = reshape(auc_array_mi2, [7, 4])';
+figure();
+imagesc(auc_reshape); axis image
+title('Area Under Curve');
+set(gca, 'FontSize', 18); colorbar;
+
+
