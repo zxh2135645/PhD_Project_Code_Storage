@@ -4,11 +4,12 @@ close all;
 % the main body for T2* SNR analysis
 
 addpath('../function/');
-
-%%%%%%%%%%%%%%%%%%%%%%%%%% output file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% roi
+%%%%%%%%%%%%%%%%%%%%%%%%%% input file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% roi 
 % mask_struct
-% aha_anlysis
+% Both from T2star_analysis_main.m
+%%%%%%%%%%%%%%%%%%%%%%%%%% output file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SNR - struct
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % 20P10
@@ -48,6 +49,8 @@ if ~exist(subject_data_dir, 'dir')
     mkdir(subject_data_dir)
 end
 
+avg_num = input('Please type average number here:  ');
+avg_name = cat(2, 'Avg', num2str(avg_num, '%04.f'));
 %% Read T2* weighted DICOM files
 whatsinit = cell(length(list_to_read), 1);
 for i = 1:length(list_to_read)
@@ -217,34 +220,36 @@ end
 %% DIsplay results
 figure('Position', [100 0 400 1600]);
 subplot(1,2,1);
-imagesc(snr_air); axis image;
+imagesc(snr_air); axis image; colorbar;
 subplot(1,2,2);
-imagesc(snr_remote); axis image;
+imagesc(snr_remote); axis image; colorbar;
 
 %%
+snr_air_max = round(max(snr_air(:)),-2);
+snr_remote_max = round(max(snr_remote(:)),-2);
 snr_air_reshape = permute(reshape(snr_air, 7, 4, []), [2,1,3]);
 snr_remote_reshape = permute(reshape(snr_remote, 7, 4, []), [2,1,3]);
 figure('Position', [100 0 800 1600]);
 subplot(5,2,1);
-imagesc(snr_air_reshape(:,:,1)); axis image; caxis([0 2500]); colorbar;
+imagesc(snr_air_reshape(:,:,1)); axis image; caxis([0 snr_air_max]); colorbar;
 subplot(5,2,2);
-imagesc(snr_remote_reshape(:,:,1)); axis image; caxis([0 20]);colorbar;
+imagesc(snr_remote_reshape(:,:,1)); axis image; caxis([0 snr_remote_max]);colorbar;
 subplot(5,2,3);
-imagesc(snr_air_reshape(:,:,2)); axis image; caxis([0 2500]);colorbar;
+imagesc(snr_air_reshape(:,:,2)); axis image; caxis([0 snr_air_max]);colorbar;
 subplot(5,2,4);
-imagesc(snr_remote_reshape(:,:,2)); axis image; caxis([0 20]);colorbar;
+imagesc(snr_remote_reshape(:,:,2)); axis image; caxis([0 snr_remote_max]);colorbar;
 subplot(5,2,5);
-imagesc(snr_air_reshape(:,:,3)); axis image; caxis([0 2500]);colorbar;
+imagesc(snr_air_reshape(:,:,3)); axis image; caxis([0 snr_air_max]);colorbar;
 subplot(5,2,6);
-imagesc(snr_remote_reshape(:,:,3)); axis image; caxis([0 20]);colorbar;
+imagesc(snr_remote_reshape(:,:,3)); axis image; caxis([0 snr_remote_max]);colorbar;
 subplot(5,2,7);
-imagesc(snr_air_reshape(:,:,4)); axis image; caxis([0 2500]);colorbar;
+imagesc(snr_air_reshape(:,:,4)); axis image; caxis([0 snr_air_max]);colorbar;
 subplot(5,2,8);
-imagesc(snr_remote_reshape(:,:,4)); axis image; caxis([0 20]);colorbar;
+imagesc(snr_remote_reshape(:,:,4)); axis image; caxis([0 snr_remote_max]);colorbar;
 subplot(5,2,9);
-imagesc(snr_air_reshape(:,:,5)); axis image; caxis([0 2500]);colorbar;
+imagesc(snr_air_reshape(:,:,5)); axis image; caxis([0 snr_air_max]);colorbar;
 subplot(5,2,10);
-imagesc(snr_remote_reshape(:,:,5)); axis image; caxis([0 20]);colorbar;
+imagesc(snr_remote_reshape(:,:,5)); axis image; caxis([0 snr_remote_max]);colorbar;
 %% Line shape
 figure();
 for j = 1:size(snr_air_reshape, 3)
@@ -266,5 +271,12 @@ for j = 1:size(snr_remote_reshape, 3)
         hold on;
     end
 end
+
+%% Save SNR 
+SNR = struct;
+SNR.snr_remote = snr_remote;
+SNR.snr_air = snr_air;
+save_f = cat(2, subject_data_dir, 'SNR_', avg_name, '.mat');
+save(save_f, 'SNR');
 
 %% R^2 analysis of fitting residual might be a good analysis?
