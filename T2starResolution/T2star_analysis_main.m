@@ -214,6 +214,7 @@ for i = 1:length(whatsinit)
     saveas(gcf, cat(2, mean2sd_dir, num2str(save_idx), '.png'));
 end
 
+close all;
 %% Otsu segmentation
 num_cluster = 3;
 
@@ -247,6 +248,8 @@ for i = 1:length(whatsinit)
     end
     saveas(gcf, cat(2, otsu_dir, num2str(i), '.png'));
 end
+
+close all;
 %% Analysis starts here
 % Histogram analysis
 % Myocardium
@@ -279,6 +282,56 @@ for i = 1:length(whatsinit)
     set(gca, 'FontSize', 16); % title('0.4x0.4 mm^2')
     xlim([0 50]);
 end
+
+%% Mean + SD plot 
+t2star_mean_array = zeros(1, length(whatsinit));
+t2star_sd_array = zeros(1, length(whatsinit));
+for i = 1:length(whatsinit)
+    t2star_mean_array(i) = mean(nonzeros(mask_struct(i).remote_mask .* whatsinit{i}));
+    t2star_sd_array(i) = std(nonzeros(mask_struct(i).remote_mask .* whatsinit{i}));
+end
+
+d = length(whatsinit)/4;
+t2star_mean_reshape = reshape(t2star_mean_array, d, length(whatsinit)/d).';
+t2star_sd_reshape = reshape(t2star_sd_array, d, length(whatsinit)/d).';
+
+x = [0, d, 2*d, 3*d, 4*d] + [0 , 0.5, 0.5, 0.5, 1];
+inplane_res = 1:d;
+res = [inplane_res; inplane_res + d; inplane_res + 2*d; inplane_res + 3*d];
+figure('Position', [100 0 1600 1600]);
+errorbar(t2star_mean_array, t2star_sd_array, 'LineStyle', 'none' );
+hold on;
+ylim_lb = min(ylim); ylim_ub = max(ylim);
+patch([x(1) x(2) x(2) x(1)], [max(ylim) max(ylim) 0 0], [241 194 151]/255, 'FaceAlpha',.5)
+patch([x(2) x(3) x(3) x(2)], [max(ylim) max(ylim) 0 0], [199 213 161]/255, 'FaceAlpha',.5)
+patch([x(3) x(4) x(4) x(3)], [max(ylim) max(ylim) 0 0], [159 203 219]/255, 'FaceAlpha',.5)
+patch([x(4) x(5) x(5) x(4)], [max(ylim) max(ylim) 0 0], [98 141 207]/255, 'FaceAlpha',.5)
+errorbar(res', t2star_mean_reshape', t2star_sd_reshape', '-o', 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980]); 
+xticks([1.2 4 6.5 8.5 11 13.5 15.5 18 20.5 22.5 25 27.5]);
+xticklabels({'0.3x0.3','---->','2.1x2.1','0.3x0.3','---->','2.1x2.1','0.3x0.3','---->','2.1x2.1','0.3x0.3','---->','2.1x2.1'})
+xlim([0 x(5)]);ylim([ylim_lb, ylim_ub])
+
+text(2,ylim_ub-2, 'Slice Thickness = 2 mm', 'FontSize', 16);
+text(9,ylim_ub-2, 'Slice Thickness = 4 mm', 'FontSize', 16);
+text(16,ylim_ub-2, 'Slice Thickness = 6 mm', 'FontSize', 16);
+text(23,ylim_ub-2, 'Slice Thickness = 8 mm', 'FontSize', 16)
+set(gca, 'FontSize', 16);
+xlabel('Resolution (mm^2)', 'FontSize', 24); ylabel('T2^* (ms)', 'FontSize', 24);
+hold off
+
+% Different color scheme (Monochrome blue/green)
+%patch([x(1) x(2) x(2) x(1)], [max(ylim) max(ylim) 0 0], [71 118 234]/255, 'FaceAlpha',.8)
+%patch([x(2) x(3) x(3) x(2)], [max(ylim) max(ylim) 0 0], [89 157 214]/255, 'FaceAlpha',.8)
+%patch([x(3) x(4) x(4) x(3)], [max(ylim) max(ylim) 0 0], [110 217 239]/255, 'FaceAlpha',.8)
+%patch([x(4) x(5) x(5) x(4)], [max(ylim) max(ylim) 0 0], [115 229 215]/255, 'FaceAlpha',.8)
+%errorbar(res', t2star_mean_reshape', t2star_sd_reshape', '-o', 'LineWidth', 2, 'Color', [54 66 223]/255); xlabel('Resolution'); ylabel('T2^* (ms)');
+
+% More distinctive (red is less bright)
+%patch([x(1) x(2) x(2) x(1)], [max(ylim) max(ylim) 0 0], [241 194 151]/255, 'FaceAlpha',.8)
+%patch([x(2) x(3) x(3) x(2)], [max(ylim) max(ylim) 0 0], [199 213 161]/255, 'FaceAlpha',.8)
+%patch([x(3) x(4) x(4) x(3)], [max(ylim) max(ylim) 0 0], [159 203 219]/255, 'FaceAlpha',.8)
+%patch([x(4) x(5) x(5) x(4)], [max(ylim) max(ylim) 0 0], [98 141 207]/255, 'FaceAlpha',.8)
+%errorbar(res', t2star_mean_reshape', t2star_sd_reshape', '-o', 'LineWidth', 2, 'Color', [207 153 150]/255); xlabel('Resolution'); ylabel('T2^* (ms)');
 
 %% AHA
 addpath('../AHA16Segment/');
@@ -564,7 +617,7 @@ set(gca, 'FontSize', 18); colorbar;
 aha_analysis_save = cat(2, subject_data_dir, 'aha_analysis.mat');
 save(aha_analysis_save, 'aha_analysis');
 
-%% Try 50 Segments in MI 
+%% Try 50 Segments in MI %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% This part is optional
 aha_mi2 = struct;
 for i = 1:length(whatsinit)
