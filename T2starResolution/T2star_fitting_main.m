@@ -2,8 +2,14 @@
 
 clear all;
 close all;
+%%%%%%%%%%%%%%%%%%%%%%%%%% input file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SNR - struct
+% SNR from different avg from T2star_SNR_analysis_main.m
+%%%%%%%%%%%%%%%%%%%%%%%%%% output file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Example for generating T1 Map MOLLI from qMRLab
+% Example for generating T1 Map MOLLI from qMRLab
 addpath('../function/'); 
 addpath('../../../qMRLab/');
 
@@ -44,6 +50,8 @@ if ~exist(subject_data_dir, 'dir')
     mkdir(subject_data_dir)
 end
 
+avg_num = input('Please type average number here:  ');
+avg_name = cat(2, 'Avg', num2str(avg_num, '%04.f'));
 %% Read T2* DICOM files
 whatsinit = cell(length(list_to_read), 1);
 slice_data = cell(length(list_to_read), 1);
@@ -116,3 +124,6 @@ for i = 1:length(whatsinit)
     imagesc(FitResults_struct(i).FitResults.res);
     colorbar;caxis([0 100]);
 end
+%% Save FittedResults
+save_f = cat(2, subject_data_dir, 'FitResults_', avg_name, '.mat');
+save(save_f, 'FitResults_struct');
