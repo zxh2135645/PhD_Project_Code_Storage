@@ -217,7 +217,7 @@ for i = 1:length(whatsinit)
         snr_air(i,j) = mean(remote(idx)) / std(air(idx_air));
     end
 end
-%% DIsplay results
+%% Display results
 figure('Position', [100 0 400 1600]);
 subplot(1,2,1);
 imagesc(snr_air); axis image; colorbar;
