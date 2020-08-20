@@ -10,6 +10,7 @@ addpath('../function/');
 % roi
 % mask_struct
 % aha_anlysis
+% T2star_meanSD_table
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % 20P10
@@ -332,6 +333,42 @@ hold off
 %patch([x(3) x(4) x(4) x(3)], [max(ylim) max(ylim) 0 0], [159 203 219]/255, 'FaceAlpha',.8)
 %patch([x(4) x(5) x(5) x(4)], [max(ylim) max(ylim) 0 0], [98 141 207]/255, 'FaceAlpha',.8)
 %errorbar(res', t2star_mean_reshape', t2star_sd_reshape', '-o', 'LineWidth', 2, 'Color', [207 153 150]/255); xlabel('Resolution'); ylabel('T2^* (ms)');
+
+%% Mean + SD Heatmap
+
+figure('Position', [100 0 1600 1600]);
+subplot(2,1,1);
+imagesc(t2star_mean_reshape); colorbar; axis off;
+for i = 1:size(t2star_mean_reshape, 1)
+    for j = 1:size(t2star_mean_reshape, 2)
+        text(0.9+(j-1),1+(i-1),num2str(round(t2star_mean_reshape(i,j),2)), 'Color', [0.8500, 0.3250, 0.0980], 'FontSize', 16);
+    end
+end
+title('Mean of Remote T2* value', 'FontSize', 24);
+
+subplot(2,1,2);
+imagesc(t2star_sd_reshape); colorbar; axis off;
+for i = 1:size(t2star_sd_reshape, 1)
+    for j = 1:size(t2star_sd_reshape, 2)
+        text(0.9+(j-1),1+(i-1),num2str(round(t2star_sd_reshape(i,j),2)), 'Color', [0.8500, 0.3250, 0.0980], 'FontSize', 16);
+    end
+end
+title('Standard Deviation of Remote T2* value', 'FontSize', 24);
+
+%% Table
+
+VarNames = {' ', '0.3x0.3 mm^2', '0.4x0.4 mm^2',  '0.8x0.8 mm^2', '1.0x1.0 mm^2', '1.3x1.3 mm^2', '1.6x1.6 mm^2', '2.1x2.1 mm^2'};
+mean_table = table({'2 mm'; '4 mm'; '6 mm'; '8 mm'},t2star_mean_reshape(:,1), t2star_mean_reshape(:,2), t2star_mean_reshape(:,3),...
+    t2star_mean_reshape(:,4), t2star_mean_reshape(:,5), t2star_mean_reshape(:,6), t2star_mean_reshape(:,7), 'VariableNames',VarNames)
+
+sd_table = table({'2 mm'; '4 mm'; '6 mm'; '8 mm'},t2star_sd_reshape(:,1), t2star_sd_reshape(:,2), t2star_sd_reshape(:,3),...
+    t2star_sd_reshape(:,4), t2star_sd_reshape(:,5), t2star_sd_reshape(:,6), t2star_sd_reshape(:,7), 'VariableNames',VarNames)
+
+t2star_table = struct;
+t2star_table.mean_table = mean_table;
+t2star_table.sd_table = sd_table;
+save_table_f = cat(2, subject_data_dir, 'T2star_meanSD_table.mat');
+save(save_table_f, 'save_table_f');
 
 %% AHA
 addpath('../AHA16Segment/');
