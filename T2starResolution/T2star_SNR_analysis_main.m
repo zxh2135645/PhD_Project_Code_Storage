@@ -50,7 +50,11 @@ if ~exist(subject_data_dir, 'dir')
 end
 
 avg_num = input('Please type average number here:  ');
-avg_name = cat(2, 'Avg', num2str(avg_num, '%04.f'));
+if isnumeric(avg_num)
+    avg_name = cat(2, 'Avg', num2str(avg_num, '%04.f'));
+else
+    avg_name = avg_num;
+end
 %% Read T2* weighted DICOM files
 whatsinit = cell(length(list_to_read), 1);
 for i = 1:length(list_to_read)
@@ -60,8 +64,10 @@ end
 
 % Display images
 figure('Position', [100 0 1600 1600]);
+row = 4;
+col = length(whatsinit) / row;
 for i = 1:length(whatsinit)
-    subplot(4,7,i);
+    subplot(row,col,i);
     imagesc(whatsinit{i}(:,:,5)); axis image;
     %caxis([0 100])
 end
@@ -202,18 +208,27 @@ end
 img_size = size(whatsinit{1});
 snr_remote = zeros(length(whatsinit), img_size(3));
 snr_air = zeros(length(whatsinit), img_size(3));
+mask_idx_array = [3:7, [3:7]+7, [3:7]+7*2, [3:7]+7*3];
 
 for i = 1:length(whatsinit)
     img = whatsinit{i};
     
     for j = 1:img_size(3)
-        idx = find(mask_struct(i).remote_mask == 1);
         
-        remote = mask_struct(i).remote_mask .* img(:,:,j);
+        if ~strcmp('Invivo', avg_name)
+            idx = find(mask_struct(i).remote_mask == 1);
+            remote = mask_struct(i).remote_mask .* img(:,:,j);
+            idx_air = find(mask_struct(i).air_mask == 1);
+            air = mask_struct(i).air_mask .* img(:,:,j);
+        else
+            mask_idx = mask_idx_array(i);
+            idx = find(mask_struct(mask_idx).remote_mask == 1);
+            remote = mask_struct(mask_idx).remote_mask .* img(:,:,j);
+            idx_air = find(mask_struct(mask_idx).air_mask == 1);
+            air = mask_struct(mask_idx).air_mask .* img(:,:,j);
+        end
+        
         snr_remote(i,j) = mean(remote(idx)) / std(remote(idx));
-        
-        idx_air = find(mask_struct(i).air_mask == 1);
-        air = mask_struct(i).air_mask .* img(:,:,j);
         snr_air(i,j) = mean(remote(idx)) / std(air(idx_air));
     end
 end
@@ -227,8 +242,8 @@ imagesc(snr_remote); axis image; colorbar;
 %%
 snr_air_max = round(max(snr_air(:)),-2);
 snr_remote_max = round(max(snr_remote(:)),-2);
-snr_air_reshape = permute(reshape(snr_air, 7, 4, []), [2,1,3]);
-snr_remote_reshape = permute(reshape(snr_remote, 7, 4, []), [2,1,3]);
+snr_air_reshape = permute(reshape(snr_air, col, row, []), [2,1,3]);
+snr_remote_reshape = permute(reshape(snr_remote, col, row, []), [2,1,3]);
 figure('Position', [100 0 800 1600]);
 subplot(5,2,1);
 imagesc(snr_air_reshape(:,:,1)); axis image; caxis([0 snr_air_max]); colorbar;

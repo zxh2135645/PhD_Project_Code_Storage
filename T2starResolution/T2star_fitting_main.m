@@ -3,13 +3,12 @@
 clear all;
 close all;
 %%%%%%%%%%%%%%%%%%%%%%%%%% input file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SNR - struct
-% SNR from different avg from T2star_SNR_analysis_main.m
+% DICOM files
+% fitting results 
 %%%%%%%%%%%%%%%%%%%%%%%%%% output file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 
+% FitResults_<avg_name>.mat
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Example for generating T1 Map MOLLI from qMRLab
 addpath('../function/'); 
 addpath('../../../qMRLab/');
 
@@ -51,7 +50,11 @@ if ~exist(subject_data_dir, 'dir')
 end
 
 avg_num = input('Please type average number here:  ');
-avg_name = cat(2, 'Avg', num2str(avg_num, '%04.f'));
+if isnumeric(avg_num)
+    avg_name = cat(2, 'Avg', num2str(avg_num, '%04.f'));
+else
+    avg_name = avg_num;
+end
 %% Read T2* DICOM files
 whatsinit = cell(length(list_to_read), 1);
 slice_data = cell(length(list_to_read), 1);
@@ -59,7 +62,8 @@ for i = 1:length(list_to_read)
     f = list_to_read{order_to_read(i)};
     [whatsinit{i}, slice_data{i}] = dicom23D(f, dicom_fields);
 end
-%%
+
+% Start qMRinfo and TE array
 qMRinfo('mono_t2');
 
 TE_array = zeros(length(slice_data{1,1}), 1);
@@ -69,9 +73,10 @@ for i = 1:length(TE_array)
 end
 
 %% Load mask
-
 load(cat(2, subject_data_dir, 'mask.mat'));
 FitResults_struct = struct;
+mask_idx_array = [3:7, [3:7]+7, [3:7]+7*2, [3:7]+7*3];
+
 for i = 1:length(whatsinit)
     % Reshape data and mask
     % Reshape matrix as [Width x Height x #Slice x #TE]
@@ -88,12 +93,16 @@ for i = 1:length(whatsinit)
     Model.options.FitType = 'Linear';
     data = struct;  % Create data structure
     data.SEdata = dicom_reshape;
-    data.Mask = mask_struct(i).myo_mask;
+    if length(whatsinit) == 20
+        data.Mask = mask_struct(mask_idx_array(i)).myo_mask;
+    else
+        data.Mask = mask_struct(i).myo_mask;
+    end
     FitResults = FitData(data, Model); %fit data
     % FitResultsSave_mat(FitResults);
     FitResults_struct(i).FitResults = FitResults;
 end
-%% T2* map
+%% T2* map (Console generated)
 [list_to_read, order_to_read] = NamePicker(folder_glob);
 T2star_map = cell(length(list_to_read), 1);
 for i = 1:length(list_to_read)
@@ -102,28 +111,38 @@ for i = 1:length(list_to_read)
 end
 
 %% Compare between T2* map and fitted T2* map
+i = 1;
+if length(whatsinit) == 20
+    idx = mask_idx_array(i);
+else
+    idx = 1;
+end
+
 figure();
 subplot(2,2,1);
-imagesc(T2star_map{1}.*mask_struct(1).myo_mask); caxis([0 100]);axis image;
+imagesc(T2star_map{i}.*mask_struct(idx).myo_mask); caxis([0 100]);axis image;
 colorbar;title('T2* Map from console');
 subplot(2,2,2);
-imagesc(FitResults_struct(1).FitResults.T2); caxis([0 100]);axis image;colorbar;
+imagesc(FitResults_struct(i).FitResults.T2); caxis([0 100]);axis image;colorbar;
 title('T2* map from qMRLab')
 subplot(2,2,3);
-diff_img = abs(T2star_map{1}.*mask_struct(1).myo_mask - FitResults_struct(1).FitResults.T2);
+diff_img = abs(T2star_map{i}.*mask_struct(idx).myo_mask - FitResults_struct(i).FitResults.T2);
 imagesc(diff_img);caxis([0 20]);axis image;colorbar;
 title('Difference Map');
 subplot(2,2,4);
-imagesc(100*abs(diff_img)./(T2star_map{1}.*mask_struct(1).myo_mask));caxis([0 50]);axis image;colorbar;
+imagesc(100*abs(diff_img)./(T2star_map{i}.*mask_struct(idx).myo_mask));caxis([0 50]);axis image;colorbar;
 title('Percentage of Difference');
 
 %% Plot residual images
 figure('Position', [100 0 1600 1600]);
+row = 4;
+col = length(whatsinit) / row;
 for i = 1:length(whatsinit)
-    subplot(4,7,i);
+    subplot(row,col,i);
     imagesc(FitResults_struct(i).FitResults.res);
     colorbar;caxis([0 100]);
 end
-%% Save FittedResults
+
+% Save FittedResults
 save_f = cat(2, subject_data_dir, 'FitResults_', avg_name, '.mat');
 save(save_f, 'FitResults_struct');

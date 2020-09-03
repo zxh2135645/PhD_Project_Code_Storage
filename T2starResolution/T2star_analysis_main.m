@@ -355,9 +355,47 @@ for i = 1:size(t2star_sd_reshape, 1)
 end
 title('Standard Deviation of Remote T2* value', 'FontSize', 24);
 
+%% Mean + SD plot (boxplot)
+clear t2star_remote_array
+t2star_remote_array = [];
+len_array = zeros(length(whatsinit), 1);
+res_array = {'03', '06', '08', '10', '13', '16', '21'};
+slc_array = {'2', '4', '6', '8'};
+g = {};
+for i = 1:length(whatsinit)
+    temp = nonzeros(mask_struct(i).remote_mask .* whatsinit{i});
+    len_array(i) = length(temp);
+    t2star_remote_array = [t2star_remote_array; temp];
+    q = fix((i-1)/7)+1;
+    r = mod(i, 7);
+    if r == 0
+        real_r = 7 - r;
+    else
+        real_r = r;
+    end
+    g_temp = repmat({cat(2, slc_array{q}, '_', res_array{real_r})}, len_array(i), 1);
+    g = [g; g_temp];
+end
+
+y_lim = [min(t2star_remote_array) max(t2star_remote_array)];
+x = [0, d, 2*d, 3*d, 4*d] + [0 , 0.5, 0.5, 0.5, 1];
+inplane_res = 1:d;
+res = [inplane_res; inplane_res + d; inplane_res + 2*d; inplane_res + 3*d];
+figure('Position', [100 0 1600 1600]);
+errorbar(t2star_mean_array, t2star_sd_array, 'LineStyle', 'none' );
+hold on;
+ylim_lb = min(ylim); ylim_ub = max(ylim);
+patch([x(1) x(2) x(2) x(1)], [max(y_lim) max(y_lim) 0 0], [241 194 151]/255, 'FaceAlpha',.5)
+patch([x(2) x(3) x(3) x(2)], [max(y_lim) max(y_lim) 0 0], [199 213 161]/255, 'FaceAlpha',.5)
+patch([x(3) x(4) x(4) x(3)], [max(y_lim) max(y_lim) 0 0], [159 203 219]/255, 'FaceAlpha',.5)
+patch([x(4) x(5) x(5) x(4)], [max(y_lim) max(y_lim) 0 0], [98 141 207]/255, 'FaceAlpha',.5)
+h = boxplot(t2star_remote_array,g);
+set(h,'LineWidth',2); grid on;
+ylim([min(t2star_remote_array), max(t2star_remote_array)]);
+
 %% Table
 
-VarNames = {' ', '0.3x0.3 mm^2', '0.4x0.4 mm^2',  '0.8x0.8 mm^2', '1.0x1.0 mm^2', '1.3x1.3 mm^2', '1.6x1.6 mm^2', '2.1x2.1 mm^2'};
+VarNames = {' ', '0.3x0.3 mm^2', '0.6x0.6 mm^2',  '0.8x0.8 mm^2', '1.0x1.0 mm^2', '1.3x1.3 mm^2', '1.6x1.6 mm^2', '2.1x2.1 mm^2'};
 mean_table = table({'2 mm'; '4 mm'; '6 mm'; '8 mm'},t2star_mean_reshape(:,1), t2star_mean_reshape(:,2), t2star_mean_reshape(:,3),...
     t2star_mean_reshape(:,4), t2star_mean_reshape(:,5), t2star_mean_reshape(:,6), t2star_mean_reshape(:,7), 'VariableNames',VarNames)
 
@@ -738,7 +776,7 @@ for i = 1:length(whatsinit)
     auc_array_mi2(i) = AUC;
 end
 
-aha_analysis.auc_array_mi = auc_array_mi2;
+aha_analysis2.auc_array_mi = auc_array_mi2;
 %% Plot AUC %%
 auc_reshape = reshape(auc_array_mi2, [7, 4])';
 figure();
