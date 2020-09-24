@@ -29,7 +29,7 @@ if ~exist(proj_dir, 'dir')
     mkdir(proj_dir)
 end
 
-save_dir = GetFullPath(cat(2, proj_dir, 'img/'));
+save_dir = GetFullPath(cat(2, proj_dir, 'img/'));   
 if ~exist(save_dir, 'dir')
     mkdir(save_dir)
 end

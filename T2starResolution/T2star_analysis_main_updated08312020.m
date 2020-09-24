@@ -61,7 +61,7 @@ for i = 1:length(list_to_read)
     whatsinit{i} = dicom23D(f);
 end
 
-%% Display images
+% Display images
 figure('Position', [100 0 1600 1600]);
 for i = 1:length(whatsinit)
     subplot(4,7,i);
@@ -143,6 +143,7 @@ else
     remote_coords = roi.remote_coords;
     fluid_coords = roi.fluid_coords;
     center_coords = roi.center_coords;
+    air_coords = roi.air_coords;
 end
 
 % 28 different set of parameters
@@ -205,9 +206,20 @@ for i = 1:length(whatsinit)
     thresh = mean(nonzeros(img2 .* mask_struct(save_idx).remote_mask)) - 2*std(nonzeros(img2 .* mask_struct(save_idx).remote_mask));
     hemo_mask = img2 < thresh;
     subplot(1,2,1);
-    imagesc(img2); caxis([0 50]); axis image; colorbar;
+    imagesc(img2); caxis([0 50]); axis image; colormap default; %colorbar;
+    
+    %img_rgb = zeros(size(img2,1), size(img2, 2), 3);
+    %img2_norm = img2 ./ max(img2(:));
+    %img_rgb(:,:,1) = img2_norm;
+    %img_rgb(:,:,2) = img2_norm;
+    %img_rgb(:,:,3) = img2_norm;
+    
+    %map = hsv(256);
+    map = gray(256);
+    rgbImage = ind2rgb(img2, map);
+    rgbImage(:,:,1) = rgbImage(:,:,1) + hemo_mask.*mask_struct(save_idx).mi_mask;
     subplot(1,2,2);
-    imagesc(img2 + hemo_mask*50.*mask_struct(save_idx).mi_mask); caxis([0 100]); axis image; colorbar;
+    imagesc(rgbImage); axis image;
     
     
     mean2sd_dir = cat(2, subject_dir, 'Mean2SD_', avg_name, '/');
@@ -241,9 +253,13 @@ for i = 1:length(whatsinit)
     
     figure();
     subplot(1,2,1);
-    imagesc(Img); caxis([0 50]); axis image; colorbar;
+    imagesc(Img); caxis([0 50]); axis image; % colorbar;
+    
+    map = gray(256);
+    rgbImage = ind2rgb(Img, map);
+    rgbImage(:,:,1) = rgbImage(:,:,1) + mask_struct(i).hemo_mask;
     subplot(1,2,2);
-    imagesc(Img + 50.*mask_struct(i).hemo_mask); caxis([0 100]); axis image; colorbar;
+    imagesc(rgbImage); axis image;
     
     otsu_dir = cat(2, subject_dir, 'Otsu_', num2str(num_cluster), '_', avg_name, '/');
     if ~exist(otsu_dir, 'dir')
@@ -424,7 +440,7 @@ end
 res_mi2 = perc_array_mi2 > 0.1;
 
 %%
-% figure(); imagesc(aha50(1).Mask_Segn.* mask_struct(1).mi_mask);
+figure(); imagesc(aha50(1).Mask_Segn.* mask_struct(1).mi_mask);
 %% Confusion Matrix
 figure('Position', [100 0 1600 1600]);
 sens_mi2 = zeros(length(whatsinit),1);
@@ -488,10 +504,10 @@ save(cat(2, subject_data_dir, 'aha_analysis_', avg_name, '.mat'), 'aha_analysis'
 disp('Avg0001 Starts here: ');
 [list_to_read, order_to_read] = NamePicker(folder_glob);
 
-avg_num = ('Please type average number here:  ');
+avg_num = input('Please type average number here:  ');
 avg_name = cat(2, 'Avg', num2str(avg_num, '%04.f'));
 
-%% Read T2* DICOM files
+% Read T2* DICOM files
 whatsinit = cell(length(list_to_read), 1);
 for i = 1:length(list_to_read)
     f = list_to_read{order_to_read(i)};
@@ -515,9 +531,12 @@ for i = 1:length(whatsinit)
     thresh = mean(nonzeros(img2 .* mask_struct(save_idx).remote_mask)) - 2*std(nonzeros(img2 .* mask_struct(save_idx).remote_mask));
     hemo_mask = img2 < thresh;
     subplot(1,2,1);
-    imagesc(img2); caxis([0 50]); axis image; colorbar;
+    imagesc(img2); caxis([0 50]); axis image; %colorbar;
+    map = gray(256);
+    rgbImage = ind2rgb(img2, map);
+    rgbImage(:,:,1) = rgbImage(:,:,1) + hemo_mask.*mask_struct(save_idx).mi_mask;
     subplot(1,2,2);
-    imagesc(img2 + hemo_mask*50.*mask_struct(save_idx).mi_mask); caxis([0 100]); axis image; colorbar;
+    imagesc(rgbImage); axis image;
     
     
     mean2sd_dir = cat(2, subject_dir, 'Mean2SD_', avg_name, '/');
@@ -551,9 +570,12 @@ for i = 1:length(whatsinit)
     
     figure();
     subplot(1,2,1);
-    imagesc(Img); caxis([0 50]); axis image; colorbar;
+    imagesc(Img); caxis([0 50]); axis image; %colorbar;
+    map = gray(256);
+    rgbImage = ind2rgb(Img, map);
+    rgbImage(:,:,1) = rgbImage(:,:,1) + mask_struct(i).hemo_mask;
     subplot(1,2,2);
-    imagesc(Img + 50.*mask_struct(i).hemo_mask); caxis([0 100]); axis image; colorbar;
+    imagesc(rgbImage); axis image;
     
     otsu_dir = cat(2, subject_dir, 'Otsu_', num2str(num_cluster), '_', avg_name, '/');
     if ~exist(otsu_dir, 'dir')
@@ -792,14 +814,14 @@ disp('Invivo Starts here: ');
 
 invivo_label = 'Invivo';
 
-%% Read T2* DICOM files
+% Read T2* DICOM files
 whatsinit = cell(length(list_to_read), 1);
 for i = 1:length(list_to_read)
     f = list_to_read{order_to_read(i)};
     whatsinit{i} = dicom23D(f);
 end
 
-%% Display images
+% Display images
 figure('Position', [100 0 1600 1600]);
 for i = 1:length(whatsinit)
     subplot(4,5,i);
@@ -818,9 +840,16 @@ for i = 1:length(whatsinit)
     thresh = mean(nonzeros(img2 .* mask_struct(mask_idx).remote_mask)) - 2*std(nonzeros(img2 .* mask_struct(mask_idx).remote_mask));
     hemo_mask = img2 < thresh;
     subplot(1,2,1);
-    imagesc(img2); caxis([0 50]); axis image; colorbar;
+    imagesc(img2); caxis([0 50]); axis image; % colorbar;
+    
+    map = gray(256);
+    rgbImage = ind2rgb(img2, map);
+    rgbImage(:,:,1) = rgbImage(:,:,1) + hemo_mask.*mask_struct(mask_idx).mi_mask;
     subplot(1,2,2);
-    imagesc(img2 + hemo_mask*50.*mask_struct(mask_idx).mi_mask); caxis([0 100]); axis image; colorbar;
+    imagesc(rgbImage); axis image;
+    
+    %subplot(1,2,2);
+    %imagesc(img2 + hemo_mask*50.*mask_struct(mask_idx).mi_mask); caxis([0 100]); axis image; colorbar;
     
     
     mean2sd_dir = cat(2, subject_dir, 'Mean2SD_', invivo_label, '/');
@@ -855,9 +884,16 @@ for i = 1:length(whatsinit)
     
     figure();
     subplot(1,2,1);
-    imagesc(Img); caxis([0 50]); axis image; colorbar;
+    imagesc(Img); caxis([0 50]); axis image; %colorbar;
+    
+    map = gray(256);
+    rgbImage = ind2rgb(Img, map);
+    rgbImage(:,:,1) = rgbImage(:,:,1) + mask_struct(mask_idx).hemo_mask;
     subplot(1,2,2);
-    imagesc(Img + 50.*mask_struct(mask_idx).hemo_mask); caxis([0 100]); axis image; colorbar;
+    imagesc(rgbImage); axis image;
+    
+    %subplot(1,2,2);
+    %imagesc(Img + 50.*mask_struct(mask_idx).hemo_mask); caxis([0 100]); axis image; colorbar;
     
     otsu_dir = cat(2, subject_dir, 'Otsu_', num2str(num_cluster), '_', invivo_label, '/');
     if ~exist(otsu_dir, 'dir')
@@ -894,7 +930,7 @@ patch([x(3) x(4) x(4) x(3)], [max(ylim) max(ylim) 0 0], [159 203 219]/255, 'Face
 patch([x(4) x(5) x(5) x(4)], [max(ylim) max(ylim) 0 0], [98 141 207]/255, 'FaceAlpha',.5)
 errorbar(res', t2star_mean_reshape', t2star_sd_reshape', '-o', 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980]); 
 xticks([1.2 4 6.5 8.5 11 13.5 15.5 18 20.5 22.5 25 27.5]);
-xticklabels({'0.3x0.3','---->','2.1x2.1','0.3x0.3','---->','2.1x2.1','0.3x0.3','---->','2.1x2.1','0.3x0.3','---->','2.1x2.1'})
+xticklabels({'0.8x0.8','---->','2.1x2.1','0.8x0.8','---->','2.1x2.1','0.8x0.8','---->','2.1x2.1','0.8x0.8','---->','2.1x2.1'})
 xlim([0 x(5)]);ylim([ylim_lb, ylim_ub])
 
 text(1,ylim_ub-2, 'Slice Thickness = 2 mm', 'FontSize', 16);
@@ -983,7 +1019,9 @@ t2star_table.sd_table = sd_table;
 save_table_f = cat(2, subject_data_dir, 'T2star_meanSD_table_', invivo_label, '.mat');
 save(save_table_f, 'save_table_f');
 
+
 %% AHA
+mask_idx_array = [3:7, [3:7]+7, [3:7]+7*2, [3:7]+7*3];
 Segn = 50;
 Groove = 0;
 aha50 = struct;
@@ -1006,6 +1044,8 @@ for i = 1:length(whatsinit)
 end
 
 res = perc_array > 0.1;
+%%
+figure(); imagesc(aha50(1).Mask_Segn.* mask_struct(3).mi_mask);
 %% 50 Segments in MI %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 aha_mi2 = struct;
 for i = 1:length(whatsinit)

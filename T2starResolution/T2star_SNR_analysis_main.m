@@ -208,6 +208,10 @@ end
 img_size = size(whatsinit{1});
 snr_remote = zeros(length(whatsinit), img_size(3));
 snr_air = zeros(length(whatsinit), img_size(3));
+sig_remote_mean = zeros(length(whatsinit), img_size(3));
+sig_remote_sd = zeros(length(whatsinit), img_size(3));
+sig_air_mean = zeros(length(whatsinit), img_size(3));
+sig_air_sd = zeros(length(whatsinit), img_size(3));
 mask_idx_array = [3:7, [3:7]+7, [3:7]+7*2, [3:7]+7*3];
 
 for i = 1:length(whatsinit)
@@ -228,6 +232,10 @@ for i = 1:length(whatsinit)
             air = mask_struct(mask_idx).air_mask .* img(:,:,j);
         end
         
+        sig_remote_mean(i,j) = mean(remote(idx));
+        sig_remote_sd(i,j) = std(remote(idx));
+        sig_air_mean(i,j) = mean(air(idx_air));
+        sig_air_sd(i,j) = std(air(idx_air));
         snr_remote(i,j) = mean(remote(idx)) / std(remote(idx));
         snr_air(i,j) = mean(remote(idx)) / std(air(idx_air));
     end
@@ -241,7 +249,7 @@ imagesc(snr_remote); axis image; colorbar;
 
 %%
 snr_air_max = round(max(snr_air(:)),-2);
-snr_remote_max = round(max(snr_remote(:)),-2);
+snr_remote_max = round(max(snr_remote(:)),-1);
 snr_air_reshape = permute(reshape(snr_air, col, row, []), [2,1,3]);
 snr_remote_reshape = permute(reshape(snr_remote, col, row, []), [2,1,3]);
 figure('Position', [100 0 800 1600]);
@@ -291,6 +299,11 @@ end
 SNR = struct;
 SNR.snr_remote = snr_remote;
 SNR.snr_air = snr_air;
+SNR.sig.sig_remote_mean = sig_remote_mean;
+SNR.sig.sig_air_mean = sig_air_mean;
+SNR.sig.sig_remote_sd = sig_remote_sd;
+SNR.sig.sig_air_sd = sig_air_sd;
+
 save_f = cat(2, subject_data_dir, 'SNR_', avg_name, '.mat');
 save(save_f, 'SNR');
 
