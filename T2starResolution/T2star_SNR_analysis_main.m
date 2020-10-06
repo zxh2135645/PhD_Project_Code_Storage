@@ -273,7 +273,7 @@ subplot(5,2,9);
 imagesc(snr_air_reshape(:,:,5)); axis image; caxis([0 snr_air_max]);colorbar;
 subplot(5,2,10);
 imagesc(snr_remote_reshape(:,:,5)); axis image; caxis([0 snr_remote_max]);colorbar;
-%% Line shape
+%% Line shape (Deprecated)
 figure();
 for j = 1:size(snr_air_reshape, 3)
     subplot(3,2,j);

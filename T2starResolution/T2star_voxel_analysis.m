@@ -32,7 +32,7 @@ if ~exist(data_dir, 'dir')
     mkdir(data_dir)
 end
 
-subject_name_cell = {'18P90', '18P93', '20P03_Exvivo5', '20P10_Exvivo7', '20P11_Exvivo6'};
+subject_name_cell = {'18P90', '18P93', '20P03_Exvivo5', '20P10_Exvivo7', '20P11_Exvivo6', '18P92', '18P94', '18P95'};
 avg_num_cell = {'Avg0016', 'Avg0001', 'Invivo'};
 %avg_num = input('Please type average number here:  ');
 %if isnumeric(avg_num)
@@ -68,7 +68,27 @@ end
 auc_avg16 = mean(auc_all16, 2);
 auc_avg01 = mean(auc_all01, 2);
 auc_invivo = mean(auc_allvivo, 2);
+auc_std_avg16 = std(auc_all16, 0, 2);
+auc_std_avg01 = std(auc_all01, 0, 2);
+auc_std_invivo = std(auc_allvivo, 0, 2);
+%% Read SNR metrics
+base_dir = uigetdir;
+folder_glob = glob(cat(2, base_dir, '\*'));
+[list_to_read, order_to_read] = NamePicker(folder_glob);
+whatsinit = cell(length(list_to_read), 1);
+slice_data = cell(length(list_to_read), 1);
+for i = 1:length(list_to_read)
+    f = list_to_read{order_to_read(i)};
+    [whatsinit{i}, slice_data{i}] = dicom23D(f);
+end
 
+vx = zeros(length(slice_data), 1);
+for i = 1:length(slice_data)
+    x = slice_data{i}.PixelSpacing(1);
+    y = slice_data{i}.PixelSpacing(2);
+    z = slice_data{i}.SliceThickness;
+    vx(i) = x*y*z;
+end
 %% Plot AUC
 [vx_sorted, I] = sort(vx);
 auc_avg16_reorder = auc_avg16(I);
@@ -107,7 +127,7 @@ xticklabels(lg);
 legend({'Avg0016', 'Avg0001', 'Invivo'});
 set(gca, 'FontSize', 12);
 grid on;
-%%
+%% AUC two-dimensional
 lg = cell(length(whatsinit), 1);
 for i = 1:length(whatsinit)
     q = fix((i-1)/7)+1;
@@ -130,32 +150,56 @@ xticks(1:length(whatsinit));
 xticklabels(lg);
 legend({'Avg0016', 'Avg0001', 'Invivo'});
 set(gca, 'FontSize', 12); grid on;
-%% Read SNR metrics
-base_dir = uigetdir;
-folder_glob = glob(cat(2, base_dir, '\*'));
-[list_to_read, order_to_read] = NamePicker(folder_glob);
-whatsinit = cell(length(list_to_read), 1);
-slice_data = cell(length(list_to_read), 1);
-for i = 1:length(list_to_read)
-    f = list_to_read{order_to_read(i)};
-    [whatsinit{i}, slice_data{i}] = dicom23D(f);
-end
-
-vx = zeros(length(slice_data), 1);
-for i = 1:length(slice_data)
-    x = slice_data{i}.PixelSpacing(1);
-    y = slice_data{i}.PixelSpacing(2);
-    z = slice_data{i}.SliceThickness;
-    vx(i) = x*y*z;
-end
 
 
+%% Mean + SD plot 
+d = length(whatsinit)/4;
+auc_avg01_reshape = reshape(auc_avg01, d, length(whatsinit)/d).';
+auc_avg16_reshape = reshape(auc_avg16, d, length(whatsinit)/d).';
+d2 = length(auc_invivo)/4;
+auc_invivo_reshape = reshape(auc_invivo, d2, length(auc_invivo)/d2).';
 
+auc_std_avg01_reshape = reshape(auc_std_avg01, d, length(whatsinit)/d).';
+auc_std_avg16_reshape = reshape(auc_std_avg16, d, length(whatsinit)/d).';
+auc_std_invivo_reshape = reshape(auc_std_invivo, d2, length(auc_invivo)/d2).';
+
+x = [0, d, 2*d, 3*d, 4*d] + [0 , 0.5, 0.5, 0.5, 1];
+inplane_res = 1:d;
+res = [inplane_res; inplane_res + d; inplane_res + 2*d; inplane_res + 3*d];
+res_invivo = res(:,3:end);
+figure('Position', [100 0 1600 1600]);
+errorbar(auc_avg16, auc_std_avg16, 'LineStyle', 'none' );
+hold on;
+ylim_lb = min(ylim); ylim_ub = max(ylim);
+patch([x(1) x(2) x(2) x(1)], [max(ylim) max(ylim) 0 0], [241 194 151]/255, 'FaceAlpha',.5)
+patch([x(2) x(3) x(3) x(2)], [max(ylim) max(ylim) 0 0], [199 213 161]/255, 'FaceAlpha',.5)
+patch([x(3) x(4) x(4) x(3)], [max(ylim) max(ylim) 0 0], [159 203 219]/255, 'FaceAlpha',.5)
+patch([x(4) x(5) x(5) x(4)], [max(ylim) max(ylim) 0 0], [98 141 207]/255, 'FaceAlpha',.5)
+e1 = errorbar(res', auc_avg16_reshape', auc_std_avg16_reshape', '-o', 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980]); 
+e2 = errorbar(res', auc_avg01_reshape', auc_std_avg01_reshape', '-o', 'LineWidth', 2, 'Color', [0.9290, 0.6940, 0.1250]); 
+e3 = errorbar(res_invivo', auc_invivo_reshape', auc_std_invivo_reshape', '-o', 'LineWidth', 2, 'Color', [0, 0.4470, 0.7410]); 
+
+xticks([1.2 4 6.5 8.5 11 13.5 15.5 18 20.5 22.5 25 27.5]);
+xticklabels({'0.3x0.3','---->','2.1x2.1','0.3x0.3','---->','2.1x2.1','0.3x0.3','---->','2.1x2.1','0.3x0.3','---->','2.1x2.1'})
+xlim([0 x(5)]);ylim([ylim_lb, ylim_ub])
+
+text(2,ylim_ub*0.92, 'Slice Thickness = 2 mm', 'FontSize', 16);
+text(9,ylim_ub*0.92, 'Slice Thickness = 4 mm', 'FontSize', 16);
+text(16,ylim_ub*0.92, 'Slice Thickness = 6 mm', 'FontSize', 16);
+text(23,ylim_ub*0.92, 'Slice Thickness = 8 mm', 'FontSize', 16);
+legend([e1(1), e2(1), e3(1)], {'Avg0016', 'Avg0001', 'Invivo'});
+set(gca, 'FontSize', 16);
+xlabel('Resolution (mm^2)', 'FontSize', 24); ylabel('T2^* (ms)', 'FontSize', 24);
+hold off
 %([0.3*0.3; 0.6*0.6; 0.8*0.8; 1.0*1.0; 1.3*1.3; 1.6*1.6; 2.1*2.1] * [2 4 6 8])'
+%% Below are 1 dimensional voxel-wise plot, which is not necessary so far.
 %% Draw contours @ epi, endo, MI, remote, fluid
 img = whatsinit{1};
 myo_coords_cell = cell(size(img, 3), 2);
+subject_name = input('Please type subject name here:  ', 's');
+subject_data_dir = GetFullPath(cat(2, data_dir, subject_name, '/'));
 roi_save = cat(2, subject_data_dir, 'roi.mat');
+
 
 if ~exist(roi_save, 'file')
 for i = 1:(size(img, 3))

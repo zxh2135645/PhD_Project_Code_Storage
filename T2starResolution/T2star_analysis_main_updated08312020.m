@@ -1140,3 +1140,57 @@ title('Area Under Curve');
 set(gca, 'FontSize', 18); colorbar;
 
 save(cat(2, subject_data_dir, 'aha_analysis_', invivo_label, '.mat'), 'aha_analysis2');
+
+%% Shorter TE parameters (Optional)
+disp('Shorter Starts here: ');
+[list_to_read, order_to_read] = NamePicker(folder_glob);
+
+invivo_label = 'ShortTE';
+
+% Read T2* DICOM files
+whatsinit = cell(length(list_to_read), 1);
+for i = 1:length(list_to_read)
+    f = list_to_read{order_to_read(i)};
+    whatsinit{i} = dicom23D(f);
+end
+
+% Display images
+figure('Position', [100 0 1600 1600]);
+for i = 1:length(whatsinit)
+    subplot(4,5,i);
+    imagesc(whatsinit{i}); axis image;
+    caxis([0 100])
+end
+
+%% Display image overlay with Mean-2SD mask
+save_array = 1:1:length(whatsinit);
+mask_idx_array = [7, 4, 2];
+for i = 1:length(whatsinit)
+    save_idx = save_array(i);
+    figure();
+    img2 = whatsinit{save_idx};
+    mask_idx = mask_idx_array(save_idx);
+    thresh = mean(nonzeros(img2 .* mask_struct(mask_idx).remote_mask)) - 2*std(nonzeros(img2 .* mask_struct(mask_idx).remote_mask));
+    hemo_mask = img2 < thresh;
+    subplot(1,2,1);
+    imagesc(img2); caxis([0 50]); axis image; % colorbar;
+    
+    map = gray(256);
+    rgbImage = ind2rgb(img2, map);
+    rgbImage(:,:,1) = rgbImage(:,:,1) + hemo_mask.*mask_struct(mask_idx).mi_mask;
+    subplot(1,2,2);
+    imagesc(rgbImage); axis image;
+    
+    %subplot(1,2,2);
+    %imagesc(img2 + hemo_mask*50.*mask_struct(mask_idx).mi_mask); caxis([0 100]); axis image; colorbar;
+    
+    
+    mean2sd_dir = cat(2, subject_dir, 'Mean2SD_', invivo_label, '/');
+    if ~exist(mean2sd_dir, 'dir')
+        mkdir(mean2sd_dir)
+    end
+    saveas(gcf, cat(2, mean2sd_dir, num2str(save_idx), '.png'));
+end
+
+close all;
+% 0.6x0.6x2 is not that big difference from longer TE
