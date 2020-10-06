@@ -272,15 +272,15 @@ Model = Custom_OptionsGUI(Model); % You need to close GUI to move on.
 
 %% III - FIT EXPERIMENTAL DATASET
 %Draw Masks
-figure(); imagesc(whatsinit{1}); axis image; 
+figure(); imagesc(whatsinit_we{1}); axis image; 
 epi = drawpolygon(gca); % You may need to use roipoly and its equivalent if MATLAB version is earlier than 2020a
 mask_epi = createMask(epi); % You may need to use roipoly and its equivalent if MATLAB version is earlier than 2020a
 
 % Reshape matrix as [Width x Height x #Slice x #IR]
-dicom_size = size(whatsinit{1});
+dicom_size = size(whatsinit_we{1});
 dicom_reshape = zeros(dicom_size(1), dicom_size(2), 1, length(whatsinit));
-for i = 1:length(whatsinit)
-    dicom_reshape(:,:,1,i) = whatsinit{i};
+for i = 1:length(whatsinit_we)
+    dicom_reshape(:,:,1,i) = whatsinit_we{i};
 end
 
 % a - load experimental data
@@ -299,9 +299,283 @@ Model.voxelwise = 1;
 
 % b- fit dataset
 FitResults = FitData(data,Model,0);
+
+%% Draw ROIs in N vials (WE)
+dim = input('Dimension of vials (1 or 2): ');
+
+mask_save = cat(2, subject_data_dir, 'roi_cmr_we.mat');
+if ~exist(mask_save, 'file')
+    if dim == 1
+        N = input('Number of vials: ');
+        roi_cmr_we = cell(N, 1);
+        for i = 1:size(roi_cmr_we, 1)
+            figure(); imagesc(FitResults.T1 .* mask_epi); axis image; caxis([0 2000]); colorbar;
+            temp = drawpolygon(gca); % You may need to use roipoly and its equivalent if MATLAB version is earlier than 2020a
+            roi_cmr_we{i} = createMask(temp);
+        end
+    elseif dim == 2
+        row = input('Number of rows: ');
+        col = input('Number of cols: ');
+        N = row * col;
+        roi_cmr_we = cell(row, col);
+        for k = 1:row
+            for j = 1:col
+                figure(); imagesc(FitResults.T1 .* mask_epi); axis image; caxis([0 2000]); colorbar;
+                temp = drawpolygon(gca); % You may need to use roipoly and its equivalent if MATLAB version is earlier than 2020a
+                roi_cmr_we{k, j} = createMask(temp);
+            end
+        end
+    end
+    save(mask_save, 'roi_cmr_we');
+else
+    load(mask_save);
+    roi_cmr_we = roi_cmr_we.vial_mask_cell;
+    row = size(roi_cmr_we, 1);
+    col = size(roi_cmr_we, 2);
+    N = row * col;
+end
+
+composite = zeros(dicom_size(1), dicom_size(2));
+
+if dim == 1
+    mean_t1_we = zeros(N, 1);
+    for i = 1:N
+        
+        composite = composite + FitResults.T1 .* roi_cmr_we{i};
+        t1_masked = nonzeros(FitResults.T1 .* roi_cmr_we{i});
+        t1_real = t1_masked(~isnan(t1_masked));
+        mean_t1_we(i) = mean(t1_real);
+    end
+elseif dim == 2
+    mean_t1_we = zeros(row, col);
+    for k = 1:row
+        for j = 1:col
+            composite = composite + FitResults.T1 .* roi_cmr_we{k,j};
+            t1_masked = nonzeros(FitResults.T1 .* roi_cmr_we{k,j});
+            t1_real = t1_masked(~isnan(t1_masked));
+            mean_t1_we(k,j) = mean(t1_real);
+        end
+    end
+end
+
 %% Save the saved results as data
-ir_fitting = struct;
-ir_fitting.FitResults = FitResults;
-ir_fitting.composite = composite;
-ir_fitting.mean_t1 = mean_t1;
-save(cat(2, subject_data_dir, 'ir_fitting.mat'), 'ir_fitting');
+ir_fitting_we = struct;
+ir_fitting_we.FitResults = FitResults;
+ir_fitting_we.composite = composite;
+ir_fitting_we.mean_t1 = mean_t1_we;
+save(cat(2, subject_data_dir, 'ir_fitting_we.mat'), 'ir_fitting_we');
+
+%% Read the save mask as IRSE (not WE)
+mask_save = cat(2, subject_data_dir, 'roi_cmr.mat');
+if ~exist(mask_save, 'file')
+    if dim == 1
+        N = input('Number of vials: ');
+        roi_cmr = cell(N, 1);
+        for i = 1:size(roi_cmr, 1)
+            figure(); imagesc(ir_fitting.FitResults.T1 .* mask_epi); axis image; caxis([0 2000]); colorbar;
+            temp = drawpolygon(gca); % You may need to use roipoly and its equivalent if MATLAB version is earlier than 2020a
+            roi_cmr{i} = createMask(temp);
+        end
+    elseif dim == 2
+        row = input('Number of rows: ');
+        col = input('Number of cols: ');
+        N = row * col;
+        roi_cmr = cell(row, col);
+        for k = 1:row
+            for j = 1:col
+                figure(); imagesc(ir_fitting.FitResults.T1 .* mask_epi); axis image; caxis([0 2000]); colorbar;
+                temp = drawpolygon(gca); % You may need to use roipoly and its equivalent if MATLAB version is earlier than 2020a
+                roi_cmr{k, j} = createMask(temp);
+            end
+        end
+    end
+    save(mask_save, 'roi_cmr');
+else
+    load(mask_save);
+    roi_cmr = roi_cmr.vial_mask_cell;
+    row = size(roi_cmr, 1);
+    col = size(roi_cmr, 2);
+    N = row * col;
+end
+
+composite = zeros(dicom_size(1), dicom_size(2));
+
+if dim == 1
+    mean_t1 = zeros(N, 1);
+    for i = 1:N
+        
+        composite = composite + FitResults.T1 .* roi_cmr{i};
+        t1_masked = nonzeros(FitResults.T1 .* roi_cmr{i});
+        t1_real = t1_masked(~isnan(t1_masked));
+        mean_t1(i) = mean(t1_real);
+    end
+elseif dim == 2
+    mean_t1 = zeros(row, col);
+    for k = 1:row
+        for j = 1:col
+            composite = composite + FitResults.T1 .* roi_cmr{k,j};
+            t1_masked = nonzeros(FitResults.T1 .* roi_cmr{k,j});
+            t1_real = t1_masked(~isnan(t1_masked));
+            mean_t1(k,j) = mean(t1_real);
+        end
+    end
+end
+
+%% display IRSE and IRSE-WE
+figure();
+for i = 1:length(whatsinit)
+    subplot(3,3,i)
+    imagesc(whatsinit{i});
+end
+
+figure();
+for i = 1:length(whatsinit_we)
+    subplot(3,3,i)
+    imagesc(whatsinit_we{i});
+end
+
+%% display IRSE and IRSE-WE
+
+figure();
+subplot(1,2,1);
+imagesc(ir_fitting.FitResults.T1); axis image;
+subplot(1,2,2);
+imagesc(ir_fitting_we.FitResults.T1); axis image;
+
+%% display IRSE vs T1 MOLLI weighted
+%% For Comparing T1 MOLLI weighted image
+folder_glob = glob(cat(2, base_dir, '/*'));
+[list_to_read, order_to_read] = NamePicker(folder_glob);
+
+dicom_fields = {'InversionTime'};
+T1_molli_w = cell(length(list_to_read), 1);
+slice_data = cell(length(list_to_read), 1);
+
+
+for i = 1:length(list_to_read)
+    f = list_to_read{order_to_read(i)};
+    [T1_molli_w{i}, slice_data{i}] = dicom23D(f, dicom_fields);
+end
+
+% Get IR_array
+IR_array_molli = zeros(1, length(slice_data{1}));
+temp = slice_data{1};
+for i = 1:length(slice_data{1})
+    IR_array_molli(i) = temp(i).InversionTime;
+end
+
+%% DRAW OR LOAD T1 MOLLI
+if dim == 1
+    % mean value of T1 MOLLI
+    mean_t1_molli_w = zeros(N, 8);
+    sd_t1_molli_w = zeros(N, 8);
+    for i = 1:N
+        for t = 1:size(mean_t1_molli_w, 2)
+            t1_masked = nonzeros(T1_molli_w{1}(:,:,t) .* roi_molli{i});
+            t1_real = t1_masked(~isnan(t1_masked));
+            mean_t1_molli_w(i, t) = mean(t1_real);
+            sd_t1_molli_w(i, t) = std(t1_real);
+        end
+    end
+elseif dim == 2
+    % mean value of T1 MOLLI
+    mean_t1_molli_w = zeros(row, col, 8);
+    sd_t1_molli_w = zeros(row, col, 8);
+    for k = 1:row
+        for j = 1:col
+            for t = 1:size(mean_t1_molli_w, 3)
+                t1_masked = nonzeros(T1_molli_w{1}(:,:,t) .* roi_molli{k,j});
+                t1_real = t1_masked(~isnan(t1_masked));
+                mean_t1_molli_w(k,j,t) = mean(t1_real);
+                sd_t1_molli_w(k,j,t) = std(t1_real);
+            end
+        end
+    end
+end
+%% IRSE weighted image
+if dim == 1
+    % mean value of T1 MOLLI
+    mean_t1_irse_w = zeros(N, 8);
+    sd_t1_irse_w = zeros(N, 8);
+    for i = 1:N
+        for t = 1:size(mean_t1_irse_w, 2)
+            t1_masked = nonzeros(whatsinit{t} .* roi_cmr{i});
+            t1_real = t1_masked(~isnan(t1_masked));
+            mean_t1_irse_w(i, t) = mean(t1_real);
+            sd_t1_irse_w(i, t) = std(t1_real);
+        end
+    end
+elseif dim == 2
+    % mean value of T1 MOLLI
+    mean_t1_irse_w = zeros(row, col, 8);
+    sd_t1_irse_w = zeros(row, col, 8);
+    for k = 1:row
+        for j = 1:col
+            for t = 1:size(mean_t1_irse_w, 3)
+                t1_masked = nonzeros(whatsinit{t} .* roi_cmr{k,j});
+                t1_real = t1_masked(~isnan(t1_masked));
+                mean_t1_irse_w(k,j,t) = mean(t1_real);
+                sd_t1_irse_w(k,j,t) = std(t1_real);
+            end
+        end
+    end
+end
+
+%% IRSE-WE weighted image
+if dim == 1
+    % mean value of T1 MOLLI
+    mean_t1_irsewe_w = zeros(N, 8);
+    sd_t1_irsewe_w = zeros(N, 8);
+    for i = 1:N
+        for t = 1:size(mean_t1_irsewe_w, 2)
+            t1_masked = nonzeros(whatsinit_we{t} .* roi_cmr_we{i});
+            t1_real = t1_masked(~isnan(t1_masked));
+            mean_t1_irsewe_w(i, t) = mean(t1_real);
+            sd_t1_irsewe_w(i, t) = std(t1_real);
+        end
+    end
+elseif dim == 2
+    % mean value of T1 MOLLI
+    mean_t1_irsewe_w = zeros(row, col, 8);
+    sd_t1_irsewe_w = zeros(row, col, 8);
+    for k = 1:row
+        for j = 1:col
+            for t = 1:size(mean_t1_irsewe_w, 3)
+                t1_masked = nonzeros(whatsinit_we{t} .* roi_cmr_we{k,j});
+                t1_real = t1_masked(~isnan(t1_masked));
+                mean_t1_irsewe_w(k,j,t) = mean(t1_real);
+                sd_t1_irsewe_w(k,j,t) = std(t1_real);
+            end
+        end
+    end
+end
+%% Plot the raw IR curves
+ff = {'0', '2.5', '5', '10', '20', '30', '40', '100'};
+figure();
+for i = 1:size(mean_t1_molli_w, 2)
+    subplot(3,3,i);
+    plot(IR_array_molli, mean_t1_molli_w(i, :)', 'LineWidth', 2);ylim([0 800]);
+    hold on;
+    yyaxis right;
+    plot(IR_array, mean_t1_irse_w(i, :)', 'LineWidth', 2);ylim([0 2000]);
+    plot(IR_array, mean_t1_irsewe_w(i,:)', 'LineWidth', 2);
+    title(cat(2, 'Fat Fraction: ', ff{i}, '%'));
+    legend({'MOLLI', 'IRSE'});
+end
+
+%% Save mean T1, IRSE and IRSE-WE
+ir_weighted_save = cat(2, subject_data_dir, 'ir_weighted_metrics.mat');
+% load(ir_weighted_save);
+ir_weighted_metrics = struct;
+ir_weighted_metrics.mean_t1_molli_w = mean_t1_molli_w;
+ir_weighted_metrics.mean_t1_irse_w = mean_t1_irse_w;
+ir_weighted_metrics.mean_t1_irsewe_w = mean_t1_irsewe_w;
+
+ir_weighted_metrics.sd_t1_molli_w = sd_t1_molli_w;
+ir_weighted_metrics.sd_t1_irse_w = sd_t1_irse_w;
+ir_weighted_metrics.sd_t1_irsewe_w = sd_t1_irsewe_w;
+
+ir_weighted_metrics.IR_array = IR_array;
+ir_weighted_metrics.IR_array_molli = IR_array_molli;
+
+save(ir_weighted_save, 'ir_weighted_metrics');
