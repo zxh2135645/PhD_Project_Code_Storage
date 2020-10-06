@@ -5,15 +5,16 @@ current_dir = pwd;
 %% 
 addpath('function\');
 % I'm referring ContourData in ShareDrive/Yinyin
-base_dir = GetFullPath(cat(2, current_dir, '\..\ContourData\'));
-img_dir = GetFullPath(cat(2, base_dir, '../CanineData/'));
+%base_dir = GetFullPath(cat(2, current_dir, '\..\ContourData\'));
+base_dir = uigetdir;
+img_dir = GetFullPath(cat(2, base_dir, '/../Data_Patient/'));
 % base_dir needs to be changed
 
 sequence_label = {'MAG', 'PSIR', 'T1Map', 'T1w_MOCO'};
 anatomy_label = {'Heart', 'Myocardium', 'excludeArea', 'MyoReference', 'noReflowArea'};
 output_label = {'LGE', 'T1'};
 
-name_glob = glob(cat(2, base_dir, '*'));
+name_glob = glob(cat(2, base_dir, '/*'));
 Names = cell(length(name_glob), 1);
 for i = 1:length(name_glob)
     strings = strsplit(name_glob{i},'\');
@@ -45,7 +46,7 @@ for i = 1:length(Names)
             labelo = output_label{2};
     end
     % Assume images must be present
-    load(cat(2, base_dir, name, '/', labelo, '/', label, '_vol_img_3D.mat'));
+    load(cat(2, base_dir,'/', name, '/', labelo, '/', label, '_vol_img_3D.mat'));
     if exist('vol_img_3D', 'var')
         img = vol_img_3D;
     else
@@ -57,17 +58,17 @@ for i = 1:length(Names)
     myoRefMask_3D = [];
     noReflowMask_3D = [];
     
-    if length(ls(cat(2, base_dir, name, '/', labelo, '/', anatomy_label{2}))) > 2
-        load(cat(2, base_dir, name, '/', labelo, '/', anatomy_label{2}, '/', 'mask_myocardium.mat'));
+    if length(ls(cat(2, base_dir,'/', name, '/', labelo, '/', anatomy_label{2}))) > 2
+        load(cat(2, base_dir,'/', name, '/', labelo, '/', anatomy_label{2}, '/', 'mask_myocardium.mat'));
     end
-    if length(ls(cat(2, base_dir, name, '/', labelo, '/', anatomy_label{3}))) > 2
-        load(cat(2, base_dir, name, '/', labelo, '/', anatomy_label{3}, '/', 'excludeArea.mat'));
+    if length(ls(cat(2, base_dir,'/', name, '/', labelo, '/', anatomy_label{3}))) > 2
+        load(cat(2, base_dir,'/', name, '/', labelo, '/', anatomy_label{3}, '/', 'excludeArea.mat'));
     end
-    if length(ls(cat(2, base_dir, name, '/', labelo, '/', anatomy_label{4}))) > 2
-        load(cat(2, base_dir, name, '/', labelo, '/', anatomy_label{4}, '/', 'myoRef.mat'));
+    if length(ls(cat(2, base_dir,'/', name, '/', labelo, '/', anatomy_label{4}))) > 2
+        load(cat(2, base_dir,'/', name, '/', labelo, '/', anatomy_label{4}, '/', 'myoRef.mat'));
     end
-    if length(ls(cat(2, base_dir, name, '/', labelo, '/', anatomy_label{5}))) > 2
-        load(cat(2, base_dir, name, '/', labelo, '/', anatomy_label{5}, '/', 'noReflow.mat'));
+    if length(ls(cat(2, base_dir,'/', name, '/', labelo, '/', anatomy_label{5}))) > 2
+        load(cat(2, base_dir,'/', name, '/', labelo, '/', anatomy_label{5}, '/', 'noReflow.mat'));
     end
    
     % Loaded are all binary masks with double floating numer type with same
@@ -76,7 +77,7 @@ for i = 1:length(Names)
     % Load image...
     
     compositeIm = mask_myocardium_3D + myoRefMask_3D + (-5) * excludeMask_3D + 3 * noReflowMask_3D;
-    Outpath = cat(2, base_dir, name, '/', labelo, '/', 'compositeLabel.mat');
+    Outpath = cat(2, base_dir,'/', name, '/', labelo, '/', 'compositeLabel.mat');
     if ~exist(Outpath, 'file')
         save(Outpath, 'compositeIm');
     end
@@ -137,7 +138,7 @@ for i = 1:length(Names)
     infarct_noReflow_masked = ImPostProc(infarct_noReflow_masked);
     infarct_hemo_masked = infarct_noReflow_masked - infarct_ex_masked;
     
-    infarct_out = cat(2, base_dir, name, '/', labelo, '/', label, '_MI/');
+    infarct_out = cat(2, base_dir,'/', name, '/', labelo, '/', label, '_MI/');
     if ~ exist(infarct_out, 'dir')
         mkdir(infarct_out);
     end

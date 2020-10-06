@@ -2,11 +2,10 @@ clear all;
 close all;
 clc;
 current_dir = pwd;
-% Dog Data configuration for Khalid
+% Patient data configuration for Khalid
 %% 
 addpath('function\');
-base_dir = GetFullPath(cat(2, current_dir, '\..\CanineData'));
-% base_dir = uigetdir;
+base_dir = uigetdir;
 % base_dir needs to be changed
 
 name_glob = glob(cat(2, base_dir, '/*'));
@@ -55,8 +54,8 @@ t1w_dicom_fields = {...
 
 %% Parsing XML file
 % Read DICOM and contours
-for n = starting_point:starting_point
-%for n = starting_point:length(Names)
+%for n = starting_point:starting_point
+for n = starting_point:length(Names)
     name = Names{n};
     % XML file is independent on Labels
     xml_glob = glob(cat(2, base_dir, '/', name, '/*.cvi42wsx'));
@@ -119,7 +118,7 @@ for n = starting_point:starting_point
             [volume_image, slice_data, image_meta_data] = dicom23D(dicom(i,:), dicom_fields);
         end
         id_cell{i} = slice_data.MediaStorageSOPInstanceUID; % Didn't do anything to it
-        [mask_heart, mask_myocardium, mask_blood, excludeContour, myoRefCell, noReflowCell, match_count] = ...
+        [mask_heart, mask_myocardium, mask_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count] = ...
             CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder);
         
         % get all contours from excludeContour
@@ -160,15 +159,16 @@ for n = starting_point:starting_point
         end
         
         if match_count > 0
-            vol_img_3D(:,:,slc_start:slc_end+match_count-1) = volume_image;
-            mask_heart_3D(:,:,slc_start:slc_end+match_count-1) = mask_heart;
-            mask_myocardium_3D(:,:,slc_start:slc_end+match_count-1) = mask_myocardium;
-            mask_blood_3D(:,:,slc_start:slc_end+match_count-1) = mask_blood;
-            excludeMask_3D(:,:,slc_start:slc_end+match_count-1) = excludeMask_2D;
-            myoRefMask_3D(:,:,slc_start:slc_end+match_count-1)  = myoRefMask_2D;
-            noReflowMask_3D(:,:,slc_start:slc_end+match_count-1)  = noReflowMask_2D;
+            % All files of LGE and T1 are under T1 folder
+            vol_img_3D = volume_image;
+            mask_heart_3D = mask_heart;
+            mask_myocardium_3D = mask_myocardium;
+            mask_blood_3D = mask_blood;
+            excludeMask_3D = excludeMask_2D;
+            myoRefMask_3D  = myoRefMask_2D;
+            noReflowMask_3D  = noReflowMask_2D;
             
-   
+            
             % Find sigOther in matched slices
             % MAG and PSIR is mutually exclusive
             if strcmp(label, sequence_label{1}) || strcmp(label, sequence_label{2}) % equals 1 or 2
@@ -182,10 +182,9 @@ for n = starting_point:starting_point
                     else
                         [sig_volume_image, sig_slice_data, sig_image_meta_data] = dicom23D(sig_dicom(s,:), dicom_fields);
                     end
+
+                    sig_vol_img_3D = sig_volume_image;
                     
-                    if slice_data.SliceLocation == sig_slice_data.SliceLocation
-                        sig_vol_img_3D(:,:,slc_start:slc_end+match_count-1) = sig_volume_image;
-                    end
                 end
             else
                 % T1w_MOCO will be 3D matrix
@@ -211,19 +210,22 @@ for n = starting_point:starting_point
                         [sig_volume_image, sig_slice_data, sig_image_meta_data] = dicom23D(sig_dicom(s,:), t1w_dicom_fields);
                     end
                     
-                    if slice_data.SliceLocation == sig_slice_data(1).SliceLocation
-                        sig_vol_img_4D(:,:,:,slc_start:slc_end+match_count-1) = sig_volume_image;
-                        invt_array = zeros(size(sig_vol_img_4D, 3), 1);
-                        for inv = 1:size(sig_vol_img_4D, 3)
-                            invt_array(inv) = sig_slice_data(inv).InversionTime;
+                    for ss = 1:size(sig_dicom, 1)
+                        if slice_data(ss).SliceLocation == sig_slice_data(1).SliceLocation
+                            sig_vol_img_4D(:,:,:,slc_start:slc_end+match_count-1) = sig_volume_image;
+                            invt_array = zeros(size(sig_vol_img_4D, 3), 1);
+                            for inv = 1:size(sig_vol_img_4D, 3)
+                                invt_array(inv) = sig_slice_data(inv).InversionTime;
+                            end
+                            invt_cell{end+1} = invt_array;
+                            slc_start = slc_start + match_count;
+                            slc_end = slc_end + match_count;
+                            total_match = total_match + match_count;
                         end
-                        invt_cell{end+1} = invt_array;
                     end
                 end
             end
-            slc_start = slc_start + match_count;
-            slc_end = slc_end + match_count;
-            total_match = total_match + match_count;
+
         end
         
     end

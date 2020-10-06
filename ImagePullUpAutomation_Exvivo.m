@@ -2,6 +2,8 @@ clear all;
 close all;
 % Image Pullup automation for exvivo scan which I'm expecting 3D acquistion
 % for images
+% % This protocol is usually used for getthing path-physio information of
+% the tissue. 
 
 %% 20P10, 20P11 Pig scan
 
