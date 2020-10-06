@@ -4,8 +4,8 @@ clear all;
 % T1 and FF analysis
 
 
-addpath('D:\src\function\');
-base_dir = 'D:\T1_Fat_Project\';
+addpath('../function/');
+base_dir = '../T1_Fat_Project/';
 contour_glob = glob(cat(2, base_dir, 'ContourData\*'));
 
 Names = ExtractNames(contour_glob);

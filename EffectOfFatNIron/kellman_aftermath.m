@@ -5,6 +5,7 @@ addpath('D:\Data\Exvivo_Phantom\lib\')
 addpath('D:\Data\Exvivo_Phantom\EPGX-src')
 addpath('D:\Data\Exvivo_Phantom');
 addpath('D:\src\BlochSimDemo');
+% This code is pretty old?
 
 %%
 TI_array = [102, 182, 935, 1010, 1762, 1840, 2587, 3410];

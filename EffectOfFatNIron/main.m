@@ -1,5 +1,7 @@
 clear all;
 close all;
+% This script is kept as a demo for kellman2015 fig2
+% But its simulation engine is not up-to-date 
 %%
 addpath('../lib_EPGX/')
 addpath('../EPGX-src/')

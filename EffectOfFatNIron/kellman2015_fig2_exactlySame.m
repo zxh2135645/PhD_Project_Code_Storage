@@ -137,7 +137,7 @@ figure();
 Mxy_readout_array_PhaseEnc = zeros(numel(FF), numel(Mxy_readout));
 for i = 1:numel(FF)
     ff = FF(i);
-    Mxy_readout_comp = (1-ff) * Mxy_readout + ff * Mxy_readout_fat15t;
+    Mxy_readout_comp = (1-ff) * Mxy_readout + ff * Mxy_readout_fat3t;
     Mxy_readout_array = MOLLI_readout_reorder(Mxy_readout_comp);
     Mxy_readout_array_PhaseEnc(i, :) = Mxy_PhaseEnc(Mxy_readout_array);
     subplot(3,3,i);

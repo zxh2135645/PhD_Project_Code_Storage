@@ -4,8 +4,8 @@ clear all;
 % 1. To plot fat fraction vs estimated T1 
 % 2. Save simulated results for estimated T1 mapping - ff_map_t1
 
-addpath('../lib_EPGX/')
-addpath('../EPGX-src/')
+addpath('../lib_EPGX/');
+addpath('../EPGX-src/');
 addpath('../BlochSimDemo/');
 addpath('../M219/');
 
