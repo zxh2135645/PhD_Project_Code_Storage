@@ -19,11 +19,22 @@ end
 
 for i = 1:length(Names)
     name = Names{i};
+    disp(name);
     for t = 1:length(time_points)
         tp = time_points{t};
-        f_to_copy = cat(2, base_dir, name, '/', name, '_', tp, '/T2star/');
+        f_to_copy = cat(2, base_dir, 'Data/', name, '/', name, '_', tp, '/T2star/');
         if exist(f_to_copy, 'dir')
-            f_to_out = cat(2, OutputPath, name, '/', name, '_', tp, '/T2star/');
+            disp(cat(2, tp, '  Succeed!'))
+            if ~exist(cat(2, OutputPath, name, '/'), 'dir')
+                mkdir(cat(2, OutputPath, name, '/'))
+            end
+            
+            save_dir = cat(2, OutputPath, name, '/', name, '_', tp);
+            if ~exist(save_dir, 'dir')
+                mkdir(save_dir)
+            end
+            
+            f_to_out = cat(2, save_dir, '/T2star/');
             copyfile(f_to_copy, f_to_out); 
         end
     end
