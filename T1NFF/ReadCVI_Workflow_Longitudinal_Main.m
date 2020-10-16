@@ -3,7 +3,7 @@ clear all;
 close all;
 
 addpath('../function/');
-base_dir = GetFullPath(cat(2, pwd, '/../../T1_Fat_Project/'));;
+base_dir = GetFullPath(cat(2, pwd, '/../../T1_Fat_Project/'));
 folder_glob = glob(cat(2, base_dir, 'Data\*'));
 
 Names = ExtractNames(folder_glob);
