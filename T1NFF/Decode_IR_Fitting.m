@@ -2,6 +2,13 @@
 % doing. Getting information about how to fit the data when we only know
 % the absolute intensity.
 
+% Previous node: T1Fitting.m
+%%%%%%%%%%%%%%%%%%%%%%%%%% input  file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ir_weighted_metrics.mat
+%%%%%%%%%%%%%%%%%%%%%%%%%% output file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 clear all;
 close all;
 
@@ -38,46 +45,84 @@ mean_t1_molli_w = ir_weighted_metrics.mean_t1_molli_w;
 T_IR = ir_weighted_metrics.IR_array;
 T_IR_molli = ir_weighted_metrics.IR_array_molli;
 tp = length(T_IR);
+tp_molli = length(T_IR_molli);
 method = 'Magnitude';
 
 mean_t1_psirse_w = zeros(size(mean_t1_irse_w));
 mean_t1_psmolli_w = zeros(size(mean_t1_molli_w));
 mean_t1_psirsewe_w = zeros(size(mean_t1_irse_w));
-for i = 1:size(mean_t1_irse_w,1)
-    data = mean_t1_irse_w(i,:);
-    data_molli = mean_t1_molli_w(i,:);
-    data_we = mean_t1_irsewe_w(i,:);
-    [T1,b,a,res,idx]=fitT1_IR(data,T_IR,method);
-    [T1_molli,b,a,res,idx_molli]=fitT1_IR(data_molli,T_IR_molli,method);
-    [T1_we,b,a,res,idx_we]=fitT1_IR(data_we,T_IR,method);
-    %     -T1: T1 value
-    %     -rb: b parameter
-    %     -ra: a prameter
-    %     -res: residual of the fit
-    %     -idx: index of last polarity restored datapoint (only used for magnitude data)
-    sign_array = cat(2, -1 * ones(1,idx), ones(1, tp-idx));
-    sign_array_molli = cat(2, -1 * ones(1,idx_molli), ones(1, tp-idx_molli));
-    sign_array_we = cat(2, -1 * ones(1,idx_we), ones(1, tp-idx_we));
-    mean_t1_psirse_w(i,:) = sign_array .* data;
-    mean_t1_psmolli_w(i,:) = sign_array_molli .* data_molli;
-    mean_t1_psirsewe_w(i,:) = sign_array_we .* data_we;
-end
+dim = input('Dimension of vials (1 or 2): ');
 
+if dim == 1
+    for i = 1:size(mean_t1_irse_w,1)
+        data = mean_t1_irse_w(i,:);
+        data_molli = mean_t1_molli_w(i,:);
+        data_we = mean_t1_irsewe_w(i,:);
+        [T1,b,a,res,idx]=fitT1_IR(data,T_IR,method);
+        [T1_molli,b,a,res,idx_molli]=fitT1_IR(data_molli,T_IR_molli,method);
+        [T1_we,b,a,res,idx_we]=fitT1_IR(data_we,T_IR,method);
+        %     -T1: T1 value
+        %     -rb: b parameter
+        %     -ra: a prameter
+        %     -res: residual of the fit
+        %     -idx: index of last polarity restored datapoint (only used for magnitude data)
+        sign_array = cat(2, -1 * ones(1,idx), ones(1, tp-idx));
+        sign_array_molli = cat(2, -1 * ones(1,idx_molli), ones(1, tp_molli-idx_molli));
+        sign_array_we = cat(2, -1 * ones(1,idx_we), ones(1, tp-idx_we));
+        mean_t1_psirse_w(i,:) = sign_array .* data;
+        mean_t1_psmolli_w(i,:) = sign_array_molli .* data_molli;
+        mean_t1_psirsewe_w(i,:) = sign_array_we .* data_we;
+    end
+elseif dim == 2
+    for i = 1:size(mean_t1_irse_w,1)
+        for j = 1:size(mean_t1_irse_w, 2)
+            data = mean_t1_irse_w(i,j,:);
+            data_molli = mean_t1_molli_w(i,j,:);
+            data_we = mean_t1_irsewe_w(i,j,:);
+            [T1,b,a,res,idx]=fitT1_IR(data,T_IR,method);
+            [T1_molli,b,a,res,idx_molli]=fitT1_IR(data_molli,T_IR_molli,method);
+            [T1_we,b,a,res,idx_we]=fitT1_IR(data_we,T_IR,method);
+
+            sign_array = cat(2, -1 * ones(1,idx), ones(1, tp-idx));
+            sign_array_molli = cat(2, -1 * ones(1,idx_molli), ones(1, tp_molli-idx_molli));
+            sign_array_we = cat(2, -1 * ones(1,idx_we), ones(1, tp-idx_we));
+            mean_t1_psirse_w(i,j,:) = sign_array .* squeeze(data)';
+            mean_t1_psmolli_w(i,j,:) = sign_array_molli .* squeeze(data_molli)';
+            mean_t1_psirsewe_w(i,j,:) = sign_array_we .* squeeze(data_we)';
+        end
+    end
+    
+end
 %% Plot
-ff = {'0', '2.5', '5', '10', '20', '30', '40', '100'};
-figure();
-for i = 1:size(mean_t1_psirse_w, 1)
-    subplot(3,3,i);
-    plot(T_IR_molli, mean_t1_psmolli_w(i, :)', 'LineWidth', 2);ylim([-1000 1000]);
-    hold on;
-    yyaxis right;
-    plot(T_IR, mean_t1_psirse_w(i, :)', 'LineWidth', 2);ylim([-2000 2000]);
-    %plot(T_IR, mean_t1_psirsewe_w(i,:)', 'LineWidth', 2);
-    title(cat(2, 'Fat Fraction: ', ff{i}, '%'));
-    legend({'MOLLI', 'IRSE'});
+ff = {'2.5', '5', '10', '20', '30', '40', '100'};
+if dim == 1
+    figure();
+    for i = 1:size(mean_t1_psirse_w, 1)
+        subplot(3,3,i);
+        plot(T_IR_molli, mean_t1_psmolli_w(i, :)', 'LineWidth', 2);ylim([-1000 1000]);
+        hold on;
+        yyaxis right;
+        plot(T_IR, mean_t1_psirse_w(i, :)', 'LineWidth', 2);ylim([-2000 2000]);
+        %plot(T_IR, mean_t1_psirsewe_w(i,:)', 'LineWidth', 2);
+        title(cat(2, 'Fat Fraction: ', ff{i}, '%'));
+        legend({'MOLLI', 'IRSE'});
+    end
+elseif dim == 2
+    for i = 1:size(mean_t1_psirse_w, 1)
+        figure();
+        for j = 1:size(mean_t1_psirse_w, 2)
+            subplot(3,3,j);
+            plot(T_IR_molli, squeeze(mean_t1_psmolli_w(i,j, :)), 'LineWidth', 2);ylim([-1000 1000]);
+            hold on;
+            yyaxis right;
+            plot(T_IR, squeeze(mean_t1_psirse_w(i,j, :)), 'LineWidth', 2);ylim([-2000 4000]);
+            plot(T_IR, squeeze(mean_t1_psirsewe_w(i,j,:)), 'LineWidth', 2);
+            title(cat(2, 'Fat Fraction: ', ff{j}, '%'));
+            legend({'MOLLI', 'IRSE'}, 'Location', 'SouthEast');
+        end
+    end
 end
-
-%% Compare MOLLI weighted image to T1 simulation [5(3)3]
+%% Compare MOLLI weighted image to T1 simulation [5(3)3] (OPTIONAL)
 addpath('../EffectOfFatNIron/');
 TI_array = T_IR_molli;
 b1 = 750;
