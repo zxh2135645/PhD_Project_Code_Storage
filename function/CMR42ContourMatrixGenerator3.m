@@ -90,58 +90,57 @@ if any(contour_idx(:))
         
         % For excludeContour (Convert to matrix)
         clear excludeContour_edit
+        excludeContour_edit = {};
         fname = fieldnames(excludeCtr_struct); % Considering multiple exclusion contours
         
         for i = 1 : length(fname)
             count = 1;
-            clear excludeCtr_mat
-            % ctr_index_array = []; %%%%% Not necessary
+            
+            ctr_index_array = []; %%%%% Not necessary
             for j = 1 : num_contours
                 if any(excludeCtr_struct.(fname{i}){j}(:))
                     excludeCtr_mat(:,:,count) =  excludeCtr_struct.(fname{i}){j};
-                    % ctr_index_array = [ctr_index_array; j];
+                    ctr_index_array = [ctr_index_array; j];
                     count = count + 1;
                 end
             end
             excludeContour_edit(i, 1:2) = {fname{i}, excludeCtr_mat};
-            % excludeContour_edit(i, 3) = {ctr_index_array};
+            excludeContour_edit(i, 3) = {ctr_index_array};
         end
         
         % For myoRef (Convert to matrix)
         count = 1;
-        % myo_index_array = []; %%%%% NOT necessary
+        myo_index_array = []; %%%%% NOT necessary
+        myoRef_edit = [];
         for i = 1 : num_contours
             if any(myoRef{i}(:))
                 myoRef_edit(:,:,count) = myoRef{i}(:,:);
-                % myo_index_array = [myo_index_array; i];
+                myo_index_array = [myo_index_array; i];
                 count = count + 1;
-            else
-                myoRef_edit(:,:,count) = zeros(size(myoRef{i}(:,:)));
             end
         end
+                
         
         % For NoReFlow (Convert to matrix)
         count = 1;
-        % noRef_index_array = [];
-        for i = 1 : num_contours
+        noRef_index_array = [];
+        NoReFlow_edit = [];
+        for i = 1:num_contours
             if any(NoReFlow{i}(:))
                 NoReFlow_edit(:,:,count) = NoReFlow{i}(:,:);
-                % noRef_index_array = [noRef_index_array; i];
+                noRef_index_array = [noRef_index_array; i];
                 count = count + 1;
-            else
-                NoReFlow_edit(:,:,count) = zeros(size(NoReFlow{i}(:,:)));
             end
         end
         
         count = 1;
-        % noRef_index_array = [];
+        freeROI_index_array = [];
+        freeROI_edit = [];
         for i = 1 : num_contours
             if any(freeROI{i}(:))
                 freeROI_edit(:,:,count) = freeROI{i}(:,:);
-                % noRef_index_array = [noRef_index_array; i];
+                freeROI_index_array = [freeROI_index_array; i];
                 count = count + 1;
-            else
-                freeROI_edit(:,:,count) = zeros(size(freeROI{i}(:,:)));
             end
         end
         
@@ -199,48 +198,56 @@ if any(contour_idx(:))
         
         % Export Exclude Contour
         excludeContour = struct;
-        for i = 1:length(fname)
-            excludeContour.(fname{i}) = cell(1, 1); % No index array needed
-            for j = 1:size(excludeContour_edit{i, 2}, 3)
-                excludeContour_edit{i, 2}(:,:,j) = imfill(excludeContour_edit{i, 2}(:,:,j), 'holes');
-                excludeContour_edit{i, 3}(:,:,j) = flipud(rot90(excludeContour_edit{i, 2}(:,:,j),1));
+        if ~isempty(excludeContour_edit)
+            for i = 1:length(fname)
+                excludeContour.(fname{i}) = cell(1, 2); % No index array needed
+                for j = 1:size(excludeContour_edit{i, 2}, 3)
+                    excludeContour_edit{i, 2}(:,:,j) = imfill(excludeContour_edit{i, 2}(:,:,j), 'holes');
+                    excludeContour_edit{i, 4}(:,:,j) = flipud(rot90(excludeContour_edit{i, 2}(:,:,j),1));
+                end
+                excludeContour.(fname{i}){1} = excludeContour_edit{i, 4};
+                excludeContour.(fname{i}){2} = excludeContour_edit{i, 3}; % No
+                % need for index array
             end
-            excludeContour.(fname{i}){1} = excludeContour_edit{i, 3};
-            % excludeContour.(fname{i}){2} = excludeContour_edit{i, 3}; % No
-            % need for index array
         end
         
         
         % Export Refernce area
         myoRefCell = cell(1, 1);
-        for i = 1:size(myoRef_edit, 3)
-            myoRef_edit(:,:,i) = imfill(myoRef_edit(:,:,i), 'holes');
-            shifted_myoRef(:,:,i) = flipud(rot90(myoRef_edit(:,:,i),1));
+        if ~isempty(myoRef_edit)
+            for i = 1:size(myoRef_edit, 3)
+                myoRef_edit(:,:,i) = imfill(myoRef_edit(:,:,i), 'holes');
+                shifted_myoRef(:,:,i) = flipud(rot90(myoRef_edit(:,:,i),1));
+            end
+            myoRefCell{1} = shifted_myoRef;
+            myoRefCell{2} = myo_index_array;
+            % Can quickly add myo_index_array back
         end
-        myoRefCell{1} = shifted_myoRef;
-        % myoRefCell{2} = myo_index_array;
-        % Can quickly add myo_index_array back
         
         
         
         % Export No Reflow
         % if strcmp(dstLabel, 'noReflowAreaContour') && ~isempty(noRef_index_array)
         noReflowCell = cell(1, 1);
-        for i = 1:size(NoReFlow_edit, 3)
-            NoReFlow_edit(:,:,i) = imfill(NoReFlow_edit(:,:,i), 'holes');
-            shifted_NoReFlow(:,:,i) = flipud(rot90(NoReFlow_edit(:,:,i),1));
+        if ~isempty(NoReFlow_edit)
+            for i = 1:size(NoReFlow_edit, 3)
+                NoReFlow_edit(:,:,i) = imfill(NoReFlow_edit(:,:,i), 'holes');
+                shifted_NoReFlow(:,:,i) = flipud(rot90(NoReFlow_edit(:,:,i),1));
+            end
+            noReflowCell{1} = shifted_NoReFlow;
+            noReflowCell{2} = noRef_index_array;
         end
-        noReflowCell{1} = shifted_NoReFlow;
-        % NoReFlowCell{2} = noRef_index_array;
         
         % Export freeROI
         freeROICell = cell(1, 1);
-        for i = 1:size(freeROI_edit, 3)
-            freeROI_edit(:,:,i) = imfill(freeROI_edit(:,:,i), 'holes');
-            shifted_freeROI(:,:,i) = flipud(rot90(freeROI_edit(:,:,i),1));
+        if ~isempty(freeROI_edit)
+            for i = 1:size(freeROI_edit, 3)
+                freeROI_edit(:,:,i) = imfill(freeROI_edit(:,:,i), 'holes');
+                shifted_freeROI(:,:,i) = flipud(rot90(freeROI_edit(:,:,i),1));
+            end
+            freeROICell{1} = shifted_freeROI;
+            freeROICell{2} = noRef_index_array;
         end
-        freeROICell{1} = shifted_freeROI;
-        
     else
         unmatch_count = unmatch_count + 1;
     end

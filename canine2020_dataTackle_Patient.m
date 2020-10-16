@@ -6,7 +6,6 @@ current_dir = pwd;
 %% 
 addpath('function\');
 base_dir = uigetdir;
-% base_dir needs to be changed
 
 name_glob = glob(cat(2, base_dir, '/*'));
 Names = cell(length(name_glob), 1);
@@ -17,9 +16,24 @@ end
 
 sequence_label = {'MAG', 'PSIR', 'T1Map', 'T1w_MOCO'};
 
+names_to_rule_out = {'11D27', 'RUTHIE'};
+RuleOutLabel = NameRuleOutFunc(Names, names_to_rule_out);
+Names = Names(RuleOutLabel == 0);
 
-name_check = 'CHOI_TAE_SIK';
-starting_point = find(strcmp(name_check, Names),1);
+name_check = {'CHOI_TAE_SIK'};
+%name_check = {'KIM_BONG_KI', 'HAN_BONG_SANG'};
+name_idx_list = linspace(1, length(Names), length(Names)); % initialize with incremental add
+
+if length(name_check) == 1
+    starting_point = find(strcmp(name_check, Names),1);
+else
+    name_idx_list = zeros(1, length(name_check));
+    for n = 1:length(name_check)
+        % Check an array of names
+        name_idxo = find(strcmp(name_check(n), Names),1);
+        name_idx_list(n) = name_idxo;
+    end
+end
 
 dicom_fields = {...
     'Filename',...
@@ -51,14 +65,16 @@ t1w_dicom_fields = {...
     };
 
     output_label = {'LGE', 'T1'};
-
+    OutputPath = GetFullPath(cat(2, base_dir, '/../ContourData/'));
 %% Parsing XML file
 % Read DICOM and contours
 %for n = starting_point:starting_point
 for n = starting_point:length(Names)
-    name = Names{n};
+%for n = 1:length(name_idx_list)
+    
+    name = Names{name_idx_list(n)};
     % XML file is independent on Labels
-    xml_glob = glob(cat(2, base_dir, '/', name, '/*.cvi42wsx'));
+    xml_glob = glob(cat(2, base_dir,'/', name, '/*.cvi42wsx'));
     cvi42wsx = char(xml_glob);
     con_cell = cell(0);
     for xml_ind = 1:size(cvi42wsx, 1)
@@ -69,8 +85,9 @@ for n = starting_point:length(Names)
     % Iterate through MAG, PSIR and LGE
     for con_idx = 1:length(con_cell)
         con = con_cell{con_idx};
-     for ll = 1:(length(sequence_label)-1)
-     %for ll = 3:3
+    for ll = 1:(length(sequence_label)-1)
+
+    % for ll = 1:2
             label = sequence_label{ll};
             
             switch label
@@ -80,7 +97,7 @@ for n = starting_point:length(Names)
                     labelo = output_label{2};
             end
     
-    dicom_glob = glob(cat(2, base_dir, '/', name, '/', label, '/*'));
+    dicom_glob = glob(cat(2, base_dir,'/', name, '/', label, '/*'));
     % MAG and PSIR is mutually exclusive
     % Only contours in T1Map, but also need to export T1-weighted images
     if strcmp(label,sequence_label{1})  % equals 1 or 2
@@ -92,20 +109,23 @@ for n = starting_point:length(Names)
     end
         
     sigOtherLabel = sequence_label{sigOtherIdx};
-    sig_dicom_glob = glob(cat(2, base_dir, '/', name, '/', sigOtherLabel, '/*'));
+    sig_dicom_glob = glob(cat(2, base_dir,'/', name, '/', sigOtherLabel, '/*'));
     sig_dicom = char(sig_dicom_glob);
     
-    
-    OutputPath = GetFullPath(cat(2, base_dir, '/../ContourData/'));
+   
     dstFolder = cat(2, OutputPath, name, '\', labelo);
     
     dicom = char(dicom_glob);
     id_cell = cell(size(dicom, 1), 1);
     total_match = 0;
+    SliceLocation_array = [];
+    % For T1
+    invt_cell = {};
+    sliceloc_array = [];
     
     slc_start = 1;
     slc_end = 1;
-    clear vol_img_3D mask_heart_3D mask_myocardium_3D mask_blood_3D excludeMask_3D myoRefMask_3D noReflowMask_3D sig_vol_img_3D sig_vol_img_4D volume_image
+    clear  mask_heart_3D mask_myocardium_3D mask_blood_3D excludeMask_3D myoRefMask_3D noReflowMask_3D vol_img_3D sig_vol_img_3D sig_vol_img_4D volume_image
     for i = 1:size(dicom, 1)
         dicom_file = glob(cat(2, dicom(i,:), '*.dcm'));        
         dicom_f = dicom_file{1};
@@ -121,57 +141,91 @@ for n = starting_point:length(Names)
         [mask_heart, mask_myocardium, mask_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count] = ...
             CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder);
         
+        
+        
+        
         % get all contours from excludeContour
-        excludeMask_2D = zeros(size(volume_image));
+        excludeMask_3Ds = zeros(size(volume_image));
         if ~isempty(excludeContour)
             keys = fieldnames(excludeContour);
-            % The code below assumes 2D slice of image; can be improved for more
-            % generic use.
+ 
             for j = 1:length(keys)
                 temp_cell = getfield(excludeContour, keys{j});
                 temp_mat = zeros(size(volume_image));
+                temp_idx = temp_cell{2};
                 if size(temp_cell{1}, 3) > 1
-                    for k = 1:size(temp_cell{1}, 3)
-                        temp_mat = temp_mat + temp_cell{1}(:,:,k);
+                    if length(temp_idx) == size(temp_cell{1}, 3)
+                        temtem_idx = temp_idx;
+                        for k = 1:size(temp_cell{1}, 3)
+                            temp_mat(:,:,temp_idx(k)) = temp_cell{1}(:,:,k);
+                        end
+                    else
+                        for k = 1:length(temp_idx)
+                            innd = find(temp_idx(k) == temtem_idx);
+                            temp_mat(:,:,temp_idx(k)) = temp_cell{1}(:,:,innd);
+                        end
                     end
+                    
+                else
+                    temp_mat = temp_cell{1};
                 end
-                excludeMask_2D = temp_mat + excludeMask_2D;
+                excludeMask_3Ds = temp_mat + excludeMask_3Ds;
             end
         end
         
+        excludeMask_3Ds(excludeMask_3Ds > 0) = 1; 
+        % I realized overlapping exclusion contour between
+        % excludeEnhancementArea and excludeEnhancementArea0001
+        % Make sure the mask is binary
+        
         % Get all contours from NoReFlowArea
-        noReflowMask_2D = zeros(size(volume_image));
+        noReflowMask_3Ds = zeros(size(volume_image));
         if ~isempty(noReflowCell)
-            temp_mat = noReflowCell{1};
-            for j = 1:size(noReflowCell{1}, 3)
-                noReflowMask_2D = temp_mat(:,:,j) + noReflowMask_2D;
+            if ~isempty(noReflowCell{1})
+                temp_mat = noReflowCell{1};
+                for j = 1:size(noReflowCell{1}, 3)
+                    noReflowMask_3Ds = temp_mat(:,:,j) + noReflowMask_3Ds;
+                end
             end
         end
         
         % Get all contours from myoRefCell
         % Why there is a empty RefMat
-        myoRefMask_2D = zeros(size(volume_image));
+        myoRefMask_3Ds = zeros(size(volume_image));
         if ~isempty(myoRefCell)
-            temp_mat = myoRefCell{1};
-            for j = 1:size(myoRefCell{1}, 3)
-                myoRefMask_2D = temp_mat(:,:,j) + myoRefMask_2D;
+            if ~isempty(myoRefCell{1})
+                temp_mat = zeros(size(volume_image));
+                temp_idx = myoRefCell{2};
+                if size(myoRefCell{1}, 3) > 1
+                    for j = 1:size(myoRefCell{1}, 3)
+                        temp_mat(:,:,temp_idx(j)) = myoRefCell{1}(:,:,j);
+                    end
+                else
+                    temp_mat = myoRefCell{1};
+                end
+                myoRefMask_3Ds = temp_mat + myoRefMask_3Ds;
             end
         end
         
         if match_count > 0
-            % All files of LGE and T1 are under T1 folder
             vol_img_3D = volume_image;
             mask_heart_3D = mask_heart;
             mask_myocardium_3D = mask_myocardium;
             mask_blood_3D = mask_blood;
-            excludeMask_3D = excludeMask_2D;
-            myoRefMask_3D  = myoRefMask_2D;
-            noReflowMask_3D  = noReflowMask_2D;
-            
-            
+            excludeMask_3D = excludeMask_3Ds;
+            myoRefMask_3D  = myoRefMask_3Ds;
+            noReflowMask_3D  = noReflowMask_3Ds;
             % Find sigOther in matched slices
             % MAG and PSIR is mutually exclusive
             if strcmp(label, sequence_label{1}) || strcmp(label, sequence_label{2}) % equals 1 or 2
+            % Find sigOther in matched slices
+            % MAG and PSIR is mutually exclusive
+            % All files of LGE and T1 are under T1 folder
+           
+                % Need another array to encode info of which slice is
+                % accpected if there is multiple version of same slice
+                % i is the index of dicom (has the same order as its counterpart)
+                
                 for s = 1:size(sig_dicom,1)
                     sig_dicom_file = glob(cat(2, sig_dicom(s,:), '*.dcm'));
                     sig_dicom_f = sig_dicom_file{1};
@@ -182,18 +236,18 @@ for n = starting_point:length(Names)
                     else
                         [sig_volume_image, sig_slice_data, sig_image_meta_data] = dicom23D(sig_dicom(s,:), dicom_fields);
                     end
-
                     sig_vol_img_3D = sig_volume_image;
-                    
+
                 end
+
             else
                 % T1w_MOCO will be 3D matrix
                 invt_cell = {};
+                total_match = 0;
                 for s = 1:size(sig_dicom,1)
                     sig_dicom_file = glob(cat(2, sig_dicom(s,:), '*.dcm'));
                     sig_dicom_f = sig_dicom_file{1};
                     sig_info = dicominfo(sig_dicom_f);
-                    
                     if contains(sig_info.InstitutionName, 'Vida') && ~isfield(sig_info, 'SliceLocation')
                         sig_volume_image = zeros(size(volume_image, 1), size(volume_image, 2), length(sig_dicom_file));
                         
@@ -209,26 +263,30 @@ for n = starting_point:length(Names)
                     else
                         [sig_volume_image, sig_slice_data, sig_image_meta_data] = dicom23D(sig_dicom(s,:), t1w_dicom_fields);
                     end
-                    
-                    for ss = 1:size(sig_dicom, 1)
-                        if slice_data(ss).SliceLocation == sig_slice_data(1).SliceLocation
-                            sig_vol_img_4D(:,:,:,slc_start:slc_end+match_count-1) = sig_volume_image;
-                            invt_array = zeros(size(sig_vol_img_4D, 3), 1);
-                            for inv = 1:size(sig_vol_img_4D, 3)
-                                invt_array(inv) = sig_slice_data(inv).InversionTime;
-                            end
-                            invt_cell{end+1} = invt_array;
-                            slc_start = slc_start + match_count;
-                            slc_end = slc_end + match_count;
-                            total_match = total_match + match_count;
+                
+                
+                for ss = 1:size(sig_dicom, 1)
+                    if slice_data(ss).SliceLocation == sig_slice_data(1).SliceLocation
+                        sig_vol_img_4D(:,:,:,slc_start:slc_end+match_count-1) = sig_volume_image;
+                        invt_array = zeros(size(sig_vol_img_4D, 3), 1);
+                        for inv = 1:size(sig_vol_img_4D, 3)
+                            invt_array(inv) = sig_slice_data(inv).InversionTime;
                         end
+                        invt_cell{end+1} = invt_array;
+                        slc_start = slc_start + match_count;
+                        slc_end = slc_end + match_count;
+                        total_match = total_match + match_count;
                     end
                 end
+                end
             end
-
+            total_match = total_match + match_count;
+            
         end
-        
     end
+    
+
+
     
         
     
@@ -238,21 +296,31 @@ for n = starting_point:length(Names)
     %  dsts = {'Heart', 'Myocardium', 'excludeContour', 'myoReference', 'noReflowAreaContour', 'BloodPool'};
     dsts = {'Heart', 'Myocardium', 'excludeArea', 'MyoReference', 'noReflowArea', 'BloodPool'};
     
-    % TODO
     if total_match ~= 0
-        dstPath = cat(2, dstFolder, '/', label, '_vol_img_3D.mat');
-        save(dstPath, 'vol_img_3D');
         
         if strcmp(label, sequence_label{1}) || strcmp(label, sequence_label{2})
+            vi3 = struct;
+            vi3.vol_img_3D = vol_img_3D;
+            dstPath = cat(2, dstFolder, '/', label, '_vol_img_3D.mat');
+            save(dstPath, 'vi3');
+            
+            svi3 = struct;
+            svi3.sig_vol_img_3D = sig_vol_img_3D;
+            
             dstPath = cat(2, dstFolder, '/', sigOtherLabel, '_vol_img_3D.mat');
-            save(dstPath, 'sig_vol_img_3D');
+            save(dstPath, 'svi3');
         else
+            vi3 = struct;
+            vi3.vol_img_3D = vol_img_3D;
+            dstPath = cat(2, dstFolder, '/', label, '_vol_img_3D.mat');
+            save(dstPath, 'vi3');
+            
             sig_vol_img_4D = permute(sig_vol_img_4D, [1,2,4,3]);
             T1w_MOCO_struct = struct;
             T1w_MOCO_struct.vol_img_4D = sig_vol_img_4D;
             T1w_MOCO_struct.invt_cell = invt_cell;
             dstPath = cat(2, dstFolder, '/', sigOtherLabel, '_vol_img_4D.mat');
-            save(dstPath, 'sig_vol_img_4D');
+            save(dstPath, 'T1w_MOCO_struct');
         
             % Save T1w images and inversion time
         end
@@ -328,6 +396,48 @@ end
 
 diff = setdiff(data_idx, contour_idx);
 disp(Names_data(diff))
+
+%% Check img dimension
+
+contour_glob = glob(cat(2, OutputPath, '*'));
+Names_contour = cell(length(contour_glob), 1);
+for i = 1:length(contour_glob)
+    strings = strsplit(contour_glob{i},'\');
+    Names_contour{i} = strings{end-1};
+end
+
+for i = 1:length(Names_contour)
+    name = Names_contour{i};
+       for ll = 1:(length(sequence_label)-1)
+            clear vol_img_3D sig_vol_img_3D vi3 svi3
+            label = sequence_label{ll};
+            
+            switch label
+                case {'MAG', 'PSIR'}
+                    labelo = output_label{1};
+                otherwise
+                    labelo = output_label{2};
+            end
+            
+            load(cat(2, OutputPath, name, '\', labelo, '\', label, '_vol_img_3D.mat'));
+            
+            if exist('vi3', 'var')
+                img = vi3.vol_img_3D;
+            else
+                img = svi3.sig_vol_img_3D;
+            end
+
+
+            disp(name)
+            disp(label)
+            disp(size(img))
+            
+       end
+end
+
+
+
+
 
 
 
