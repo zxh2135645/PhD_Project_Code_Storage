@@ -213,7 +213,7 @@ if any(contour_idx(:))
         
         
         % Export Refernce area
-        myoRefCell = cell(1, 1);
+        myoRefCell = cell(1, 2);
         if ~isempty(myoRef_edit)
             for i = 1:size(myoRef_edit, 3)
                 myoRef_edit(:,:,i) = imfill(myoRef_edit(:,:,i), 'holes');
@@ -228,7 +228,7 @@ if any(contour_idx(:))
         
         % Export No Reflow
         % if strcmp(dstLabel, 'noReflowAreaContour') && ~isempty(noRef_index_array)
-        noReflowCell = cell(1, 1);
+        noReflowCell = cell(1, 2);
         if ~isempty(NoReFlow_edit)
             for i = 1:size(NoReFlow_edit, 3)
                 NoReFlow_edit(:,:,i) = imfill(NoReFlow_edit(:,:,i), 'holes');
@@ -239,7 +239,7 @@ if any(contour_idx(:))
         end
         
         % Export freeROI
-        freeROICell = cell(1, 1);
+        freeROICell = cell(1, 2);
         if ~isempty(freeROI_edit)
             for i = 1:size(freeROI_edit, 3)
                 freeROI_edit(:,:,i) = imfill(freeROI_edit(:,:,i), 'holes');
