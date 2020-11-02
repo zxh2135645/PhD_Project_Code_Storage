@@ -195,3 +195,19 @@ hold on;
 %scatter(s, trans16_avg_sorted, 72, 'filled', 'MarkerFaceColor', [0, 0.4470, 0.7410]); ylim([0 0.3])
 xlabel('Transmurality'); ylabel('T2*');
 %xticklabels(subject_name_cell(I));
+
+%% 2. transmurality by only looking at Avg0016
+perc_trans16 = cell(length(subject_name_cell), 1);
+trans16_avg = zeros(length(subject_name_cell), 1);
+for i = 1:length(subject_name_cell)
+    subject_name = subject_name_cell{i};
+    subject_data_dir = GetFullPath(cat(2, data_dir, subject_name, '/'));
+        avg_name = avg_num_cell{1};
+        aha16 = load(cat(2, subject_data_dir, 'aha_analysis_', avg_name, '.mat'));
+        perc_array_mi = aha16.aha_analysis.perc_array_mi;
+        perc_array_temp = nonzeros(perc_array_mi(1,:))';
+        perc_trans16{i} = perc_array_temp;
+        trans16_avg(i) = mean(perc_array_temp);
+        
+        
+end

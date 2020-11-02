@@ -1141,6 +1141,7 @@ set(gca, 'FontSize', 18); colorbar;
 
 save(cat(2, subject_data_dir, 'aha_analysis_', invivo_label, '.mat'), 'aha_analysis2');
 
+%% OPTIONAL STARTS BELOW
 %% Shorter TE parameters (Optional)
 disp('Shorter Starts here: ');
 [list_to_read, order_to_read] = NamePicker(folder_glob);

@@ -32,7 +32,7 @@ if ~exist(data_dir, 'dir')
     mkdir(data_dir)
 end
 
-subject_name_cell = {'18P90', '18P93', '20P03_Exvivo5', '20P10_Exvivo7', '20P11_Exvivo6', '18P92', '18P94', '18P95'};
+subject_name_cell = {'18P90', '18P93', '20P03_Exvivo5', '20P10_Exvivo7', '20P11_Exvivo6', '18P92', '18P94_Exvivo3', '18P95', '17P73'};
 avg_num_cell = {'Avg0016', 'Avg0001', 'Invivo'};
 %avg_num = input('Please type average number here:  ');
 %if isnumeric(avg_num)
@@ -117,11 +117,15 @@ for i = 1:length(whatsinit)
     lg{i} = cat(2, slc_array{q}, '__', res_array{real_r});
     
 end
+idx_array = 1:length(auc_avg16_reorder);
 figure('Position', [100 0 1600 1600]);
 plot(auc_avg16_reorder, 'LineWidth', 2);
 hold on;
 plot(auc_avg01_reorder, 'LineWidth', 2);
 plot(auc_invivo_reorder, 'LineWidth', 2);
+scatter(idx_array, auc_avg16_reorder, 72, 'filled', 'MarkerFaceColor', [0, 0.4470, 0.7410]);
+scatter(idx_array, auc_avg01_reorder, 72, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+scatter(idx_array, auc_invivo_reorder, 72, 'filled', 'MarkerFaceColor', [0.9290, 0.6940, 0.1250]);
 xticks(1:length(whatsinit));
 xticklabels(lg);
 legend({'Avg0016', 'Avg0001', 'Invivo'});

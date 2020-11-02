@@ -25,7 +25,7 @@ if ~exist(data_dir, 'dir')
     mkdir(data_dir)
 end
 
-subject_name_cell = {'18P95'};
+subject_name_cell = {'17P73'};
 avg_num_cell = {'Avg0016', 'Avg0001', 'Invivo'};
 
 snr_all_remote = cell(length(avg_num_cell), length(subject_name_cell));
