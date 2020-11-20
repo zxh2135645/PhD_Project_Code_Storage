@@ -40,6 +40,9 @@ avg_num_cell = {'Avg0016', 'Avg0001', 'Invivo'};
 perc_all16 = [];
 perc_all01 = [];
 perc_allvivo = [];
+auc_subjects_mean_avg16 = zeros(length(subject_name_cell), 1);
+auc_subjects_mean_invivo = zeros(length(subject_name_cell), 1);
+
 for i = 1:length(subject_name_cell)
     subject_name = subject_name_cell{i};
     subject_data_dir = GetFullPath(cat(2, data_dir, subject_name, '/'));
@@ -50,6 +53,8 @@ for i = 1:length(subject_name_cell)
         if j == 1
             aha16 = load(cat(2, subject_data_dir, 'aha_analysis_', avg_name, '.mat'));
             perc_all16 = [perc_all16, aha16.aha_analysis.perc_array_mi];
+            auc_subjects_mean_avg16(i) = mean(aha16.aha_analysis.auc_array_mi);
+            
         elseif j == 2
             aha01 = load(cat(2, subject_data_dir, 'aha_analysis_', avg_name, '.mat'));
             perc_all01 = [perc_all01, aha01.aha_analysis2.perc_array_mi];
@@ -59,6 +64,7 @@ for i = 1:length(subject_name_cell)
         elseif j == 3
             aha_invivo = load(cat(2, subject_data_dir, 'aha_analysis_', avg_name, '.mat'));
             perc_allvivo = [perc_allvivo, aha_invivo.aha_analysis2.perc_array_mi];
+            auc_subjects_mean_invivo(i) = mean(aha_invivo.aha_analysis2.auc_array_mi);
         end
     end
 end
@@ -154,6 +160,28 @@ hold on;
 scatter(s, trans16_avg_sorted, 72, 'filled', 'MarkerFaceColor', [0, 0.4470, 0.7410]); ylim([0 0.3])
 ylabel('Transmurality'); xlabel('Subject Name');
 xticklabels(subject_name_cell(I));
+
+%% 2b. 
+X = [ones(length(trans16_avg_sorted),1), trans16_avg_sorted];
+figure();
+scatter(trans16_avg_sorted, auc_subjects_mean_avg16(I), 72, 'filled', 'MarkerFaceColor', [0, 0.4470, 0.7410]);
+hold on;
+scatter(trans16_avg_sorted, auc_subjects_mean_invivo(I), 72, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+xlabel('Transmurality'); ylabel('Mean AUC');
+legend({'Avg0016', 'Invivo'}, 'Location', 'SouthEast');
+
+
+
+b = X \ auc_subjects_mean_avg16(I);
+yCalc_avg16 = X*b;
+plot(trans16_avg_sorted, yCalc_avg16);
+
+b = X \ auc_subjects_mean_invivo(I);
+yCalc_invivo = X*b;
+plot(trans16_avg_sorted, yCalc_invivo);
+grid on;
+
+Rsq1 = 1 - sum((auc_subjects_mean_avg16 - yCalc_avg16).^2)/sum((y - mean(y)).^2);
 %% 3. T2* value in hemorrhage zone
 % [70, 73, 64, 79, 71, 65, 94, 65, 79]
 whatsinit = cell(length(subject_name_cell), 1);

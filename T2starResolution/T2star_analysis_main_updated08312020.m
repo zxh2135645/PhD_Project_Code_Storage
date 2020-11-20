@@ -206,8 +206,10 @@ for i = 1:length(whatsinit)
     thresh = mean(nonzeros(img2 .* mask_struct(save_idx).remote_mask)) - 2*std(nonzeros(img2 .* mask_struct(save_idx).remote_mask));
     hemo_mask = img2 < thresh;
     subplot(1,2,1);
-    imagesc(img2); caxis([0 50]); axis image; colormap default; %colorbar;
-    
+    imagesc(img2); caxis([0 100]); axis image; %colormap default; %colorbar;
+    colormap(brewermap([],'RdBu'));
+    % colorbar;
+    % '*YlGnBu'
     %img_rgb = zeros(size(img2,1), size(img2, 2), 3);
     %img2_norm = img2 ./ max(img2(:));
     %img_rgb(:,:,1) = img2_norm;

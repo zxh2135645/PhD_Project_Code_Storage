@@ -25,7 +25,7 @@ if ~exist(data_dir, 'dir')
     mkdir(data_dir)
 end
 
-subject_name_cell = {'17P73'};
+subject_name_cell = {'18P90', '18P93', '20P03_Exvivo5', '20P10_Exvivo7', '20P11_Exvivo6', '18P92', '18P94_Exvivo3', '18P95', '17P73'};
 avg_num_cell = {'Avg0016', 'Avg0001', 'Invivo'};
 
 snr_all_remote = cell(length(avg_num_cell), length(subject_name_cell));
@@ -75,23 +75,34 @@ end
 
 
 %% For one case
-snr_avg16_remote = mean(snr_all_remote{1,1}, 2);
-snr_avg01_remote = mean(snr_all_remote{2,1}, 2);
-snr_invivo_remote = mean(snr_all_remote{3,1}, 2);
-snr_avg16_air = mean(snr_all_air{1,1}, 2);
-snr_avg01_air = mean(snr_all_air{2,1}, 2);
-snr_invivo_air = mean(snr_all_air{3,1}, 2);
-
+snr_avg16_remote = [];
+snr_avg01_remote = [];
+snr_invivo_remote = [];
+snr_avg16_air = [];
+snr_avg01_air = [];
+snr_invivo_air = [];
+res_all_avg16_flat = [];
+res_all_invivo_flat = [];
+for i = 1:size(snr_all_remote, 2)
+    snr_avg16_remote = [snr_avg16_remote ;mean(snr_all_remote{1,i}, 2)];
+    snr_avg01_remote = [snr_avg01_remote; mean(snr_all_remote{2,i}, 2)];
+    snr_invivo_remote = [snr_invivo_remote; mean(snr_all_remote{3,i}, 2)];
+    snr_avg16_air = [snr_avg16_air; mean(snr_all_air{1,i}, 2)];
+    snr_avg01_air = [snr_avg01_air; mean(snr_all_air{2,i}, 2)];
+    snr_invivo_air = [snr_invivo_air; mean(snr_all_air{3,i}, 2)];
+    res_all_avg16_flat = [res_all_avg16_flat; res_all{1, i}];
+    res_all_invivo_flat = [res_all_invivo_flat; res_all{3, i}];
+end
 %% Plot
 figure();
-scatter(snr_avg16_remote, res_all{1}, 72, 'filled');
+scatter(snr_avg16_remote, res_all_avg16_flat, 72, 'filled');
 hold on;
-scatter(snr_avg01_remote, res_all{2}, 72, 'filled');
+% scatter(snr_avg01_remote, res_all{2}, 72, 'filled');
 
-scatter(snr_invivo_remote, res_all{3}, 72, 'filled');
+scatter(snr_invivo_remote, res_all_invivo_flat, 72, 'filled');
 grid on;
 
-legend({'Avg0016', 'Avg0001', 'Invivo'});
+legend({'Avg0016', 'Invivo'});
 set(gca, 'FontSize', 16);
 
 xlabel('SNR (unitless)'); ylabel('Fitting Residual');
