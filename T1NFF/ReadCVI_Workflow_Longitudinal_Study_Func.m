@@ -23,6 +23,11 @@ label = strings{end-1};
                 if isempty(dicom_file)
                     
                     dicom_file = glob(cat(2, dicom(i,:), '*.IMA'));
+                    
+                    if isempty(dicom_file)
+                        
+                        dicom_file = {dicom(i,:)};
+                    end
 
                 end
                 

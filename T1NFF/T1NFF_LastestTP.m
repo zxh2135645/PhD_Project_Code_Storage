@@ -426,13 +426,13 @@ end
 
 figure();
 X = 1:length(for_analysis);
-errorbar(X, mean_t1, sd_t1);
+errorbar(X, mean_t1, sd_t1, 'LineWidth', 2);
 hold on;
 %plot(X, mean_t1_remote);
 xticks(X);
 xticklabels(name_cell);
-yyaxis right; errorbar(X, mean_ff, sd_ff); 
-
+yyaxis right; errorbar(X, mean_ff, sd_ff, 'LineWidth', 2); 
+legend({'T1', 'FF'});
 %plot(mean_r2star);
 
 %% Get the matrics of T1, FF and R2star
@@ -446,8 +446,8 @@ label_lge = sequence_label{3};
 label_t2star = sequence_label{2};
 for_analysis = struct;
 
-%for n = starting_point:length(Names)
-for n = starting_point:starting_point
+for n = starting_point:length(Names)
+%for n = starting_point:starting_point
     name = Names{n};
     name_save_dir = cat(2, save_dir, name);
     if ~exist(name_save_dir, 'dir')
@@ -471,7 +471,8 @@ for n = starting_point:starting_point
             load(roi_glob{1});
             load(remote_glob{1});
             load(cat(2, tp_dir, label_t1, '/', label_t1, '_SliceLoc.mat'));
-            slc_array_t1 = sort(slc_array);
+            
+            [slc_array_t1, idx_reordered] = sort(slc_array);
             
             roi_in_myo_t1 = mask_myocardium_3D .* freeROIMask_3D;
             remote_in_myo_t1 = mask_myocardium_3D .* myoRefMask_3D;
@@ -486,6 +487,8 @@ for n = starting_point:starting_point
             remote_t1 = remote_t1(:,:,idx_reordered);
             t1 = t1(:,:,idx_reordered);
             myo_t1 = myo_t1(:,:,idx_reordered);
+            [row_roi_t1, col_roi_t1, v_roi_t1] = find(roi_in_myo_t1);
+            [row_remote_t1, col_remote_t1, v_remote_t1] = find(remote_in_myo_t1);
             
             % LGE
             myo_glob = glob(cat(2, tp_dir, label_lge, '/', anatomy_label{5}, '/*'));
@@ -550,6 +553,8 @@ for n = starting_point:starting_point
             roi_ff = roi_ff(:,:,idx_reordered);
             remote_in_myo_ff = remote_in_myo_ff(:,:,idx_reordered);
             roi_in_myo_ff = roi_in_myo_ff(:,:,idx_reordered);
+            [row_roi, col_roi, v_roi] = find(roi_in_myo_ff);
+            [row_remote, col_remote, v_remote] = find(remote_in_myo_ff);
             
             % R2star Map
             r2star_map = cell(1, length(glob_names));
@@ -575,7 +580,8 @@ for n = starting_point:starting_point
             roi_r2star = roi_r2star(:,:,idx_reordered);
             remote_in_myo_r2star = remote_in_myo_r2star(:,:,idx_reordered);
             roi_in_myo_r2star = roi_in_myo_r2star(:,:,idx_reordered);
-            
+            [row_roi_r2star, col_roi_r2star, v_roi_r2star] = find(roi_in_myo_r2star);
+            [row_remote_r2star, col_remote_r2star, v_remote_r2star] = find(remote_in_myo_r2star);
             
             name_tp = cat(2, name, '_', time_point);
             for_analysis(n).Name = name;
@@ -587,17 +593,234 @@ for n = starting_point:starting_point
             for_analysis(n).metrics.mean_remote_t1 = mean(nonzeros(remote_t1));
             for_analysis(n).metrics.sd_remote_t1 = std(nonzeros(remote_t1));
             
-            for_analysis(n).metrics.mean_roi_ff = mean(nonzeros(roi_ff));
-            for_analysis(n).metrics.sd_roi_ff = std(nonzeros(roi_ff));
-            for_analysis(n).metrics.mean_remote_ff = mean(nonzeros(remote_ff));
-            for_analysis(n).metrics.sd_remote_ff = std(nonzeros(remote_ff));
+            roi_ff_array = zeros(1, length(row_roi));
+            remote_ff_array = zeros(1, length(row_remote));
+            roi_r2star_array = zeros(1, length(row_roi_r2star));
+            remote_r2star_array = zeros(1, length(row_remote_r2star));
+            roi_t1_array = zeros(1, length(row_roi_t1));
+            remote_t1_array = zeros(1, length(row_remote_t1));
+            
+            for fff = 1:length(row_roi)
+               roi_ff_array(fff) = roi_ff(row_roi(fff), col_roi(fff));
+            end
+            
+            for fff = 1:length(row_remote)
+                remote_ff_array(fff) = remote_ff(row_remote(fff), col_remote(fff));
+            end
+            
+            for fff = 1:length(row_roi_r2star)
+                roi_r2star_array(fff) = roi_r2star(row_roi_r2star(fff), col_roi_r2star(fff));
+            end
+            
+            for fff = 1:length(row_remote_r2star)
+                remote_r2star_array(fff) = remote_r2star(row_remote_r2star(fff), col_remote_r2star(fff));
+            end
+            
+            for fff = 1:length(row_roi_t1)
+                roi_t1_array(fff) = roi_t1(row_roi_t1(fff), col_roi_t1(fff));
+            end
+            
+            for fff = 1:length(row_remote_t1)
+                remote_t1_array(fff) = remote_t1(row_remote_t1(fff), col_remote_t1(fff));
+            end
+            
+            roi_ff_array(roi_ff_array < 0) = 0;
+            roi_ff_array(roi_ff_array > 100) = 100;
+            remote_ff_array(remote_ff_array < 0) = 0;
+            remote_ff_array(remote_ff_array > 100) = 100;
+            
+            roi_r2star_array(roi_r2star_array > 100) = 100;
+            remote_r2star_array(remote_r2star_array > 100) = 100;
+                        
+            % Plot Histogram of ROI vs Remote (Gross view)
+            figure();
+            h_ff = histogram(roi_ff_array, 'Normalization', 'probability');xlabel('Fat Fraction (%)'); ylabel('Frequency');
+            NumBins = h_ff.NumBins;
+            BinWidth = h_ff.BinWidth;
+            BinEdges = h_ff.BinEdges;
+%            x_ff = zeros(1, NumBins);
+%             for nb = 1:NumBins
+%                 x_ff(nb) = BinEdges(nb) + BinWidth/2;
+%             end
+%             y_ff = h_ff.Values;
+            hold on;
+            h_remote = histogram(remote_ff_array, 'Normalization', 'probability');
+            h_remote.BinEdges = BinEdges;
+            set(gca, 'FontSize', 16); title([name, ' ', time_point]);
+            xlim([0 100]);
+            legend({'MI', 'Remote'});
+            name_tp_dir = cat(2, name_save_dir, '/', name, '_', time_point);
+            if ~exist(name_tp_dir, 'dir')
+                mkdir(name_tp_dir);
+            end
+            saveas(gcf, cat(2, name_save_dir, '/', name, '_', time_point, '/Histogram_FF_Whole.png'));
+            
+            % R2star
+            figure();
+            h_r2star = histogram(roi_r2star_array, 'Normalization', 'probability');xlabel('R2* (Hz)'); ylabel('Frequency');
+            NumBins = h_r2star.NumBins;
+            BinWidth = h_r2star.BinWidth;
+            BinEdges = h_r2star.BinEdges;
+            hold on;
+            h_r2star_remote = histogram(remote_r2star_array, 'Normalization', 'probability');
+            h_r2star_remote.BinEdges = BinEdges;
+            set(gca, 'FontSize', 16); title([name, ' ', time_point]);
+            xlim([0 100]);
+            legend({'MI', 'Remote'});
+            name_tp_dir = cat(2, name_save_dir, '/', name, '_', time_point);
+            if ~exist(name_tp_dir, 'dir')
+                mkdir(name_tp_dir);
+            end
+            saveas(gcf, cat(2, name_save_dir, '/', name, '_', time_point, '/Histogram_R2star_Whole.png'));
+            
+            % T1
+            figure();
+            h_t1 = histogram(roi_t1_array, 'Normalization', 'probability');xlabel('T1 (ms)'); ylabel('Frequency');
+            NumBins = h_t1.NumBins;
+            BinWidth = h_t1.BinWidth;
+            BinEdges = h_t1.BinEdges;
+            hold on;
+            h_t1_remote = histogram(remote_t1_array, 'Normalization', 'probability');
+            h_t1_remote.BinEdges = BinEdges;
+            set(gca, 'FontSize', 16); title([name, ' ', time_point]);
+            %xlim([0 100]);
+            legend({'MI', 'Remote'});
+            name_tp_dir = cat(2, name_save_dir, '/', name, '_', time_point);
+            if ~exist(name_tp_dir, 'dir')
+                mkdir(name_tp_dir);
+            end
+            saveas(gcf, cat(2, name_save_dir, '/', name, '_', time_point, '/Histogram_T1_Whole.png'));
+            % Histogram and curve, not necessary
+%             figure();
+%             hh_ff = histfit(roi_ff_array, 20, 'exponential');
+%             yt = get(gca, 'YTick');
+%             set(gca, 'YTick', yt, 'YTickLabel', round(yt/numel(roi_ff_array), 2))
+%             left_yt = round(yt/numel(roi_ff_array), 2);
+%             hold on;
+%             yyaxis right; histfit(remote_ff_array, 20, 'exponential');
+%             yt = get(gca, 'YTick');
+%             set(gca, 'YTick', yt, 'YTickLabel', round(yt/numel(remote_ff_array), 2))
+
+            % Plot Histogram of ROI vs Remote (Slice by slice)
+            % Missing remote in ZZ slice 3
+            for slc = 1:size(roi_ff, 3)
+                % FF
+                roi_ff_slc = roi_ff(:,:,slc);
+                remote_ff_slc = remote_ff(:,:,slc);
+                [row_roi, col_roi, v_roi] = find(roi_in_myo_ff(:,:,slc));
+                roi_ff_array = zeros(1, length(row_roi));
+                for fff = 1:length(row_roi)
+                    roi_ff_array(fff) = roi_ff_slc(row_roi(fff), col_roi(fff));
+                end
+                
+                [row_remote, col_remote, v_remote] = find(remote_in_myo_ff(:,:,slc));
+                remote_ff_array = zeros(1, length(row_remote));
+                for fff = 1:length(row_remote)
+                    remote_ff_array(fff) = remote_ff_slc(row_remote(fff), col_remote(fff));
+                end
+                roi_ff_array(roi_ff_array < 0) = 0;
+                roi_ff_array(roi_ff_array > 100) = 100;
+                remote_ff_array(remote_ff_array < 0) = 0;
+                remote_ff_array(remote_ff_array > 100) = 100;
+                
+                figure();
+                h_ff = histogram(roi_ff_array, 'Normalization', 'probability');xlabel('Fat Fraction (%)'); ylabel('Frequency');
+                NumBins = h_ff.NumBins;
+                BinWidth = h_ff.BinWidth;
+                BinEdges = h_ff.BinEdges;
+                x_ff = zeros(1, NumBins);
+                hold on;
+                h_remote = histogram(remote_ff_array, 'Normalization', 'probability');
+                h_remote.BinEdges = BinEdges;
+                set(gca, 'FontSize', 16); title([name, ' ', time_point, ' Slice=', num2str(slc)]);
+                xlim([0 100]);
+                legend({'MI', 'Remote'});
+                name_tp_dir = cat(2, name_save_dir, '/', name, '_', time_point);
+                if ~exist(name_tp_dir, 'dir')
+                    mkdir(name_tp_dir);
+                end
+                saveas(gcf, cat(2, name_save_dir, '/', name, '_', time_point, '/Histogram_FF_Slice', num2str(slc),'.png'));
+                
+                % R2star
+                roi_r2star_slc = roi_r2star(:,:,slc);
+                remote_r2star_slc = remote_r2star(:,:,slc);
+                [row_roi_r2star, col_roi_r2star, v_roi_r2star] = find(roi_in_myo_r2star(:,:,slc));
+                roi_r2star_array = zeros(1, length(row_roi_r2star));
+                for fff = 1:length(row_roi_r2star)
+                    roi_r2star_array(fff) = roi_r2star_slc(row_roi_r2star(fff), col_roi_r2star(fff));
+                end
+                
+                [row_remote_r2star, col_remote_r2star, v_remote_r2star] = find(remote_in_myo_r2star(:,:,slc));
+                remote_r2star_array = zeros(1, length(row_remote_r2star));
+                for fff = 1:length(row_remote_r2star)
+                    remote_r2star_array(fff) = remote_r2star_slc(row_remote_r2star(fff), col_remote_r2star(fff));
+                end
+                roi_r2star_array(roi_r2star_array > 100) = 100;
+                remote_r2star_array(remote_r2star_array > 100) = 100;
+                
+                figure();
+                h_r2star = histogram(roi_r2star_array, 'Normalization', 'probability');xlabel('R2* (Hz)'); ylabel('Frequency');
+                NumBins = h_r2star.NumBins;
+                BinWidth = h_r2star.BinWidth;
+                BinEdges = h_r2star.BinEdges;
+                x_r2star = zeros(1, NumBins);
+                hold on;
+                h_r2star_remote = histogram(remote_r2star_array, 'Normalization', 'probability');
+                h_r2star_remote.BinEdges = BinEdges;
+                set(gca, 'FontSize', 16); title([name, ' ', time_point, ' Slice=', num2str(slc)]);
+                xlim([0 100]);
+                legend({'MI', 'Remote'});
+                name_tp_dir = cat(2, name_save_dir, '/', name, '_', time_point);
+                if ~exist(name_tp_dir, 'dir')
+                    mkdir(name_tp_dir);
+                end
+                saveas(gcf, cat(2, name_save_dir, '/', name, '_', time_point, '/Histogram_R2star_Slice', num2str(slc),'.png'));
+                
+                % T1
+                roi_t1_slc = roi_t1(:,:,slc);
+                remote_t1_slc = remote_t1(:,:,slc);
+                [row_roi_t1, col_roi_t1, v_roi_t1] = find(roi_in_myo_t1(:,:,slc));
+                roi_t1_array = zeros(1, length(row_roi_t1));
+                for fff = 1:length(row_roi_t1)
+                    roi_t1_array(fff) = roi_t1_slc(row_roi_t1(fff), col_roi_t1(fff));
+                end
+                
+                [row_remote_t1, col_remote_t1, v_remote_t1] = find(remote_in_myo_t1(:,:,slc));
+                remote_t1_array = zeros(1, length(row_remote_t1));
+                for fff = 1:length(row_remote_t1)
+                    remote_t1_array(fff) = remote_t1_slc(row_remote_t1(fff), col_remote_t1(fff));
+                end
+                
+                figure();
+                h_t1 = histogram(roi_t1_array, 'Normalization', 'probability');xlabel('T1 (ms)'); ylabel('Frequency');
+                NumBins = h_t1.NumBins;
+                BinWidth = h_t1.BinWidth;
+                BinEdges = h_t1.BinEdges;
+                x_t1 = zeros(1, NumBins);
+                hold on;
+                h_t1_remote = histogram(remote_t1_array, 'Normalization', 'probability');
+                h_t1_remote.BinEdges = BinEdges;
+                set(gca, 'FontSize', 16); title([name, ' ', time_point, ' Slice=', num2str(slc)]);
+                %xlim([0 100]);
+                legend({'MI', 'Remote'});
+                name_tp_dir = cat(2, name_save_dir, '/', name, '_', time_point);
+                if ~exist(name_tp_dir, 'dir')
+                    mkdir(name_tp_dir);
+                end
+                saveas(gcf, cat(2, name_save_dir, '/', name, '_', time_point, '/Histogram_T1_Slice', num2str(slc),'.png'));
+            end
+            
+            for_analysis(n).metrics.mean_roi_ff = mean(roi_ff_array);
+            for_analysis(n).metrics.sd_roi_ff = std(roi_ff_array);
+            for_analysis(n).metrics.mean_remote_ff = mean(remote_ff_array);
+            for_analysis(n).metrics.sd_remote_ff = std(remote_ff_array);
             
             for_analysis(n).metrics.mean_roi_r2star = mean(nonzeros(roi_r2star));
             for_analysis(n).metrics.sd_roi_r2star = std(nonzeros(roi_r2star));
             for_analysis(n).metrics.mean_remote_r2star = mean(nonzeros(remote_r2star));
             for_analysis(n).metrics.sd_remote_r2star = std(nonzeros(remote_r2star));
             
-            
+            close all;
             break;
         end
         
