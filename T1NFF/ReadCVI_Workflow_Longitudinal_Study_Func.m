@@ -2,12 +2,23 @@
 % And generate all its masks
 % For - T1_fat_Project
 
-function ReadCVI_Workflow_Longitudinal_Study_Func(con, dicom_glob, dstFolder, dicom_fields)
-            
-strings = strsplit(dstFolder, '/');
+function ReadCVI_Workflow_Longitudinal_Study_Func(con, dicom_glob, dstFolder, dicom_fields, old_freeROI_label)
+
+if nargin == 4
+    old_freeROI_label = 0;
+end
+if ispc
+    strings = strsplit(dicom_glob{1}, '\');
+else
+    strings = strsplit(dicom_glob{1}, '/');
+end
 name = strings{end-2};
 label = strings{end-1};
-            
+if strcmp(label, 'MAG') || strcmp(label, 'PSIR')
+    labelo = 'LGE';
+else
+    labelo = label;
+end
             dicom = char(dicom_glob); % Strings should be the same length, otherwise recategorize
             id_cell = cell(size(dicom, 1), 1);
             total_match = 0;
@@ -48,10 +59,10 @@ label = strings{end-1};
                 end
                 id_cell{i} = slice_data.MediaStorageSOPInstanceUID; % Didn't do anything to it
                 [mask_heart, mask_myocardium, mask_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count] = ...
-                    CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder);
+                    CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder, old_freeROI_label);
                 
                 % get all contours from excludeContour
-                excludeMask_2D = zeros(size(volume_image));
+                excludeMask_3Ds = zeros(size(volume_image));
                 if ~isempty(excludeContour)
                     keys = fieldnames(excludeContour);
                     % The code below assumes 2D slice of image; can be improved for more
@@ -64,52 +75,71 @@ label = strings{end-1};
                                 temp_mat = temp_mat + temp_cell{1}(:,:,k);
                             end
                         end
-                        excludeMask_2D = temp_mat + excludeMask_2D;
+                        excludeMask_3Ds = temp_mat + excludeMask_3Ds;
                     end
                 end
                 
                 % Get all contours from NoReFlowArea
-                noReflowMask_2D = zeros(size(volume_image));
+                noReflowMask_3Ds = zeros(size(volume_image));
                 if ~isempty(noReflowCell)
-                    temp_mat = noReflowCell{1};
-                    if ~isempty(temp_mat)
-                        for j = 1:size(noReflowCell{1}, 3)
-                            noReflowMask_2D = temp_mat(:,:,j) + noReflowMask_2D;
+                    if ~isempty(noReflowCell{1})
+                        temp_mat = zeros(size(volume_image));
+                        temp_idx = noReflowCell{2};
+                        if size(noReflowCell{1}, 3) > 1
+                            for j = 1:size(noReflowCell{1}, 3)
+                                noReflowMask_3Ds(:,:,temp_idx(j)) = noReflowCell{1}(:,:,j);
+                            end
+                        else
+                            temp_mat = noReflowCell{1};
                         end
+                        noReflowMask_3Ds = temp_mat + noReflowMask_3Ds;
                     end
                 end
                 
-                % Get all contours from myoRefCell
-                % Why there is a empty RefMat
-                myoRefMask_2D = zeros(size(volume_image));
+                myoRefMask_3Ds = zeros(size(volume_image));
                 if ~isempty(myoRefCell)
-                    temp_mat = myoRefCell{1};
-                    if ~isempty(temp_mat)
-                        for j = 1:size(myoRefCell{1}, 3)
-                            myoRefMask_2D = temp_mat(:,:,j) + myoRefMask_2D;
+                    if ~isempty(myoRefCell{1})
+                        temp_mat = zeros(size(volume_image));
+                        temp_idx = myoRefCell{2};
+                        if size(myoRefCell{1}, 3) > 1
+                            for j = 1:size(myoRefCell{1}, 3)
+                                temp_mat(:,:,temp_idx(j)) = myoRefCell{1}(:,:,j);
+                            end
+                        else
+                            temp_mat = myoRefCell{1};
                         end
+                        myoRefMask_3Ds = temp_mat + myoRefMask_3Ds;
                     end
                 end
                 
-                freeROIMask_2D = zeros(size(volume_image));
+                freeROIMask_3Ds = zeros(size(volume_image));
                 if ~isempty(freeROICell)
-                    temp_mat = freeROICell{1};
-                    if ~isempty(temp_mat)
+                    if ~isempty(freeROICell{1})
+                        temp_mat = zeros(size(volume_image));
+                        temp_idx = freeROICell{2};
+                        if size(freeROICell{1}, 3) > 1
                         for j = 1:size(freeROICell{1}, 3)
-                            freeROIMask_2D = temp_mat(:,:,j) + freeROIMask_2D;
+                            temp_mat(:,:,temp_idx(j)) = freeROICell{1}(:,:,j);
+                            
                         end
+                        else
+                            temp_mat = freeROICell{1};
+                        end
+                        freeROIMask_3Ds = temp_mat + freeROIMask_3Ds;
                     end
                 end
                 
                 if match_count > 0
+                    slc_end = slc_end + size(volume_image, 3) - 1;
+                    
                     vol_img_3D(:,:,slc_start:slc_end+match_count-1) = volume_image;
                     mask_heart_3D(:,:,slc_start:slc_end+match_count-1) = mask_heart;
                     mask_myocardium_3D(:,:,slc_start:slc_end+match_count-1) = mask_myocardium;
                     mask_blood_3D(:,:,slc_start:slc_end+match_count-1) = mask_blood;
-                    excludeMask_3D(:,:,slc_start:slc_end+match_count-1) = excludeMask_2D;
-                    myoRefMask_3D(:,:,slc_start:slc_end+match_count-1)  = myoRefMask_2D;
-                    noReflowMask_3D(:,:,slc_start:slc_end+match_count-1)  = noReflowMask_2D;
-                    freeROIMask_3D(:,:,slc_start:slc_end+match_count-1)  = freeROIMask_2D;
+                    excludeMask_3D(:,:,slc_start:slc_end+match_count-1) = excludeMask_3Ds;
+                    myoRefMask_3D(:,:,slc_start:slc_end+match_count-1)  = myoRefMask_3Ds;
+                    noReflowMask_3D(:,:,slc_start:slc_end+match_count-1)  = noReflowMask_3Ds;
+                    freeROIMask_3D(:,:,slc_start:slc_end+match_count-1)  = freeROIMask_3Ds;
                     
                     slc_start = slc_start + match_count;
                     slc_end = slc_end + match_count;
@@ -174,7 +204,7 @@ label = strings{end-1};
                 end
                 save(cat(2, dstPath, '/freeROI.mat'), 'freeROIMask_3D');
                 
-                dstPath = cat(2, dstFolder, '/', label, '_SliceLoc.mat');
+                dstPath = cat(2, dstFolder, '/', labelo, '_SliceLoc.mat');
                 save(dstPath, 'slc_array');
                 
                 if strcmp(label, 'T2star')
