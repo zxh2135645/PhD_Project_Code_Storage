@@ -1,8 +1,12 @@
 function [shifted_heart, shifted_myo, shifted_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count] ...
-    = CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder)
+    = CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder, old_freeROI_label)
 % Second version, improved performance. Initially used for CNN
 % segmentation.
 
+% This is hard-coded to solve freeROI coordinate record
+if nargin == 4
+    old_freeROI_label = 0;
+end
 % Find Epi- and Endo-cardium from the contours
 num_slice = length(slice_data);
 num_contours = size(con.contours, 1);
@@ -62,8 +66,14 @@ if any(contour_idx(:))
                     NoReFlow{i}([ceil(con.contours(contour_idx(i)).pts{j}(c,1))], [ceil(con.contours(contour_idx(i)).pts{j}(c,2))]) = 1;
                 end
             elseif contains(contour_type, 'freeDrawRoiContour')
-                for c = 1: length(con.contours(contour_idx(i)).pts{j})
-                    freeROI{i}([ceil(con.contours(contour_idx(i)).pts{j}(c,1))], [ceil(con.contours(contour_idx(i)).pts{j}(c,2))]) = 1;
+                if old_freeROI_label == 0
+                    for c = 1: length(con.contours(contour_idx(i)).pts{j})
+                        freeROI{i}([ceil(con.contours(contour_idx(i)).pts{j}(c,1))], [ceil(con.contours(contour_idx(i)).pts{j}(c,2))]) = 1;
+                    end
+                else
+                    for c = 1: length(con.contours(contour_idx(i)).pts{j})
+                        freeROI{i}([round(con.contours(contour_idx(i)).pts{j}(c,1)/2)], [round(con.contours(contour_idx(i)).pts{j}(c,2)/2)]) = 1;
+                    end
                 end
             end
         end
@@ -246,7 +256,7 @@ if any(contour_idx(:))
                 shifted_freeROI(:,:,i) = flipud(rot90(freeROI_edit(:,:,i),1));
             end
             freeROICell{1} = shifted_freeROI;
-            freeROICell{2} = noRef_index_array;
+            freeROICell{2} = freeROI_index_array;
         end
     else
         unmatch_count = unmatch_count + 1;
