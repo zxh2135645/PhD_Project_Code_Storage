@@ -6,9 +6,9 @@ addpath('../function/');
 base_dir = uigetdir;
 
 
-Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn'};
+Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn', '18D15', '18D16', '11D05', '11D26', '11D33'};
 
-time_points = {'8WK', '12WK', '14WK' '6MO', '9MO', '1YR', '15YR'};
+time_points = {'8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
 
 sequence_label = {'T1', 'T2star', 'LGE'};
 

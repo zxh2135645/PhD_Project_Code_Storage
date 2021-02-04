@@ -11,7 +11,7 @@ myo_new = [];
 
 switch name
     
-    case {'Ryn', 'Gobi'}
+    case {'Ryn', 'Gobi', '18D16'}
         
         for i = 1:sum(status_check(n).status(tp_count,:))
             if  status_check(n).status(tp_count, i) == 1

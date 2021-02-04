@@ -3,7 +3,7 @@ clear all;
 % Statistical analysis
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input
-% data_storage_rim
+% data_storage_rim from T1NFF_Longitudinal_new.m 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Output
 % p_storage
@@ -15,9 +15,9 @@ addpath('../function/');
 base_dir = uigetdir;
 contour_glob = glob(cat(2, base_dir, '/ContourData/*'));
 %Names = ExtractNames(contour_glob);
-Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn'};
+Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn', '18D15', '18D16', '11D05', '11D26', '11D33'};
 %time_points = {'0D_baseline','1D', '7D', '28D', '8WK', '6MO', '9MO', '1YR', '15YR'};
-time_points = {'8WK', '12WK', '14WK' '6MO', '9MO', '1YR', '15YR'};
+time_points = {'8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
 
 dicom_fields = {...
     'Filename',...
@@ -139,10 +139,12 @@ end
 save(cat(2, metrics_save_dir, 'p_storage.mat'), 'p_storage');
 
 %% Make tables showing mean and sd
-load(cat(2, metrics_save_dir, 'data_storage_rim.mat'));
+load(cat(2, metrics_save_dir, 'for_analysis_rim.mat'));
 col1 = {'Merry_MI', 'Merry_Remote', 'Ryn_MI', 'Ryn_Remote', 'Mojave_MI', 'Mojave_Remote', 'Sahara_MI', 'Sahara_Remote', ...
     'ZZ_MI', 'ZZ_Remote',  'Tina_MI', 'Tina_Remote', 'Sunny_MI', 'Sunny_Remote' 'Queenie_MI', 'Queenie_Remote', ...
-    'Hope_MI', 'Hope_Remote', 'Gobi_MI', 'Gobi_Remote', 'Felicity_MI', 'Felicity_Remote', 'Evelyn_MI', 'Evelyn_Remote'}';
+    'Hope_MI', 'Hope_Remote', 'Gobi_MI', 'Gobi_Remote', 'Felicity_MI', 'Felicity_Remote', 'Evelyn_MI', 'Evelyn_Remote',...
+    '18D15_MI', '18D15_Remote', '18D16_MI', '18D16_Remote', ...
+    '11D05_MI', '11D05_Remote', '11D26_MI', '11D26_Remote', '11D33_MI', '11D33_Remote'}';
 
 % time_point = time_points';
 wk8_t1 = cell(length(col1), 1);
@@ -209,9 +211,9 @@ for i = 1:length(data_storage_rim)
     end
 end
 
-T_t1.Properties.VariableNames = {'Subjects', '8WK', '12WK', '14WK' '6MO', '9MO', '1YR', '15YR'};
-T_ff.Properties.VariableNames = {'Subjects', '8WK', '12WK', '14WK' '6MO', '9MO', '1YR', '15YR'};
-T_r2star.Properties.VariableNames = {'Subjects', '8WK', '12WK', '14WK' '6MO', '9MO', '1YR', '15YR'};
+T_t1.Properties.VariableNames = {'Subjects', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
+T_ff.Properties.VariableNames = {'Subjects', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
+T_r2star.Properties.VariableNames = {'Subjects', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
 
 save(cat(2, metrics_save_dir, 'Table_t1.mat'), 'T_t1');
 save(cat(2, metrics_save_dir, 'Table_ff.mat'), 'T_ff');

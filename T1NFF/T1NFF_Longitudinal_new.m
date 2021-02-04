@@ -16,9 +16,9 @@ addpath('../function/');
 base_dir = uigetdir;
 contour_glob = glob(cat(2, base_dir, '/ContourData/*'));
 %Names = ExtractNames(contour_glob);
-Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn'};
+Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn', '18D15', '18D16', '11D05', '11D26', '11D33'};
 %time_points = {'0D_baseline','1D', '7D', '28D', '8WK', '6MO', '9MO', '1YR', '15YR'};
-time_points = {'8WK', '12WK', '14WK' '6MO', '9MO', '1YR', '15YR'};
+time_points = {'8WK', '12WK', '14WK' '4MO', '6MO', '9MO', '1YR', '15YR'};
 
 dicom_fields = {...
     'Filename',...
@@ -48,6 +48,7 @@ end
 load(cat(2, metrics_save_dir, 'pre_QualControl.mat'));
 
 %% Pull LGE, T1 Map, FF Map, and True R2* Map
+% This can be skipped for the second time
 
 label_t1 = sequence_label{1};
 label_lge = sequence_label{3};
@@ -56,7 +57,7 @@ for_analysis = struct;
 
 
 %for n = 1:length(Names)
-for n = 10:10
+for n = 15:19
 % for n = starting_point:starting_point
 % Do not need to pull up images for baseline
     name = Names{n};
@@ -306,6 +307,8 @@ end
 
 %% Here is where analysis starts
 % First looking at mean+sd value time evolution
+%% The pre_QualControl is generated in T1FP_GenDict_FromQC.m
+% after running the section above
 %% Before analysis, parse pre_QualControl
 status_check = struct;
 for n = 1:length(Names)
@@ -696,7 +699,7 @@ for n = 1:length(Names)
     xticklabels(fliplr(time_points_lr(I)));
     set(gca, 'FontSize', 16);
     grid on;
-    ylim([1000 1600]); xlim([xtcks(1) xtcks(end)]);
+    ylim([800 1600]); xlim([xtcks(1) xtcks(end)]);
     legend({'MI', 'Remote'}, 'Location', 'SouthEast');
     title(cat(2, name, '  T1 evolution'));
     
@@ -1104,7 +1107,7 @@ for n = 1:length(Names)
     xticklabels(fliplr(time_points_lr(I)));
     set(gca, 'FontSize', 16);
     grid on;
-    ylim([1000 1600]); xlim([xtcks(1) xtcks(end)]);
+    ylim([800 1600]); xlim([xtcks(1) xtcks(end)]);
     legend({'MI', 'Remote'}, 'Location', 'SouthEast');
     title(cat(2, name, '  T1 evolution'));
     
@@ -1226,7 +1229,7 @@ for n = 1:length(Names)
     xticks(fliplr(xtcks_lr));
     xticklabels(fliplr(time_points_lr));
     grid on;
-    ylim([1000 1600]); xlim([xtcks(1) xtcks(end)+1]);
+    ylim([800 1600]); xlim([xtcks(1) xtcks(end)+1]);
     ha(3*(n-1)+1).XAxis.FontSize = 16;
     if n == 1
         title(' T1 evolution', 'FontSize', 16);
@@ -1275,4 +1278,4 @@ if ~exist(t1fp_save_dir, 'dir')
     mkdir(t1fp_save_dir);
 end
     
-saveas(gcf, cat(2, t1fp_save_dir, '/Time_Evolution_rim.png'));
+saveas(gcf, cat(2, t1fp_save_dir, '/Time_Evolution_rim_new_12282020.png'))
