@@ -205,7 +205,9 @@ for i = 1:length(whatsinit)
     img2 = img2 .* mask_struct(i).epi_mask;
     imagesc(img2); caxis([0 100]); axis image; %colormap default; %colorbar;
     colormap(brewermap([],'RdBu'));
-    % colorbar;
+    c = colorbar;
+    w = c.FontSize;
+    c.FontSize = 20;
     % '*YlGnBu'
     
     colormap_dir = cat(2, subject_dir, 'Colormap_', avg_name, '/');
@@ -216,3 +218,49 @@ for i = 1:length(whatsinit)
 end
 
 close all;
+
+
+%% Get intensity from a pixel
+n = 28;
+figure('Position', [100 0 1600 1600]);
+img2 = whatsinit{n};
+img2 = img2 .* mask_struct(n).epi_mask;
+hIm = imagesc(img2); caxis([0 100]); axis image;
+colormap(brewermap([],'RdBu'));
+roi = drawpolygon(gca);
+
+roi_mask = createMask(roi);
+
+mean_v = mean(nonzeros(img2 .* roi_mask));
+% 20P10_Exvivo7 
+% T2* is 13.08/15.09 ms at core @ 0.3x0.3x2
+% For hemo- MI region, T2* = 59.73
+% @ 2.1x2.1x8
+% T2* is 20.50 ms and 52.50
+
+% 18P93
+% T2* is 27.50/24.67/26.40 ms @ 0.3x0.3x2
+% T2* is 37 ms @ 2.1x2.1x8
+
+%% Measure Distance of thinned wall and hemo+ (Optional)
+figure('Position', [100 0 1600 1600]);
+img2 = whatsinit{1};
+img2 = img2 .* mask_struct(1).epi_mask;
+hIm = imagesc(img2); caxis([0 100]); axis image; %colormap default; %colorbar;
+sz = size(img2);
+colormap(brewermap([],'RdBu'));
+
+myData = MeasureDist_Image(hIm, sz);
+
+% 18P93
+% (24.03 + 16.00 + 19.61 + 14.65 + 27.98 + 20.43 + 16.80 + 21.37 + 18.30 + 28.36)/10 * (200/sz(1))
+% 5.6394 mm 
+% MI thinnest is ~0.3 mm 
+% Thickest is ~ 1.36 mm
+% From transmurality -> mean thickness is 0.31 mm 
+% 20P10_Exvivo7
+% (20.63 + 12.58 + 21.00 + 21.57 + 23.76 + 25.54 + 19.82 + 25.16) / 8 * (200/sz(1))
+% 5.5358 mm
+% MI thinnest is ~ 0.6-0.7 mm
+% MI thickest is ~ 3.26 mm
+% From transmurality -> mean thickness is 1.1145 

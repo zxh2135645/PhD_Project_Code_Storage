@@ -315,7 +315,7 @@ xlim([0 x(5)]);ylim([ylim_lb, ylim_ub])
 text(2,ylim_ub-2, 'Slice Thickness = 2 mm', 'FontSize', 16);
 text(9,ylim_ub-2, 'Slice Thickness = 4 mm', 'FontSize', 16);
 text(16,ylim_ub-2, 'Slice Thickness = 6 mm', 'FontSize', 16);
-text(23,ylim_ub-2, 'Slice Thickness = 8 mm', 'FontSize', 16)
+text(23,ylim_ub-2, 'Slice Thickness = 8 mm', 'FontSize', 16);
 set(gca, 'FontSize', 16);
 xlabel('Resolution (mm^2)', 'FontSize', 24); ylabel('T2^* (ms)', 'FontSize', 24);
 hold off
