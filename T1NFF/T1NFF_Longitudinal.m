@@ -2,7 +2,8 @@ close all;
 clear all;
 
 % T1 and FF analysis
-
+% This was initially used for Merry
+% Incorperate T1NFF_LastestTP can to this can be good
 
 addpath('../function/');
 base_dir = '../T1_Fat_Project/';

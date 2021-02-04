@@ -1,6 +1,6 @@
 clear all;
 close all;
-%% Delete duplicate files
+% Delete duplicate files
 % base directory
 base_dir = uigetdir;
 %% 
