@@ -2,7 +2,7 @@ function [shifted_heart, shifted_myo, shifted_blood, excludeContour, myoRefCell,
     = CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder, old_freeROI_label)
 % Second version, improved performance. Initially used for CNN
 % segmentation.
-
+% Need to work on this to make it 3D compatible? 02/03/2021
 % This is hard-coded to solve freeROI coordinate record
 if nargin == 4
     old_freeROI_label = 0;
@@ -10,7 +10,7 @@ end
 % Find Epi- and Endo-cardium from the contours
 num_slice = length(slice_data);
 num_contours = size(con.contours, 1);
-contour_idx = zeros(1, num_contours);
+contour_idx = zeros(1, num_slice);
 
 for i = 1:num_slice
     for j = 1:num_contours
@@ -20,18 +20,22 @@ for i = 1:num_slice
     end
 end
 
+match_array = contour_idx > 0;
 unmatch_count = 0; % See if slice matches
+epi_match_array = zeros(1, num_slice);
+endo_match_array = zeros(1, num_slice);
 
 if any(contour_idx(:))
-    epi_flow = cell(1, num_contours);
-    endo_flow = cell(1, num_contours);
-    excludeContour = cell(1, num_contours);
-    myoRef = cell(1, num_contours);
-    NoReFlow = cell(1, num_contours);
-    freeROI = cell(1, num_contours);
+    epi_flow = cell(1, num_slice);
+    endo_flow = cell(1, num_slice);
+    excludeContour = cell(1, num_slice);
+    myoRef = cell(1, num_slice);
+    NoReFlow = cell(1, num_slice);
+    freeROI = cell(1, num_slice);
     excludeCtr_struct = struct;
     
-    for i = 1:num_contours
+    %for i = 1:num_contours
+    for i = 1:num_slice
         ctype = [];
         if contour_idx(i) ~= 0
             ctype = con.contours(contour_idx(i)).ctype;
@@ -82,12 +86,16 @@ if any(contour_idx(:))
     % Remove zero matrix
     count = 1;
     index_array = [];
-    for i = 1 : num_contours
-        if any(epi_flow{i}(:))
+    
+    for i = 1 : num_slice
+        if any(epi_flow{i}(:)) && any(endo_flow{i}(:))
             epi_flow_edit(:,:,count) = epi_flow{i}(:,:);
             endo_flow_edit(:,:,count) = endo_flow{i}(:,:);
             index_array = [index_array; i];
             count = count + 1;
+            
+            epi_match_array(i) = 1;
+            endo_match_array(i) = 1;
         end
     end
     
@@ -107,7 +115,7 @@ if any(contour_idx(:))
             count = 1;
             
             ctr_index_array = []; %%%%% Not necessary
-            for j = 1 : num_contours
+            for j = 1 : num_slice
                 if any(excludeCtr_struct.(fname{i}){j}(:))
                     excludeCtr_mat(:,:,count) =  excludeCtr_struct.(fname{i}){j};
                     ctr_index_array = [ctr_index_array; j];
@@ -122,7 +130,7 @@ if any(contour_idx(:))
         count = 1;
         myo_index_array = []; %%%%% NOT necessary
         myoRef_edit = [];
-        for i = 1 : num_contours
+        for i = 1 : num_slice
             if any(myoRef{i}(:))
                 myoRef_edit(:,:,count) = myoRef{i}(:,:);
                 myo_index_array = [myo_index_array; i];
@@ -135,7 +143,7 @@ if any(contour_idx(:))
         count = 1;
         noRef_index_array = [];
         NoReFlow_edit = [];
-        for i = 1:num_contours
+        for i = 1:num_slice
             if any(NoReFlow{i}(:))
                 NoReFlow_edit(:,:,count) = NoReFlow{i}(:,:);
                 noRef_index_array = [noRef_index_array; i];
@@ -146,7 +154,7 @@ if any(contour_idx(:))
         count = 1;
         freeROI_index_array = [];
         freeROI_edit = [];
-        for i = 1 : num_contours
+        for i = 1 : num_slice
             if any(freeROI{i}(:))
                 freeROI_edit(:,:,count) = freeROI{i}(:,:);
                 freeROI_index_array = [freeROI_index_array; i];
@@ -259,16 +267,18 @@ if any(contour_idx(:))
             freeROICell{2} = freeROI_index_array;
         end
     else
-        unmatch_count = unmatch_count + 1;
+        % unmatch_count = unmatch_count + 1;
     end
     
 else
-    unmatch_count = unmatch_count + 1;
+   % unmatch_count = unmatch_count + 1;
     
     % disp('No Match');
 end
 
-match_count = (num_slice>0) - unmatch_count;
+match_count = sum(epi_match_array & endo_match_array & match_array);
+
+% match_count = (num_slice>0) - unmatch_count;
 if match_count == 0
     mask_heart = [];
     mask_myocardium = [];
