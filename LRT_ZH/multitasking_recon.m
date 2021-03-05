@@ -1,0 +1,134 @@
+% 3D MR Multitasking reconstruction code v2.0 - VB and VE multitasking sequence support
+% This is the 3D brain T1T2* branch, managed by Zhehao Hu
+% This branch was derived from the 3D branch
+
+%% Set up paths
+mainpath='/mnt/DharmakumarRLab/Files/Diane/Multitasking/LRT_ZH'; %Put your path here.
+
+% mainpath='/mnt/DharmakumarRLab/Files/Diane/Multitasking/LRT_ZH';
+
+addpath(genpath(fullfile(mainpath,'supporting','recon'))); %Supporting reconstruction scripts
+addpath(genpath(fullfile(mainpath,'supporting','utils'))); %Supporting utilities
+
+%Third-party paths are below:
+
+% NYU GPU NUFFT code. Not included. You will have to download, compile, and manage your own copy
+% addpath(genpath('~/gpuNUFFT'));
+
+% Siemens import code. Included. If you already have it, you can remove this folder from your branch and update this path to your existing folder
+addpath(genpath((fullfile(mainpath,'supporting','mapVBVD'))));
+
+% Michigan irt code. Included.  If you already have it, you can remove this folder from your branch and update this path to your existing folder
+% irtdir=fullfile(mainpath,'supporting','irt');
+% current_dir=pwd;
+% cd(irtdir);
+% irtdir=pwd; %reset irtdir to use absolute pathname
+% setup;
+% cd(current_dir);
+
+%% Loading and preprocessing
+useGPU=(exist('gpuNUFFT','file')>1); %true if using gpuNUFFT. false if using irt.
+
+total_time = inf; %amount of data to use, in seconds. Use "inf" to use all.
+%rep = 1; %only for repeatability studies
+ 
+load_data;
+%%
+setup_trajectories;
+%
+setup_functions;
+%
+pre_whiten;
+%
+estimate_sensitivities;
+
+disp('Finished SEs.')
+%% initial reconstruction
+realtime_subspace; %default is probably overconstrained, but enough to identify respiration
+
+phase_drift_correction; %For long scans, such as 3D, correct for phase drift and re-calculate real-time subspace
+realtime_subspace;
+
+if iscartesian
+    Phi_rt(:,nav_indices)=0; %set nav lines to 0
+    
+%     st.w(1)=st.w(1)-size(nav_data,1);
+%     st.winv = 1./st.w;
+%     st.winv(st.w==0)=0;
+    
+    M=@(x)vec(ifft(ifft(bsxfun(@times,fft(fft(prep(x),[],1),[],3),reshape(1./(st.w+1),Ny,1,Nz)),[],1),[],3));
+end
+
+ls_recon;
+
+%Store real-time reconstruction
+L_init = L;
+Phi_rt_init = Phi_rt;
+Phi_rt_full_init =  Phi_rt_full;
+Phi_rt_small_init = Phi_rt_small;
+U_init = U;
+
+realtime_display;
+
+%% generate relaxation subspace
+gen_bloch_subspace;
+
+% clear twix_obj;
+save('Phantom_T1_beforeBinning.mat','-v7.3');
+%% binning
+% disp('Starting binning...')
+rbins=1; %Set # of respiratory bins here
+cbins=1; %Set # of cardiac bins here
+
+resp = 1;
+card = 1;
+do_binning;
+
+% card = 1;
+% resp = 0;
+% 
+% do_binning;
+
+Phi_rt_small_init = save_Phi_rt_small_init;
+% clear Phi_rt_FirstEcho
+disp('Finished section binning.')
+%% tensor subspace estimation
+set_tensor_params; %change smoothness/low-rankness parameters in here
+tensor_subspace;
+
+%VERY approximate preview
+%U=vec(reshape(U_init,[],L_init)*(Phi_rt_full_init*pinv(Phi_rt_full)));
+U=vec(reshape(U_init,[],L_init)*(bsxfun(@times,Phi_rt_init,lrw)*pinv(Phi_rt)));
+tensor_display;
+
+disp('Finished section tensor subspace estimation.')
+%u recon
+ls_recon; %set least-squares iterations in here
+tensor_display;
+
+% Whiten 
+Wt=reshape(U0,[],L);
+Wt=Wt'*Wt/size(Wt,1);
+Wt = inv(sqrtm(Wt));
+WtWh = Wt*Wt';
+
+if false  % for brain DSC perfusion, should use this part
+    Wt=mean(diag(Wt))*eye(L);
+    WtWh=Wt*Wt';
+end
+
+% tv or wavelet
+% wavelet_recon_aniso3D;
+% tensor_display;
+tv_recon_aniso3D;
+tensor_display;
+%%
+
+%clear twix.obj;
+save('20P48_4wk_3mm_5meas_binningResults_0214.mat', 'Gr','L','Nx', 'Ny', 'Nz','Phi','U','dispim', 'vec','sizes','ScanType','Phi_rt_full','Phi_rt_full_init','params','Ridx','Hidx');
+% save('20P48_4wk_6mm_2meas_0125_modifiedBinning.mat','-v7.3');
+disp('Saved.')
+
+
+% diary off
+clear all

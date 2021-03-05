@@ -40,16 +40,16 @@ dicom_fields = {...
 sequence_label = {'LGE', 'T1', 'T2star'};
 sequence_label_exvivo = {'mGRE_3D', 'T1_SIEMENS', 'T2_SIEMENS', 'T2star_SIEMENS', 'T2_CMR', 'T1_CMR', 'T2star_CMR'};
 %% Name check
-name_check = 'Hope';
+name_check = '11D05';
 starting_point = find(strcmp(name_check, Names),1);
 
 %
 % Make it not always overwrite
-%for n = starting_point:length(Names)
-for n = starting_point:starting_point+4
+for n = starting_point:length(Names)
+%for n = starting_point:starting_point+4
     name = Names{n};
     %for tp = 1:length(time_points)
-    for tp = 1:1
+    for tp = 12:12
         
     
         time_point = time_points{end-tp+1};
@@ -77,7 +77,7 @@ for n = starting_point:starting_point+4
                         
                         dicom_glob = glob(cat(2, base_dir, '/Data/', name, '/', name, '_', time_point, '/', label, '/*'));
                         
-                        if tp == 12 && (ll == 1)% D3 do not have 2D LGE, and sax5 and sax6 of D3 has different resolution
+                        if tp == 13 && (ll == 1)% D3 do not have 2D LGE, and sax5 and sax6 of D3 has different resolution
                             % Needed to be modified here for a more generic use
                             disp(['Skipped ', time_point, '  ', label])
                             
@@ -95,7 +95,7 @@ for n = starting_point:starting_point+4
                             
                             dicom_glob = glob(cat(2, base_dir, '/Data/', name, '/', name, '_', time_point, '/', label, '/*'));
                             
-                        if tp == 12 && (ll == 1)% D3 do not have 2D LGE, and sax5 and sax6 of D3 has different resolution
+                        if tp == 13 && (ll == 1)% D3 do not have 2D LGE, and sax5 and sax6 of D3 has different resolution
                             % Needed to be modified here for a more generic use
                             disp(['Skipped ', time_point, '  ', label])
                             
