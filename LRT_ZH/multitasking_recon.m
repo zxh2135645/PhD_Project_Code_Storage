@@ -3,7 +3,7 @@
 % This branch was derived from the 3D branch
 
 %% Set up paths
-mainpath='/mnt/DharmakumarRLab/Files/Diane/Multitasking/LRT_ZH'; %Put your path here.
+mainpath = uigetdir; %Put your path here.
 
 % mainpath='/mnt/DharmakumarRLab/Files/Diane/Multitasking/LRT_ZH';
 
