@@ -1,3 +1,5 @@
+% 
+% Align between different modalities and compared in pseudo-pixel level
 clear all;
 close all;
 addpath('../function/');
@@ -6,7 +8,7 @@ base_dir = uigetdir;
 contour_glob = glob(cat(2, base_dir, '/ContourData/*'));
 %Names = ExtractNames(contour_glob);
 Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn', '18D15', '18D16', '11D05', '11D26', '11D33'};
-time_points = {'8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
+time_points = {'7D', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
 
 dicom_fields = {...
     'Filename',...
@@ -35,7 +37,7 @@ label_t1 = sequence_label{1};
 label_lge = sequence_label{3};
 label_t2star = sequence_label{2};
 
-%%
+%% Main body
 for n = 1:length(Names)
 %for n = 1:1
     % for n = starting_point:starting_point
@@ -51,7 +53,7 @@ for n = 1:length(Names)
     end
     
     %for tp = 1:length(time_points)
-    for tp = 2:2
+    for tp = 9:9
         time_point = time_points{end-tp+1};
         tp_dir = cat(2, base_dir, '/ContourData/',  name, '/', name, '_', time_point,  '/');
         if ~exist(tp_dir, 'dir')

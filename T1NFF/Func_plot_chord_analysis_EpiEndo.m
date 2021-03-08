@@ -137,6 +137,6 @@ plot(x2_endo,yCalc2_for_plot_endo, 'LineWidth', 1.5);
 text(x2_ub-100, y_lb+200, str2_endo, 'FontSize', 12);
 grid on;
 
-saveas(gcf, cat(2, tp_dir2, 'Chord_Scatter_EpiEndo_LReg.png'));
+saveas(gcf, cat(2, tp_dir2, 'Chord_Scatter_EpiEndo_LReg_Grv180.png'));
 
 end

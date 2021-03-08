@@ -28,7 +28,8 @@
 % FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 % OTHER DEALINGS IN THE SOFTWARE.
  
-
+% Modified by Xinheng Zhang 02/10/2021
+% For parsing Vida header
 
 
 function [volume_image, slice_data, image_meta_data] = ...
@@ -204,13 +205,39 @@ function [volume_image, slice_data, image_meta_data] = ...
             % Save selected header data into the structure slice_data
             for j = 1:numel(dicom_fields) % loop through dicom field names
                 current_field = dicom_fields{j};
-                % Deal with requested fields not found in header
-                if isfield(header, current_field)
-                    slice_data(true_index).(current_field) = header.(current_field);
+                if contains(header.ManufacturerModelName, 'Vida')
+                    switch current_field
+                        
+                        case {'PixelSpacing', 'SliceThickness'}
+                            if isfield(header.PerFrameFunctionalGroupsSequence.Item_1.PixelMeasuresSequence.Item_1, current_field)
+                                slice_data(true_index).(current_field) = header.PerFrameFunctionalGroupsSequence.Item_1.PixelMeasuresSequence.Item_1.(current_field);
+                            else
+                                ['header did not contain the field ' current_field]
+                            end %if
+                            
+                        case {'SliceLocation'}
+                            if isfield(header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_11fe.Item_1, 'Private_0021_1188')
+                                slice_data(true_index).(current_field) = header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_11fe.Item_1.Private_0021_1188;
+                            else
+                                ['header did not contain the field ' current_field]
+                            end %if
+                        otherwise
+                            if isfield(header, current_field)
+                                slice_data(true_index).(current_field) = header.(current_field);
+                            else
+                                ['header did not contain the field ' current_field]
+                            end %if
+                    end
+                            
+                    
                 else
-                    ['header did not contain the field ' current_field]
-                end %if
-                
+                    % Deal with requested fields not found in header
+                    if isfield(header, current_field)
+                        slice_data(true_index).(current_field) = header.(current_field);
+                    else
+                        ['header did not contain the field ' current_field]
+                    end %if
+                end
             end % loop through dicom field names
             % done saving filtered header data
             

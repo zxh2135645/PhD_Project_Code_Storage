@@ -115,7 +115,7 @@ grid on;
 
 subplot(2,2,3);
 scatter(Mipix_mean3_nnz_epi, Mipix_mean_nnz_epi, 48, 'filled');
-xlabel('R2star (Hz)'); ylabel('T1 (ms)');
+xlabel('R2star (s^{-1})'); ylabel('T1 (ms)');
 set(gca, 'FontSize', 20)
 ylim([y_lb y_ub]); xlim([x2_lb x2_ub]);
 hold on;
@@ -136,7 +136,7 @@ grid on;
 
 subplot(2,2,4);
 scatter(Mipix_mean3_nnz_endo, Mipix_mean_nnz_endo, 48, 'filled');
-xlabel('R2star (Hz)'); ylabel('T1 (ms)');
+xlabel('R2star (s^{-1})'); ylabel('T1 (ms)');
 set(gca, 'FontSize', 20);
 ylim([y_lb y_ub]); xlim([x2_lb x2_ub]);
 hold on;

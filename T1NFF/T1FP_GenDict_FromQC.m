@@ -8,7 +8,7 @@ base_dir = uigetdir;
 
 Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn', '18D15', '18D16', '11D05', '11D26', '11D33'};
 
-time_points = {'8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
+time_points = {'7D', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
 
 sequence_label = {'T1', 'T2star', 'LGE'};
 
@@ -75,21 +75,27 @@ end
 
 % Permernantly remove
 % Sunny_8WK bad T2* quality
-pre_QualControl(7).status(1).Slice1 = 0;
+pre_QualControl(7).status(2).Slice1 = 0;
 % Queenie 6MO
-pre_QualControl(8).status(4).Slice1 = 0;
+pre_QualControl(8).status(6).Slice1 = 0;
 % Evelyn 6MO slice1 and slice2
-pre_QualControl(12).status(4).Slice1 = 0;
-pre_QualControl(12).status(4).Slice2 = 0;
+%        7D  slice2
+pre_QualControl(12).status(6).Slice1 = 0;
+pre_QualControl(12).status(6).Slice2 = 0;
+pre_QualControl(12).status(1).Slice2 = 0;
+
 % Felicity 6MO slice3
-pre_QualControl(11).status(4).Slice3 = 0;
+pre_QualControl(11).status(6).Slice3 = 0;
+
+% Gobi 7D slice3
+pre_QualControl(10).status(1).Slice3 = 0;
 
 
 % Reorder Gobi
 % pre_QualControl(10).status(1).Slice1 = 0;
 % TODO
 % special case for Gobi and Ryn
-pre_QualControl(2).status(1).Slice5 = [];
-pre_QualControl(10).status(1).Slice1 = [];
+pre_QualControl(2).status(2).Slice5 = [];
+pre_QualControl(10).status(2).Slice1 = [];
 
 save(cat(2, metrics_save_dir, 'pre_QualControl.mat'), 'pre_QualControl');

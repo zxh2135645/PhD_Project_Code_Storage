@@ -9,7 +9,7 @@ addpath('../function/');
 %%%%%%%%%%%%%%%%%%%%%%%%%% output file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % roi
 % mask_struct
-% aha_anlysis
+% aha_analysis
 % T2star_meanSD_table
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
