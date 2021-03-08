@@ -104,6 +104,7 @@ for i = 1:size(t1, 3)
     BW_skel = bwmorph(fixed_eroded, 'skel', Inf);
     center_mask_t1(:,:,i) = imfill(BW_skel, 'hole');
     center_fixed = center_mask_t1(:,:,i);
+    center_fixed = imopen(center_fixed, se); % Removing spikes
     fixedRegistered_epi = fixed_eroded - center_fixed > 0;
     fixedRegistered_endo = center_fixed + fixed_eroded > 1;
     
@@ -111,6 +112,7 @@ for i = 1:size(t1, 3)
     BW_skel = bwmorph(movingRegistered_eroded, 'skel', Inf);
     center_mask_ff(:,:,i) = imfill(BW_skel, 'hole');
     center_moving = center_mask_ff(:,:,i);
+    center_moving = imopen(center_moving, se); % Removing spikes
     movingRegistered_epi = movingRegistered_eroded - center_moving > 0;
     movingRegistered_endo = center_moving + movingRegistered_eroded > 1;
     
@@ -211,20 +213,40 @@ for i = 1:size(t1, 3)
     for j = 1:Segn
         if ~isempty(Mipix_hemo_p{j,i})
             Mi_idx1_hemo_p = [Mi_idx1_hemo_p, j];
+        end
+        if ~isempty(Mipix_hemo_n{j,i})
             Mi_idx1_hemo_n = [Mi_idx1_hemo_n, j];
+        end
+        if ~isempty(Mipix_hemo_n_ff_p{j,i})
             Mi_idx1_hemo_n_ff_p = [Mi_idx1_hemo_n_ff_p, j];
+        end
+        if ~isempty(Mipix_hemo_n_ff_n{j,i})
             Mi_idx1_hemo_n_ff_n = [Mi_idx1_hemo_n_ff_n, j];
         end
+        
         if ~isempty(Mipix_epi_hemo_p{j,i})
             Mi_idx1_epi_hemo_p = [Mi_idx1_epi_hemo_p, j];
+        end
+        if ~isempty(Mipix_epi_hemo_n{j,i})
             Mi_idx1_epi_hemo_n = [Mi_idx1_epi_hemo_n, j];
+        end
+        if ~isempty(Mipix_epi_hemo_n_ff_p{j,i})
             Mi_idx1_epi_hemo_n_ff_p = [Mi_idx1_epi_hemo_n_ff_p, j];
+        end
+        if ~isempty(Mipix_epi_hemo_n_ff_n{j,i})
             Mi_idx1_epi_hemo_n_ff_n = [Mi_idx1_epi_hemo_n_ff_n, j];
         end
+        
         if ~isempty(Mipix_endo_hemo_p{j,i})
             Mi_idx1_endo_hemo_p = [Mi_idx1_endo_hemo_p, j];
+        end
+        if ~isempty(Mipix_endo_hemo_n{j,i})
             Mi_idx1_endo_hemo_n = [Mi_idx1_endo_hemo_n, j];
+        end
+        if ~isempty(Mipix_endo_hemo_n_ff_p{j,i})
             Mi_idx1_endo_hemo_n_ff_p = [Mi_idx1_endo_hemo_n_ff_p, j];
+        end
+        if ~isempty(Mipix_endo_hemo_n_ff_n{j,i})
             Mi_idx1_endo_hemo_n_ff_n = [Mi_idx1_endo_hemo_n_ff_n, j];
         end
     end
@@ -244,20 +266,41 @@ for i = 1:size(t1, 3)
     for j = 1:Segn
         if ~isempty(Mipix2_hemo_p{j,i})
             Mi_idx2_hemo_p = [Mi_idx2_hemo_p, j];
+        end
+        if ~isempty(Mipix2_hemo_n{j,i})
             Mi_idx2_hemo_n = [Mi_idx2_hemo_n, j];
+        end
+        if ~isempty(Mipix2_hemo_n_ff_p{j,i})
             Mi_idx2_hemo_n_ff_p = [Mi_idx2_hemo_n_ff_p, j];
+        end
+        if ~isempty(Mipix2_hemo_n_ff_n{j,i})
             Mi_idx2_hemo_n_ff_n = [Mi_idx2_hemo_n_ff_n, j];
         end
+        
+        
         if ~isempty(Mipix2_epi_hemo_p{j,i})
             Mi_idx2_epi_hemo_p = [Mi_idx2_epi_hemo_p, j];
+        end
+        if ~isempty(Mipix2_epi_hemo_n{j,i})
             Mi_idx2_epi_hemo_n = [Mi_idx2_epi_hemo_n, j];
+        end
+        if ~isempty(Mipix2_epi_hemo_n_ff_p{j,i})
             Mi_idx2_epi_hemo_n_ff_p = [Mi_idx2_epi_hemo_n_ff_p, j];
+        end
+        if ~isempty(Mipix2_epi_hemo_n_ff_n{j,i})
             Mi_idx2_epi_hemo_n_ff_n = [Mi_idx2_epi_hemo_n_ff_n, j];
         end
+        
         if ~isempty(Mipix2_endo_hemo_p{j,i})
             Mi_idx2_endo_hemo_p = [Mi_idx2_endo_hemo_p, j];
+        end
+        if ~isempty(Mipix2_endo_hemo_n{j,i})
             Mi_idx2_endo_hemo_n = [Mi_idx2_endo_hemo_n, j];
+        end
+        if ~isempty(Mipix2_endo_hemo_n_ff_p{j,i})
             Mi_idx2_endo_hemo_n_ff_p = [Mi_idx2_endo_hemo_n_ff_p, j];
+        end
+        if ~isempty(Mipix2_endo_hemo_n_ff_n{j,i})
             Mi_idx2_endo_hemo_n_ff_n = [Mi_idx2_endo_hemo_n_ff_n, j];
         end
     end
@@ -277,20 +320,40 @@ for i = 1:size(t1, 3)
     for j = 1:Segn
         if ~isempty(Mipix3_hemo_p{j,i})
             Mi_idx3_hemo_p = [Mi_idx3_hemo_p, j];
+        end
+        if ~isempty(Mipix3_hemo_n{j,i})
             Mi_idx3_hemo_n = [Mi_idx3_hemo_n, j];
+        end
+        if ~isempty(Mipix3_hemo_n_ff_p{j,i})
             Mi_idx3_hemo_n_ff_p = [Mi_idx3_hemo_n_ff_p, j];
+        end
+        if ~isempty(Mipix3_hemo_n_ff_n{j,i})
             Mi_idx3_hemo_n_ff_n = [Mi_idx3_hemo_n_ff_n, j];
         end
+        
         if ~isempty(Mipix3_epi_hemo_p{j,i})
             Mi_idx3_epi_hemo_p = [Mi_idx3_epi_hemo_p, j];
+        end
+        if ~isempty(Mipix3_epi_hemo_n{j,i})
             Mi_idx3_epi_hemo_n = [Mi_idx3_epi_hemo_n, j];
+        end
+        if ~isempty(Mipix3_epi_hemo_n_ff_p{j,i})
             Mi_idx3_epi_hemo_n_ff_p = [Mi_idx3_epi_hemo_n_ff_p, j];
+        end
+        if ~isempty(Mipix3_epi_hemo_n_ff_n{j,i})
             Mi_idx3_epi_hemo_n_ff_n = [Mi_idx3_epi_hemo_n_ff_n, j];
         end
+        
         if ~isempty(Mipix3_endo_hemo_p{j,i})
             Mi_idx3_endo_hemo_p = [Mi_idx3_endo_hemo_p, j];
+        end
+        if ~isempty(Mipix3_endo_hemo_n{j,i})
             Mi_idx3_endo_hemo_n = [Mi_idx3_endo_hemo_n, j];
+        end
+        if ~isempty(Mipix3_endo_hemo_n_ff_p{j,i})
             Mi_idx3_endo_hemo_n_ff_p = [Mi_idx3_endo_hemo_n_ff_p, j];
+        end
+        if ~isempty(Mipix3_endo_hemo_n_ff_n{j,i})
             Mi_idx3_endo_hemo_n_ff_n = [Mi_idx3_endo_hemo_n_ff_n, j];
         end
     end

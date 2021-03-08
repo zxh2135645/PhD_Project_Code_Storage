@@ -18,7 +18,7 @@ contour_glob = glob(cat(2, base_dir, '/ContourData/*'));
 %Names = ExtractNames(contour_glob);
 Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn', '18D15', '18D16', '11D05', '11D26', '11D33'};
 %time_points = {'0D_baseline','1D', '7D', '28D', '8WK', '6MO', '9MO', '1YR', '15YR'};
-time_points = {'8WK', '12WK', '14WK' '4MO', '6MO', '9MO', '1YR', '15YR'};
+time_points = {'7D', '8WK', '12WK', '14WK' '4MO', '6MO', '9MO', '1YR', '15YR'};
 
 dicom_fields = {...
     'Filename',...
@@ -56,8 +56,8 @@ label_t2star = sequence_label{2};
 for_analysis = struct;
 
 
-%for n = 1:length(Names)
-for n = 15:19
+for n = 9:length(Names)
+% for n = 1:1
 % for n = starting_point:starting_point
 % Do not need to pull up images for baseline
     name = Names{n};
@@ -66,8 +66,8 @@ for n = 15:19
         mkdir(name_save_dir);
     end
     
-    for tp = 1:length(time_points)
-        %for tp = 1:length(time_points)
+    % for tp = 1:length(time_points)
+    for tp = 9:9
         time_point = time_points{end-tp+1};
         tp_dir = cat(2, base_dir, '/ContourData/',  name, '/', name, '_', time_point,  '/');
         if ~exist(tp_dir, 'dir')
@@ -170,7 +170,7 @@ for n = 15:19
             end
             
             % convert ff_map to matrix
-            r2star = zeros(size(r2star_map{1}.fwmc_r2star,1), size(r2star_map{2}.fwmc_r2star, 2), length(r2star_map));
+            r2star = zeros(size(r2star_map{1}.fwmc_r2star,1), size(r2star_map{1}.fwmc_r2star, 2), length(r2star_map));
             for f = 1:length(r2star_map)
                r2star(:,:,f) = r2star_map{f}.fwmc_r2star; 
             end
@@ -339,9 +339,12 @@ for n = 1:length(Names)
     end
     for i = 1:(length(fieldnames(pre_QualControl(n).status))-1)
         status_check(n).status_final(1,i) = all(status_check(n).status(:,i));
+        % The timepoints of status_check goes from end to beginning
     end
 end
-%% Get the matrics of T1, FF and R2star
+
+%% Skip to main body
+%% Get the matrics of T1, FF and R2star (Without peeling off edge pixels)
 %for ll = 1:length(sequence_label)
 % T1 Map
 % Images will be stored at img/<name>/overview/
@@ -456,7 +459,7 @@ for n = 1:length(Names)
             end
             
             % convert ff_map to matrix
-            r2star = zeros(size(r2star_map{1}.fwmc_r2star,1), size(r2star_map{2}.fwmc_r2star, 2), length(r2star_map));
+            r2star = zeros(size(r2star_map{1}.fwmc_r2star,1), size(r2star_map{1}.fwmc_r2star, 2), length(r2star_map));
             for f = 1:length(r2star_map)
                r2star(:,:,f) = r2star_map{f}.fwmc_r2star; 
             end
@@ -623,8 +626,9 @@ for n = 1:length(Names)
     end
     close all;
 end
-
-%% Plot
+%% The following is 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Plot Longitudinal time evolution
 time_points_lr = fliplr(time_points);
 xtcks = 1:length(time_points);
 xtcks_lr = fliplr(xtcks);
@@ -731,7 +735,9 @@ for n = 1:length(Names)
 end
 
 close all;
-
+%% The below is main body of this script
+% Because it peels off the edge
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Get the matrics of T1, FF and R2star ( exclude edges of MI region)
 %for ll = 1:length(sequence_label)
@@ -746,6 +752,7 @@ for_analysis_rim = struct;
 data_storage_rim = struct;
 
 for n = 1:length(Names)
+%for n = 14:length(Names)
 %for n = starting_point:starting_point
     name = Names{n};
     name_save_dir = cat(2, save_dir, name);
@@ -759,7 +766,7 @@ for n = 1:length(Names)
     data_storage_rim(n).data = struct;
         
     for tp = 1:length(time_points)
-        %for tp = 1:length(time_points)
+    %for tp = 9:9
         time_point = time_points{end-tp+1};
         tp_dir = cat(2, base_dir, '/ContourData/',  name, '/', name, '_', time_point,  '/');
         if ~exist(tp_dir, 'dir')
@@ -865,7 +872,7 @@ for n = 1:length(Names)
             end
             
             % convert ff_map to matrix
-            r2star = zeros(size(r2star_map{1}.fwmc_r2star,1), size(r2star_map{2}.fwmc_r2star, 2), length(r2star_map));
+            r2star = zeros(size(r2star_map{1}.fwmc_r2star,1), size(r2star_map{1}.fwmc_r2star, 2), length(r2star_map));
             for f = 1:length(r2star_map)
                r2star(:,:,f) = r2star_map{f}.fwmc_r2star; 
             end
@@ -1032,7 +1039,7 @@ if ~exist(metrics_save_dir, 'dir')
    mkdir(metrics_save_dir); 
 end
 save(cat(2, metrics_save_dir, 'data_storage_rim.mat'), 'data_storage_rim');
-%% Plot
+%% Plot (Longitudinal plot)
 time_points_lr = fliplr(time_points);
 xtcks = 1:length(time_points);
 xtcks_lr = fliplr(xtcks);
@@ -1045,22 +1052,22 @@ for n = 1:length(Names)
         mkdir(long_name_save_dir);
     end
     
-    mean_roi_t1 = zeros(1, length(time_points));
-    sd_roi_t1 = zeros(1, length(time_points));
-    mean_remote_t1 = zeros(1, length(time_points));
-    sd_remote_t1 = zeros(1, length(time_points));
+    mean_roi_t1 = zeros(1, size(data_storage_rim(n).data,2));
+    sd_roi_t1 = zeros(1, size(data_storage_rim(n).data,2));
+    mean_remote_t1 = zeros(1, size(data_storage_rim(n).data,2));
+    sd_remote_t1 = zeros(1, size(data_storage_rim(n).data,2));
     
-    mean_roi_ff = zeros(1, length(time_points));
-    sd_roi_ff = zeros(1, length(time_points));
-    mean_remote_ff = zeros(1, length(time_points));
-    sd_remote_ff = zeros(1, length(time_points));
+    mean_roi_ff = zeros(1, size(data_storage_rim(n).data,2));
+    sd_roi_ff = zeros(1, size(data_storage_rim(n).data,2));
+    mean_remote_ff = zeros(1, size(data_storage_rim(n).data,2));
+    sd_remote_ff = zeros(1, size(data_storage_rim(n).data,2));
     
-    mean_roi_r2star = zeros(1, length(time_points));
-    sd_roi_r2star = zeros(1, length(time_points));
-    mean_remote_r2star = zeros(1, length(time_points));
-    sd_remote_r2star = zeros(1, length(time_points));
+    mean_roi_r2star = zeros(1, size(data_storage_rim(n).data,2));
+    sd_roi_r2star = zeros(1, size(data_storage_rim(n).data,2));
+    mean_remote_r2star = zeros(1, size(data_storage_rim(n).data,2));
+    sd_remote_r2star = zeros(1, size(data_storage_rim(n).data,2));
     
-    for tp = 1:length(time_points)
+    for tp = 1:size(data_storage_rim(n).data,2)
         
         roi_t1_temp = for_analysis_rim(n).metrics(tp).mean_roi_t1;
         if isempty(roi_t1_temp)
@@ -1135,7 +1142,7 @@ for n = 1:length(Names)
     legend({'MI', 'Remote'}, 'Location', 'SouthEast');
     title(cat(2, name, '  R2 star evolution'));
     
-    saveas(gcf, cat(2, long_name_save_dir, '/Time_Evolution_rim.png'));
+    saveas(gcf, cat(2, long_name_save_dir, '/Time_Evolution_rim_03012021.png'));
 end
 
 close all;
@@ -1145,14 +1152,14 @@ metrics_save_dir = cat(2, base_dir, '/Results/');
 if ~exist(metrics_save_dir, 'dir')
    mkdir(metrics_save_dir); 
 end
-save(cat(2, metrics_save_dir, 'for_analysis.mat'), 'for_analysis');
+%save(cat(2, metrics_save_dir, 'for_analysis.mat'), 'for_analysis');
 save(cat(2, metrics_save_dir, 'for_analysis_rim.mat'), 'for_analysis_rim');
 
 %% Make one tight-subplot for longitudinal image
 metrics_save_dir = cat(2, base_dir, '/Results/');
-if ~exist('for_analysis', 'var')
-   load(cat(2, metrics_save_dir, 'for_analysis.mat'));
-end
+%if ~exist('for_analysis', 'var')
+%   load(cat(2, metrics_save_dir, 'for_analysis.mat'));
+%end
 
 if ~exist(cat(2, metrics_save_dir, 'for_analysis_rim.mat'), 'var')
     load(cat(2, metrics_save_dir, 'for_analysis_rim.mat'));
@@ -1169,22 +1176,22 @@ for n = 1:length(Names)
 %for n = starting_point:starting_point
     name = Names{n};
 
-    mean_roi_t1 = zeros(1, length(time_points));
-    sd_roi_t1 = zeros(1, length(time_points));
-    mean_remote_t1 = zeros(1, length(time_points));
-    sd_remote_t1 = zeros(1, length(time_points));
+    mean_roi_t1 = zeros(1, size(data_storage_rim(n).data,2));
+    sd_roi_t1 = zeros(1, size(data_storage_rim(n).data,2));
+    mean_remote_t1 = zeros(1, size(data_storage_rim(n).data,2));
+    sd_remote_t1 = zeros(1, size(data_storage_rim(n).data,2));
     
-    mean_roi_ff = zeros(1, length(time_points));
-    sd_roi_ff = zeros(1, length(time_points));
-    mean_remote_ff = zeros(1, length(time_points));
-    sd_remote_ff = zeros(1, length(time_points));
+    mean_roi_ff = zeros(1, size(data_storage_rim(n).data,2));
+    sd_roi_ff = zeros(1, size(data_storage_rim(n).data,2));
+    mean_remote_ff = zeros(1, size(data_storage_rim(n).data,2));
+    sd_remote_ff = zeros(1, size(data_storage_rim(n).data,2));
     
-    mean_roi_r2star = zeros(1, length(time_points));
-    sd_roi_r2star = zeros(1, length(time_points));
-    mean_remote_r2star = zeros(1, length(time_points));
-    sd_remote_r2star = zeros(1, length(time_points));
+    mean_roi_r2star = zeros(1, size(data_storage_rim(n).data,2));
+    sd_roi_r2star = zeros(1, size(data_storage_rim(n).data,2));
+    mean_remote_r2star = zeros(1, size(data_storage_rim(n).data,2));
+    sd_remote_r2star = zeros(1, size(data_storage_rim(n).data,2));
     
-    for tp = 1:length(time_points)
+    for tp = 1:size(data_storage_rim(n).data,2)
         
         roi_t1_temp = for_analysis_rim(n).metrics(tp).mean_roi_t1;
         if isempty(roi_t1_temp)
@@ -1278,4 +1285,7 @@ if ~exist(t1fp_save_dir, 'dir')
     mkdir(t1fp_save_dir);
 end
     
-saveas(gcf, cat(2, t1fp_save_dir, '/Time_Evolution_rim_new_12282020.png'))
+saveas(gcf, cat(2, t1fp_save_dir, '/Time_Evolution_rim_new_03012021.png'));
+
+%% Plot the table & statistical analysis
+% Please go to T1FP_Stats_Analysis.m

@@ -33,6 +33,8 @@ for i = 1:size(t1, 3)
     img3 = r2star(:,:,i);
     fixed = myo_t1(:,:,i);
     moving = myo_ff(:,:,i);
+    %fixed = roi_in_myo_t1(:,:,i);
+    %moving = roi_in_myo_ff(:,:,i);
     
     tform = imregtform(moving, fixed, 'rigid', optimizer, metric);
     img2 = imwarp(img2,tform,'OutputView',imref2d(size(fixed)));
@@ -44,6 +46,7 @@ for i = 1:size(t1, 3)
     BW_skel = bwmorph(fixed_eroded, 'skel', Inf);
     center_mask_t1(:,:,i) = imfill(BW_skel, 'hole');
     center_fixed = center_mask_t1(:,:,i);
+    center_fixed = imopen(center_fixed, se); % Removing spikes
     fixedRegistered_epi = fixed_eroded - center_fixed > 0;
     fixedRegistered_endo = center_fixed + fixed_eroded > 1;
     
@@ -51,6 +54,7 @@ for i = 1:size(t1, 3)
     BW_skel = bwmorph(movingRegistered_eroded, 'skel', Inf);
     center_mask_ff(:,:,i) = imfill(BW_skel, 'hole');
     center_moving = center_mask_ff(:,:,i);
+    center_moving = imopen(center_moving, se); % Removing spikes
     movingRegistered_epi = movingRegistered_eroded - center_moving > 0;
     movingRegistered_endo = center_moving + movingRegistered_eroded > 1;
     
@@ -70,10 +74,19 @@ for i = 1:size(t1, 3)
     [Segmentpix, stats, Mask_Segn3_epi] = AHASegmentation(img3, movingRegistered_epi, Segn, Groove);
     [Segmentpix, stats, Mask_Segn3_endo] = AHASegmentation(img3, movingRegistered_endo, Segn, Groove);
         
+    %figure('Position', [100 0 1600 1600]);
+    %seg_mask_overlap = zeros(size(img));
+    %vid_save = cat(2, 'myVideoFile.mov');
+    %myVideo = VideoWriter(vid_save); %open video file
+    %myVideo.FrameRate = 2;  %can adjust this, 5 - 10 works well for me
+    
+    %open(myVideo)
     for j = 1:Segn
+        
         Mipix{j,i} = img(Mask_Segn .* roi_in_myo_t1(:,:,i) .* fixed_eroded == j);
         Mipix_epi{j,i} = img(Mask_Segn_epi .* roi_in_myo_t1(:,:,i) .* fixed_eroded == j);
         Mipix_endo{j,i} = img(Mask_Segn_endo .* roi_in_myo_t1(:,:,i) .* fixed_eroded == j);
+       
         
         Mipix2{j,i} = img2(Mask_Segn2 .* movingRegistered_roi_ff .* movingRegistered_eroded == j);
         Mipix2_epi{j,i} = img2(Mask_Segn2_epi .* movingRegistered_roi_ff .* movingRegistered_eroded == j);
@@ -82,7 +95,27 @@ for i = 1:size(t1, 3)
         Mipix3{j,i} = img3(Mask_Segn3 .* movingRegistered_roi_r2star .* movingRegistered_eroded == j);
         Mipix3_epi{j,i} = img3(Mask_Segn3_epi .* movingRegistered_roi_r2star .* movingRegistered_eroded == j);
         Mipix3_endo{j,i} = img3(Mask_Segn3_endo .* movingRegistered_roi_r2star .* movingRegistered_eroded == j);
+        
+%          % For debugging
+%         seg_mask_t1 = Mask_Segn .* roi_in_myo_t1(:,:,i) .* fixed_eroded == j;
+%         seg_mask_ff = Mask_Segn2 .* movingRegistered_roi_ff .* movingRegistered_eroded == j;
+%         
+%         if ~isempty(nonzeros(seg_mask_t1)) && ~isempty(nonzeros(seg_mask_ff))
+%             seg_mask_overlap = seg_mask_overlap + seg_mask_t1 + 2*seg_mask_ff;
+%             ax1 = subplot(1,2,1);
+%             imagesc(ax1, seg_mask_overlap); axis image; caxis([0 3]);
+%             title(['Segment = ', num2str(j)]);
+%             colormap(brewermap([],'*RdYlBu'));
+%             ax2 = subplot(1,2,2);
+%             imagesc(ax2, seg_mask_t1 + 2*seg_mask_ff); axis image; caxis([0 3]);
+%             title(['Segment = ', num2str(j)]); %colorbar;
+%             colormap(brewermap([],'*RdYlBu'));
+%             pause(.5);
+%             frame = getframe(gcf); %get frame
+%             writeVideo(myVideo, frame);
+%         end
     end
+%    close(myVideo);
     
     Mi_idx1 = [];
     Mi_idx1_epi = [];

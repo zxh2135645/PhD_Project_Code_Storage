@@ -17,7 +17,7 @@ contour_glob = glob(cat(2, base_dir, '/ContourData/*'));
 %Names = ExtractNames(contour_glob);
 Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn', '18D15', '18D16', '11D05', '11D26', '11D33'};
 %time_points = {'0D_baseline','1D', '7D', '28D', '8WK', '6MO', '9MO', '1YR', '15YR'};
-time_points = {'8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
+time_points = {'7D', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
 
 dicom_fields = {...
     'Filename',...
@@ -54,7 +54,7 @@ for n = 1:length(Names)
     p_storage(n).nolong = struct;
     
     tp_count = 1;
-    for tp = 1:length(time_points)
+    for tp = 1:size(data_storage_rim(n).data, 2)
         time_point = time_points{tp};
         
         
@@ -96,7 +96,7 @@ for n = 1:length(Names)
     strength_remote_r2star = [];
     alloy_remote_r2star = {};
     
-    for tp = 1:length(time_points)
+    for tp = 1:size(data_storage_rim(n).data, 2)
         time_point = time_points{tp};
         
         
@@ -137,7 +137,7 @@ for n = 1:length(Names)
 end
 
 save(cat(2, metrics_save_dir, 'p_storage.mat'), 'p_storage');
-
+% p_storage for Ryn, 11D05, 18D16 needs to be modified
 %% Make tables showing mean and sd
 load(cat(2, metrics_save_dir, 'for_analysis_rim.mat'));
 col1 = {'Merry_MI', 'Merry_Remote', 'Ryn_MI', 'Ryn_Remote', 'Mojave_MI', 'Mojave_Remote', 'Sahara_MI', 'Sahara_Remote', ...
@@ -147,36 +147,42 @@ col1 = {'Merry_MI', 'Merry_Remote', 'Ryn_MI', 'Ryn_Remote', 'Mojave_MI', 'Mojave
     '11D05_MI', '11D05_Remote', '11D26_MI', '11D26_Remote', '11D33_MI', '11D33_Remote'}';
 
 % time_point = time_points';
+d7_t1 = cell(length(col1), 1);
 wk8_t1 = cell(length(col1), 1);
 wk12_t1 = cell(length(col1), 1);
 wk14_t1 = cell(length(col1), 1);
+mo4_t1 = cell(length(col1), 1);
 mo6_t1 = cell(length(col1), 1);
 mo9_t1 = cell(length(col1), 1);
 yr1_t1 = cell(length(col1), 1);
 yr15_t1 = cell(length(col1), 1);
 
+d7_ff = cell(length(col1), 1);
 wk8_ff = cell(length(col1), 1);
 wk12_ff = cell(length(col1), 1);
 wk14_ff = cell(length(col1), 1);
+mo4_ff = cell(length(col1), 1);
 mo6_ff = cell(length(col1), 1);
 mo9_ff = cell(length(col1), 1);
 yr1_ff = cell(length(col1), 1);
 yr15_ff = cell(length(col1), 1);
 
+d7_r2star = cell(length(col1), 1);
 wk8_r2star = cell(length(col1), 1);
 wk12_r2star = cell(length(col1), 1);
 wk14_r2star = cell(length(col1), 1);
+mo4_r2star = cell(length(col1), 1);
 mo6_r2star = cell(length(col1), 1);
 mo9_r2star = cell(length(col1), 1);
 yr1_r2star = cell(length(col1), 1);
 yr15_r2star = cell(length(col1), 1);
 
-T_t1 = table(col1, wk8_t1, wk12_t1, wk14_t1, mo6_t1, mo9_t1, yr1_t1, yr15_t1);
-T_ff = table(col1, wk8_ff, wk12_ff, wk14_ff, mo6_ff, mo9_ff, yr1_ff, yr15_ff);
-T_r2star = table(col1, wk8_r2star, wk12_r2star, wk14_r2star, mo6_r2star, mo9_r2star, yr1_r2star, yr15_r2star);
+T_t1 = table(col1, d7_t1, wk8_t1, wk12_t1, wk14_t1, mo4_t1, mo6_t1, mo9_t1, yr1_t1, yr15_t1);
+T_ff = table(col1, d7_ff, wk8_ff, wk12_ff, wk14_ff, mo4_ff, mo6_ff, mo9_ff, yr1_ff, yr15_ff);
+T_r2star = table(col1, d7_r2star, wk8_r2star, wk12_r2star, wk14_r2star, mo4_r2star, mo6_r2star, mo9_r2star, yr1_r2star, yr15_r2star);
 
 for i = 1:length(data_storage_rim)
-    for tp = 1:length(time_points)
+    for tp = 1:size(data_storage_rim(i).data, 2)
         time_point = time_points{tp};
         if ~isempty(data_storage_rim(i).data(end-tp+1).time_point)
             mean_roi_t1 = num2str(round(for_analysis_rim(i).metrics(end-tp+1).mean_roi_t1,1));
@@ -193,28 +199,55 @@ for i = 1:length(data_storage_rim)
             sd_roi_r2star = num2str(round(for_analysis_rim(i).metrics(end-tp+1).sd_roi_r2star,1));
             mean_remote_r2star = num2str(round(for_analysis_rim(i).metrics(end-tp+1).mean_remote_r2star,1));
             sd_remote_r2star = num2str(round(for_analysis_rim(i).metrics(end-tp+1).sd_remote_r2star,1));
-            
-            T_t1(2*(i-1)+1, tp+1) = {cat(2, mean_roi_t1, ' +/- ', sd_roi_t1)};
-            T_t1(2*(i-1)+2, tp+1) = {cat(2, mean_remote_t1, ' +/- ', sd_remote_t1)};
-            T_ff(2*(i-1)+1, tp+1) = {cat(2, mean_roi_ff, ' +/- ', sd_roi_ff)};
-            T_ff(2*(i-1)+2, tp+1) = {cat(2, mean_remote_ff, ' +/- ', sd_remote_ff)};
-            T_r2star(2*(i-1)+1, tp+1) = {cat(2, mean_roi_r2star, ' +/- ', sd_roi_r2star)};
-            T_r2star(2*(i-1)+2, tp+1) = {cat(2, mean_remote_r2star, ' +/- ', sd_remote_r2star)};
+            if i == 2 || i == 14 || i == 15
+                T_t1(2*(i-1)+1, tp+2) = {cat(2, mean_roi_t1, ' +/- ', sd_roi_t1)};
+                T_t1(2*(i-1)+2, tp+2) = {cat(2, mean_remote_t1, ' +/- ', sd_remote_t1)};
+                T_ff(2*(i-1)+1, tp+2) = {cat(2, mean_roi_ff, ' +/- ', sd_roi_ff)};
+                T_ff(2*(i-1)+2, tp+2) = {cat(2, mean_remote_ff, ' +/- ', sd_remote_ff)};
+                T_r2star(2*(i-1)+1, tp+2) = {cat(2, mean_roi_r2star, ' +/- ', sd_roi_r2star)};
+                T_r2star(2*(i-1)+2, tp+2) = {cat(2, mean_remote_r2star, ' +/- ', sd_remote_r2star)};
+            else
+                T_t1(2*(i-1)+1, tp+1) = {cat(2, mean_roi_t1, ' +/- ', sd_roi_t1)};
+                T_t1(2*(i-1)+2, tp+1) = {cat(2, mean_remote_t1, ' +/- ', sd_remote_t1)};
+                T_ff(2*(i-1)+1, tp+1) = {cat(2, mean_roi_ff, ' +/- ', sd_roi_ff)};
+                T_ff(2*(i-1)+2, tp+1) = {cat(2, mean_remote_ff, ' +/- ', sd_remote_ff)};
+                T_r2star(2*(i-1)+1, tp+1) = {cat(2, mean_roi_r2star, ' +/- ', sd_roi_r2star)};
+                T_r2star(2*(i-1)+2, tp+1) = {cat(2, mean_remote_r2star, ' +/- ', sd_remote_r2star)};
+            end
         else
-            T_t1(2*(i-1)+1, tp+1) = {' '};
-            T_t1(2*(i-1)+2, tp+1) = {' '};
-            T_ff(2*(i-1)+1, tp+1) = {' '};
-            T_ff(2*(i-1)+2, tp+1) = {' '};
-            T_r2star(2*(i-1)+1, tp+1) = {' '};
-            T_r2star(2*(i-1)+2, tp+1) = {' '};
+            % Because there is no 7D data for Ryn, 18D16, 11D05
+            if i == 2 || i == 14 || i == 15
+                if tp == 2
+                    T_t1(2*(i-1)+1, tp) = {' '};
+                    T_t1(2*(i-1)+2, tp) = {' '};
+                    T_ff(2*(i-1)+1, tp) = {' '};
+                    T_ff(2*(i-1)+2, tp) = {' '};
+                    T_r2star(2*(i-1)+1, tp) = {' '};
+                    T_r2star(2*(i-1)+2, tp) = {' '};
+                end
+                
+                T_t1(2*(i-1)+1, tp+2) = {' '};
+                T_t1(2*(i-1)+2, tp+2) = {' '};
+                T_ff(2*(i-1)+1, tp+2) = {' '};
+                T_ff(2*(i-1)+2, tp+2) = {' '};
+                T_r2star(2*(i-1)+1, tp+2) = {' '};
+                T_r2star(2*(i-1)+2, tp+2) = {' '};
+            else
+                T_t1(2*(i-1)+1, tp+1) = {' '};
+                T_t1(2*(i-1)+2, tp+1) = {' '};
+                T_ff(2*(i-1)+1, tp+1) = {' '};
+                T_ff(2*(i-1)+2, tp+1) = {' '};
+                T_r2star(2*(i-1)+1, tp+1) = {' '};
+                T_r2star(2*(i-1)+2, tp+1) = {' '};
+            end
         end
     end
 end
 
-T_t1.Properties.VariableNames = {'Subjects', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
-T_ff.Properties.VariableNames = {'Subjects', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
-T_r2star.Properties.VariableNames = {'Subjects', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
+T_t1.Properties.VariableNames = {'Subjects', '7D', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
+T_ff.Properties.VariableNames = {'Subjects', '7D', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
+T_r2star.Properties.VariableNames = {'Subjects', '7D', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
 
-save(cat(2, metrics_save_dir, 'Table_t1.mat'), 'T_t1');
-save(cat(2, metrics_save_dir, 'Table_ff.mat'), 'T_ff');
-save(cat(2, metrics_save_dir, 'Table_r2star.mat'), 'T_r2star');
+save(cat(2, metrics_save_dir, 'Table_t1_03012021.mat'), 'T_t1');
+save(cat(2, metrics_save_dir, 'Table_ff_03012021.mat'), 'T_ff');
+save(cat(2, metrics_save_dir, 'Table_r2star_03012021.mat'), 'T_r2star');
