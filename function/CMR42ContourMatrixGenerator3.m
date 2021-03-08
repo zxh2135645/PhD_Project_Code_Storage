@@ -173,6 +173,7 @@ if any(contour_idx(:))
         % Get center coordinate and region growing
         contours = epi_flow_edit | endo_flow_edit;
         num = size(contours, 3);
+        
         myocardium = zeros(size(volume_image,2), size(volume_image,1), num);
         heart = zeros(size(volume_image,2), size(volume_image,1), num);
         blood_pool = zeros(size(volume_image,2), size(volume_image,1), num);
@@ -197,20 +198,22 @@ if any(contour_idx(:))
             center_array(i, :) = [(x_epi_center + x_endo_center)/2, (y_epi_center + y_endo_center)/2];
         end
         
+        % num2 = size(volume_image, 3);
         shifted_heart = zeros(size(volume_image));
         shifted_myo = zeros(size(volume_image));
         shifted_blood = zeros(size(volume_image));
+        % index_array
         
         for i = 1:num
-            shifted_heart(:,:,i) = flipud(rot90(heart(:,:,i),1));
-            shifted_myo(:,:,i) = flipud(rot90(myocardium(:,:,i),1));
-            shifted_heart(:,:,i) = imfill(shifted_heart(:,:,i), 'holes');
-            mask_heart = shifted_heart(:,:,i) .* volume_image(:,:,index_array(i));
-            mask_myocardium = shifted_myo(:,:,i) .* volume_image(:,:,index_array(i));
+            shifted_heart(:,:,index_array(i)) = flipud(rot90(heart(:,:,i),1));
+            shifted_myo(:,:,index_array(i)) = flipud(rot90(myocardium(:,:,i),1));
+            shifted_heart(:,:,index_array(i)) = imfill(shifted_heart(:,:,i), 'holes');
+            mask_heart = shifted_heart(:,:,index_array(i)) .* volume_image(:,:,index_array(i));
+            mask_myocardium = shifted_myo(:,:,index_array(i)) .* volume_image(:,:,index_array(i));
             
-            shifted_blood(:,:,i) = flipud(rot90(blood_pool(:,:,i),1));
-            shifted_blood(:,:,i) = imfill(shifted_blood(:,:,i), 'holes');
-            mask_blood = shifted_blood(:,:,i) .* volume_image(:,:,index_array(i));
+            shifted_blood(:,:,index_array(i)) = flipud(rot90(blood_pool(:,:,i),1));
+            shifted_blood(:,:,index_array(i)) = imfill(shifted_blood(:,:,index_array(i)), 'holes');
+            mask_blood = shifted_blood(:,:,index_array(i)) .* volume_image(:,:,index_array(i));
             
         end
         
