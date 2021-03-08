@@ -1,10 +1,10 @@
 clear all;
 close all;
 
-addpath('D:\Data\Exvivo_Phantom\lib\')
-addpath('D:\Data\Exvivo_Phantom\EPGX-src')
-addpath('D:\Data\Exvivo_Phantom');
-addpath('D:\src\BlochSimDemo');
+%addpath('D:\Data\Exvivo_Phantom\lib\')
+addpath('../EPGX-src/')
+%addpath('D:\Data\Exvivo_Phantom');
+addpath('../BlochSimDemo/');
 %%
 
 % npulse = 60; % Single-shot 
