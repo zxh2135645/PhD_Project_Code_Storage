@@ -22,7 +22,9 @@ num_rampup = 5;
 HR = 60*1000/(((TI_array(8) - TI_array(7)) + (TI_array(7) - TI_array(6)) + (TI_array(6) - TI_array(4)) + ...
     (TI_array(4) - TI_array(2)) + (TI_array(5) - TI_array(3)) + (TI_array(3) - TI_array(1))) / 6);
 window = round(60*1000 / HR);
-acq_win = TR*(PhaseEnc+num_rampup);
+RAMP_DOWN = 1;
+acq_win = TR*(PhaseEnc+num_rampup+RAMP_DOWN);
+
 trigger = window-TI_array(1)-acq_win;
 line([0,10],[0,0],'Color', 'black')
 hold on;
@@ -88,7 +90,8 @@ npulse = 58 + num_rampup + RAMP_DOWN;
 %%% User inputs for adiabatic pulse:
 adiabatic.mu = 5;   % Phase modulation parameter [dimensionless]
 adiabatic.beta1 = 750;   % Frequency modulation parameter [rad/s]
-adiabatic.pulseWidth = 10.24*2;   % RF pulse duration [ms] % According to siemens 3T
+% adiabatic.pulseWidth = 10*2;   % For temporal resolution 0.1ms
+adiabatic.pulseWidth = 10.24*2;  % RF pulse duration [ms] % According to siemens 3T
 adiabatic.A0 = 0.12; 
 
 [t_total, M_total_total, t_readout, Mxy_readout] = seq_T1MOLLI_noMT_bloch2(TI_array, TD, npulse, T1, T2, alpha, TR, prep, M0, trigger, trigger2, df, adiabatic, RAMP_DOWN);

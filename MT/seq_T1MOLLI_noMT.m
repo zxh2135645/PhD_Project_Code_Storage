@@ -9,8 +9,8 @@ Mz_total_total = [];
 Mxy_readout_array = zeros(1,8);
 t_readout_array = zeros(1,8);
 
-%for i = 1:length(TI_array)
- for i = 1:1
+for i = 1:length(TI_array)
+%for i = 1:1
     if i == 1
         [t, Mz_total, mxys_array, mzs_array, Mxy_readout, t_readout] = ...
             seq_block_noMT(TD, npulse, T1, T2, alpha, TR, prep, num_rampup, Mz0, restore_pulse);

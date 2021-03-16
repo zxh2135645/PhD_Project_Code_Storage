@@ -1,8 +1,8 @@
 clear all;
 close all;
 %% Fig. A
-addpath('D:\Data\Exvivo_Phantom\lib\')
-addpath('D:\Data\Exvivo_Phantom\EPGX-src')
+addpath('../lib_EPGX/')
+addpath('../EPGX-src/')
 TI_array = [102, 182, 935, 1010, 1762, 1840, 2587, 3410];
 figure();
 b1 = 750;
@@ -67,7 +67,7 @@ plot(tr_total/1000, Mzr_total_total, '-.', 'LineWidth', 2)
 legend({'Remote Free (no MT)', 'Remote Bound (no MT)'});
 xlabel('Time (s)'); ylabel('M_z/M_0')
 grid on;
-xlim([0 10])
+xlim([0 10]);
 %% Fig. C (with MT)
 npulse = 60 + num_rampup;
 gam = 267.5221 *1e-3; % rad /ms /uT
@@ -86,7 +86,7 @@ MT_prep.t_delay = t_delay;
 % Assuming pulse duration is 20 ms
 trf_prep = 20.00;
 alpha_inv = 180;
-MT_prep.B1SqrdTau = 2^2 * (d2r(alpha_inv)./(trf_prep.*gam)).^2.*trf_prep; 
+MT_prep.B1SqrdTau = (d2r(alpha_inv)./(trf_prep.*gam)).^2.*trf_prep; 
 
 M0_remote = [0 0 1-MT_para_remote.F MT_para_remote.F]';
 
@@ -237,7 +237,7 @@ MT_prep.t_delay = t_delay;
 % Assuming pulse duration is 20 ms
 trf_prep = 20.00;
 alpha_inv = 180;
-MT_prep.B1SqrdTau = 2^2 * (d2r(alpha_inv)./(trf_prep.*gam)).^2.*trf_prep; 
+MT_prep.B1SqrdTau = (d2r(alpha_inv)./(trf_prep.*gam)).^2.*trf_prep; 
 
 M0_remote = [0 0 1-MT_para_remote.F MT_para_remote.F]';
 M0_mi = [0 0 1-MT_para_mi.F MT_para_mi.F]';

@@ -1,6 +1,40 @@
 function [t, Mzmt_total, mxymt_array, mzmt_array, Mzmt_bound_total, Mxy_readout, corespond_t] ...
     = seq_block_MT(TD, npulse, alpha, TR, MT_para, MT_prep, M0, num_rampup, varargin)
 
+% MT energy deposition (b1sqrdtau) was 4 times of the theory (maybe for 
+% inline with agar simulation?)
+% In this version it is now switched back
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% arguments:
+%       TD:         trigger delay (ms)        e.g. 554.6
+%       npulse:     number of pulses          e.g. 60
+%       alpha:      flip angle (degree)       e.g. 35
+%       TR:         Repetition time (ms)      e.g. 2.4
+%       MT_para:    1x1 struct
+%                   T1x, T2x, F, Kf, trf, G
+%       MT_prep:    1x1 struct
+%                   flip, t_delay, B1SqrdTau
+%       M0:         Initial magnetization     e.g. [0;0;1]
+%       num_rampup: number of linear ramp-up  e.g. 5
+%
+%
+%   optional arguments (use string then value as next argument)
+%       
+%       restore_pulse: if apply alpha/2 restore pulse; Boolean
+%
+% Outputs:
+%       t:           Time array (ms)        e.g. 1x340 double (0 - 813.6)
+%       Mzmt_total:  Mz temporal evolution  e.g. 1x340 double
+%       mxymt_array: Mxy of bSSFP           e.g. 1x66  double 
+%       mzmt_array:  Mz of bSSFP (first half free pool/ second half bound pool)
+%                    e.g. 1x132 double
+%       Mzmt_bound_total:    Mz of complete of bound pool    e.g. 1x340 double
+%       Mxy_readout: abs(Mxy) of the readout   e.g. 0.1221
+%       correspond_t:at the readout time point e.g. 727.2 (ms)
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
 for ii=1:length(varargin)
     if varargin{ii} == 1
         npulse = npulse + 1;
@@ -19,13 +53,14 @@ t_delay = MT_prep.t_delay;
 gam = 267.5221 *1e-3; % rad /ms /uT
 trf = MT_para.trf; % ms
 b1 = d2r(alpha)./(trf.*gam); % uT
-b1sqrdtau = 2^2 * b1.^2.*trf;
-b1sqrdtau0 = 2^2 * (d2r(rampup)./(trf.*gam)).^2.*trf;
-
+b1sqrdtau = b1.^2.*trf; 
+%b1sqrdtau = 2*2 * b1.^2.*trf;
+b1sqrdtau0 = (d2r(rampup)./(trf.*gam)).^2.*trf;
+%b1sqrdtau0 = 2*2 * (d2r(rampup)./(trf.*gam)).^2.*trf;
 for ii=1:length(varargin)
     if varargin{ii} == 1
         fa_flow(end) = d2r(alpha/2);
-        b1sqrdtau_end = 2^2 * (d2r(alpha/2)./(trf.*gam)).^2.*trf;
+        b1sqrdtau_end = (d2r(alpha/2)./(trf.*gam)).^2.*trf;
         b1sqrdtau_array = [b1sqrdtau0'; b1sqrdtau * ones(npulse-1-num_rampup,1); b1sqrdtau_end];
         % fprintf('%d\n', length(b1sqrdtau_array))
     else
@@ -63,6 +98,7 @@ else
 end
     
 one_rep_Mzmt_bound = MT_para.F * ones(1, length(one_rep_t));
+
 % MT_prep 
 initM1 = [0 0 mzmt_array0(recovery_timepoint) mzmt_array0(end)]';
 [~,fnmt,Znmt] = EPGX_GRE_MT(fa_flow,phi, b1sqrdtau_array,...
@@ -116,5 +152,7 @@ Mzmt_total = one_rep_Mzmt;
 Mzmt_bound_total = one_rep_Mzmt_bound;
 
 Mxy_readout = mxymt_array(round((npulse - num_rampup - 1) / 2));
-corespond_t = t(recovery_timepoint+TI_timepoint+round((npulse - num_rampup - 1) / 2));
+corespond_t = t(recovery_timepoint+TI_timepoint+round((npulse - num_rampup - 1) / 2)); 
+% Readout t
+
 end

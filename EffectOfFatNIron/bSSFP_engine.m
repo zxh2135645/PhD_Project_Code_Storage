@@ -1,5 +1,5 @@
 function [MxyTE, BSIM, plotTEidx, bSSFPcat, Msimf, bSSFPend] = bSSFP_engine(M0, T1, T2, df, TR, FA, NTR, dt, f_vec, PLOT_EACHSPIN, PLOT_SS, varargin)
-
+% RAMPDOWN has an effect in Mxy in last time point
 % extract if RAMP_DOWN is input
 if isempty(varargin)
     RAMP_DOWN = 0;
@@ -156,6 +156,7 @@ MxyTE = MxyTE .* RF_phi_all;
 
 
 if( PLOT_SS )
+    % RAMPDOWN is taking effect
     % plot steady-state freq profile at TE (for last TR)
     MxyTElast = squeeze( MxyTE(end, :) );
     % % demod RF phase
@@ -180,7 +181,7 @@ if( PLOT_SS )
     % MxyTElast_phaseenc = -abs(MxyTElast .* pos_idx) + abs(MxyTElast .* neg_idx);
     plot(f_vec, MxyTElast_phaseenc);
     title('Balanced SSFP frequency profile: phased-enc');
-    xlabel('Hz'); ylabel('Normalized |Mxy|');
+    xlabel('Hz'); ylabel('Normalized Mxy');
     
 end
 
