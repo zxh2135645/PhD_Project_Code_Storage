@@ -200,6 +200,11 @@ clear all;
 %% Fig. A
 addpath('../lib_EPGX/')
 addpath('../EPGX-src/')
+addpath('../T1NFF/')
+addpath('../BlochSimDemo/')
+addpath('../M219/')
+addpath('../MT/');
+addpath('../EffectOfFatNIron/')
 TI_array = [102, 182, 935, 1010, 1762, 1840, 2587, 3410];
 figure();
 b1 = 750;
@@ -251,30 +256,50 @@ prep.flip = d2r(flip);
 prep.t_delay = t_delay;
 Mz0 = 1;
 TD = trigger; % ms
-npulse = 60 + num_rampup;
 gam = 267.5221 *1e-3; % rad /ms /uT
 
-MT_para_remote = struct;
-MT_para_remote.T1x = [T1 T1];
-MT_para_remote.T2x = [T2, 8.1e-3];
-% MT_para_remote.b1sqrdtau_array = b1sqrdtau_array;
-MT_para_remote.F = 0.097;
-MT_para_remote.Kf = 5.2e-3;
-MT_para_remote.trf = 0.600; % ms
+F_array = 0:0.002:0.1;
+Kf_array = 0:0.6:10.2;
+for f = 1:length(F_array)
+    for k = 1:length(Kf_array)
+        MT_para_remote = struct;
+        MT_para_remote.T1x = [T1 T1];
+        MT_para_remote.T2x = [T2, 8.1e-3];
+        % MT_para_remote.b1sqrdtau_array = b1sqrdtau_array;
+        MT_para_remote.F = F_array(f);
+        MT_para_remote.Kf = Kf_array(k);
+        MT_para_remote.trf = 0.600; % ms
 
-MT_prep = struct;
-MT_prep.flip = d2r(flip);
-MT_prep.t_delay = t_delay;
-% Assuming pulse duration is 20 ms
-trf_prep = 20.00;
-alpha_inv = 180;
-MT_prep.B1SqrdTau = (d2r(alpha_inv)./(trf_prep.*gam)).^2.*trf_prep; 
-ddt = 0.2;
-M0_remote = [0 0 1-MT_para_remote.F MT_para_remote.F]';
+        MT_prep = struct;
+        MT_prep.flip = d2r(flip);
+        MT_prep.t_delay = t_delay;
+        % Assuming pulse duration is 20 ms
+        trf_prep = 20.00;
+        alpha_inv = 180;
+        MT_prep.B1SqrdTau = (d2r(alpha_inv)./(trf_prep.*gam)).^2.*trf_prep; 
+        ddt = 0.2;
 
-[t_total, Mzmt_total_total, Mxymt_total_total, t_readout_mt, Mxy_readout_mt] = seq_T1MOLLI_MT2(TI_array, TD, npulse,...
-    alpha, TR, MT_para_remote, MT_prep, num_rampup, M0_remote, restore_pulse, trigger, trigger2, ddt);
-
+        % Looping F and Kf (20x20)
+        M0_remote = [0 0 1-MT_para_remote.F MT_para_remote.F]';
+        
+        disp(['F: ', num2str(F_array(f)), '  Kf: ', num2str(Kf_array(k))]);
+        tic;
+        [t_total, Mzmt_total_total, Mxymt_total_total, t_readout_mt, Mxy_readout_mt] = seq_T1MOLLI_MT2(TI_array, TD, npulse,...
+            alpha, TR, MT_para_remote, MT_prep, num_rampup, M0_remote, restore_pulse, trigger, trigger2, ddt);
+        toc;
+        
+        if f == 1 && k == 1
+            Mzmt_dict = zeros(length(F_array), length(Kf_array), length(Mzmt_total_total));
+            Mxymt_dict = zeros(length(F_array), length(Kf_array), length(Mxymt_total_total));
+        end
+        
+        Mzmt_dict(f, k, :) = Mzmt_total_total;
+        Mxymt_dict(f, k, :) = Mxymt_total_total;
+        
+    end
+end
+%% This part isn't working for Linux
+%% Because bloch is compiled for OS/Windows
 % A final half-alpha 'restore pulse' to return the magnetization into Mz
 T1_fat3t = 400;
 T2_fat3t = 100;
