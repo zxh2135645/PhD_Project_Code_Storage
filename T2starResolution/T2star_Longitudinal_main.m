@@ -30,7 +30,7 @@ if ~exist(data_dir, 'dir')
     mkdir(data_dir)
 end
 
-subject_name_cell = {'18P90', '18P93', '20P03_Exvivo5', '20P10_Exvivo7', '20P11_Exvivo6', '18P92', '18P94_Exvivo3', '18P95', '17P73'};
+subject_name_cell = {'18P90', '18P93', '20P03_Exvivo5', '20P10_Exvivo7', '20P11_Exvivo6', '18P92', '18P94_Exvivo3', '18P95', '17P73', '20P48'};
 avg_num_cell = {'Avg0016', 'Avg0001', 'Invivo'};
 
 
@@ -110,7 +110,7 @@ for i = 1:size(perc_all01, 1)
     auc_all01(i) = AUC;
 end
 
-% ROC analysis %% Avg0001
+% ROC analysis %% Invivo
 auc_allvivo = zeros(size(perc_allvivo, 1),1);
 mask_idx_array = [3:7, [3:7]+7, [3:7]+7*2, [3:7]+7*3];
 figure('Position', [100 0 1600 1600]);
@@ -169,7 +169,7 @@ hold on;
 bar(s, trans16_avg_sorted); ylim([0 0.3]);
 grid on;
 bar(2, trans16_avg_sorted(2), 'FaceColor', [0.8500, 0.3250, 0.0980]); ylim([0 0.3]);
-bar(9, trans16_avg_sorted(9), 'FaceColor', [0.8500, 0.3250, 0.0980]); ylim([0 0.3]);
+bar(10, trans16_avg_sorted(10), 'FaceColor', [0.8500, 0.3250, 0.0980]); ylim([0 0.3]);
 
 ylabel('Transmurality'); xlabel('Subject Name');
 set(gca, 'FontSize', 24)
@@ -182,8 +182,6 @@ scatter(trans16_avg_sorted, auc_subjects_mean_avg16(I), 72, 'filled', 'MarkerFac
 hold on;
 scatter(trans16_avg_sorted, auc_subjects_mean_invivo(I), 72, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
 xlabel('Transmurality'); ylabel('Mean AUC');
-
-
 
 
 b = X \ auc_subjects_mean_avg16(I);
@@ -201,7 +199,7 @@ Rsq1 = 1 - sum((auc_subjects_mean_avg16(I) - yCalc_avg16).^2)/sum((auc_subjects_
 Rsq2 = 1 - sum((auc_subjects_mean_invivo(I) - yCalc_invivo).^2)/sum((auc_subjects_mean_invivo - mean(auc_subjects_mean_invivo)).^2);
 
 %% 3.1 T2* value in hemorrhage zone Avg16
-% [70, 73, 64, 79, 71, 65, 94, 65, 79]
+% [70, 73, 64, 79, 71, 65, 94, 65, 79, 85]
 whatsinit = cell(length(subject_name_cell), 1);
 for i = 1:length(subject_name_cell)
     subject_name = subject_name_cell{i};

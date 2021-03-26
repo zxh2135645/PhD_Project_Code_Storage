@@ -8,11 +8,11 @@ if size(img, 3) > 1
         if img_size(1) <= img_size(2)
             x_dis = round(img_size(2)/6);
             y_dis = round(img_size(1)/6);
-            img_cropped_2d = imcrop(img_2D, [round(0.5*x_dis), round(0.5*y_dis), 5*x_dis, 5*y_dis]);
+            img_cropped_2d = imcrop(img_2D, [round(1.5*x_dis), round(1.5*y_dis), 3*x_dis, 3*y_dis]);
         else
             x_dis = round(img_size(2)/6);
             y_dis = round(img_size(1)/6);
-            img_cropped_2d = imcrop(img_2D, [round(0.5*x_dis), round(0.5*y_dis), 5*x_dis, 5*y_dis]);
+            img_cropped_2d = imcrop(img_2D, [round(1.5*x_dis), round(1.5*y_dis), 3*x_dis, 3*y_dis]);
         end
         img_cropped(:,:,i) = img_cropped_2d;
     end
@@ -29,7 +29,7 @@ else
     else
         x_dis = round(img_size(2)/6);
         y_dis = round(img_size(1)/6);
-        img_cropped = imcrop(img, [x_dis, y_dis, 3*x_dis, 3*y_dis]);
+        img_cropped = imcrop(img, [round(1.5*x_dis), round(1.5*y_dis), 3*x_dis, 3*y_dis]);
     end
 end
 end
