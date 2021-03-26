@@ -195,8 +195,9 @@ corespond_t = t(recovery_timepoint+TI_timepoint+TEidx); % Readout t
 
 Mxymt_total = one_rep_Mxymt;
 
-%% 
+%% Dictionary generation starts here
 clear all;
+
 %% Fig. A
 addpath('../lib_EPGX/')
 addpath('../EPGX-src/')
@@ -277,7 +278,7 @@ for f = 1:length(F_array)
         trf_prep = 20.00;
         alpha_inv = 180;
         MT_prep.B1SqrdTau = (d2r(alpha_inv)./(trf_prep.*gam)).^2.*trf_prep; 
-        ddt = 0.2;
+        ddt = 0.4;
 
         % Looping F and Kf (20x20)
         M0_remote = [0 0 1-MT_para_remote.F MT_para_remote.F]';
@@ -298,6 +299,16 @@ for f = 1:length(F_array)
         
     end
 end
+
+%% Save as dictionary
+Dict.Mzmt_dict = Mzmt_dict;
+Dict.Mxymt_dict = Mxymt_dict;
+Dict.ddt = ddt;
+save_dir = uigetdir;
+f_save = 'MT_MOLLI_Dict.mat';
+save(cat(2, save_dir, '/', f_save), '-struct', 'Dict');
+%% Should create another script for parsing the dictionary
+% We can refer to the script below 
 %% This part isn't working for Linux
 %% Because bloch is compiled for OS/Windows
 % A final half-alpha 'restore pulse' to return the magnetization into Mz
