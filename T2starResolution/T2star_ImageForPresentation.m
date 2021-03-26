@@ -197,24 +197,42 @@ else
 end
 
 %% Display original colormap image
+% Cropped center of the endo_mask 03/21/2021
 save_array = 1:1:length(whatsinit);
+len = 36;
+base_x = size(mask_struct(7).myo_mask, 1);
 for i = 1:length(whatsinit)
     save_idx = save_array(i);
     figure();
     img2 = whatsinit{save_idx};
     img2 = img2 .* mask_struct(i).epi_mask;
     imagesc(img2); caxis([0 100]); axis image; %colormap default; %colorbar;
+    axis off;
     colormap(brewermap([],'RdBu'));
     c = colorbar;
     w = c.FontSize;
     c.FontSize = 20;
     % '*YlGnBu'
-    
+        
     colormap_dir = cat(2, subject_dir, 'Colormap_', avg_name, '/');
     if ~exist(colormap_dir, 'dir')
         mkdir(colormap_dir)
     end
     saveas(gcf, cat(2, colormap_dir, num2str(save_idx), '.png'));
+    
+    stats = regionprops(mask_struct(i).myo_mask);
+    centroid = round(stats.Centroid);
+    
+    ioi_x = size(mask_struct(i).myo_mask, 1);
+    multiplier = ioi_x / base_x;
+    len_mul = multiplier * len;
+    img2_cropped = imcrop(img2, [centroid(1) - len_mul/2, centroid(2) - len_mul/2, len_mul, len_mul]);
+    figure(); 
+    imagesc(img2_cropped);
+    caxis([0 100]); axis image;
+    axis off;
+    colormap(brewermap([],'RdBu'));
+    saveas(gcf, cat(2, colormap_dir, num2str(save_idx), '_cropped.png'));
 end
 
 close all;

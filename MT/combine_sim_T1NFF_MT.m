@@ -197,15 +197,14 @@ Mxymt_total = one_rep_Mxymt;
 
 %% Dictionary generation starts here
 clear all;
-
 %% Fig. A
 addpath('../lib_EPGX/')
 addpath('../EPGX-src/')
 addpath('../T1NFF/')
-addpath('../BlochSimDemo/')
-addpath('../M219/')
+addpath('../BlochSimDemo/');
+addpath('../M219/');
 addpath('../MT/');
-addpath('../EffectOfFatNIron/')
+addpath('../EffectOfFatNIron/');
 TI_array = [102, 182, 935, 1010, 1762, 1840, 2587, 3410];
 figure();
 b1 = 750;
@@ -239,9 +238,21 @@ rectangle('Position', [(trigger2+TI_array(8))/1000 -b1 acq_win/1000 b1*2], 'Face
 
 xlabel('Time (s)')
 ylabel('B_1 (Hz)')
-%%
+
+half_readout = zeros(8, 1);
+center_k = TR * (num_rampup + PhaseEnc/2) / 1000;
+half_readout(1) = (window-acq_win)/1000 + center_k;
+half_readout(2) = (trigger+TI_array(3))/1000 + center_k;
+half_readout(3) = (trigger+TI_array(5))/1000 + center_k;
+half_readout(4) = (7*window-acq_win)/1000 + center_k;
+half_readout(5) = (trigger2+TI_array(4))/1000 + center_k;
+half_readout(6) = (trigger2+TI_array(6))/1000 + center_k;
+half_readout(7) = (trigger2+TI_array(7))/1000 + center_k;
+half_readout(8) = (trigger2+TI_array(8))/1000 + center_k;
+%% Initiate parameters
+num_rampup = 5;
 TI_array = [102, 935, 1762, 182, 1010, 1840, 2587, 3410];
-npulse = 60 + num_rampup; % Single-shot 
+npulse = 60; % Single-shot 
 % A final half-alpha 'restore pulse' to return the magnetization into Mz
 t_delay = TI_array(1); % TI = 650 ms
 flip = 180; % prep flip angle = 180 degree
@@ -258,6 +269,28 @@ prep.t_delay = t_delay;
 Mz0 = 1;
 TD = trigger; % ms
 gam = 267.5221 *1e-3; % rad /ms /uT
+
+MT_para_remote = struct;
+MT_para_remote.T1x = [T1 T1];
+MT_para_remote.T2x = [T2, 8.1e-3];
+% MT_para_remote.b1sqrdtau_array = b1sqrdtau_array;
+MT_para_remote.F = 0.097;
+MT_para_remote.Kf = 5.2e-3;
+MT_para_remote.trf = 0.600; % ms
+
+MT_prep = struct;
+MT_prep.flip = d2r(flip);
+MT_prep.t_delay = t_delay;
+%% Dictionary generation needs to run on workstation
+% Assuming pulse duration is 20 ms
+trf_prep = 20.00;
+alpha_inv = 180;
+MT_prep.B1SqrdTau = (d2r(alpha_inv)./(trf_prep.*gam)).^2.*trf_prep; 
+ddt = 0.6;
+M0_remote = [0 0 1-MT_para_remote.F MT_para_remote.F]';
+
+[t_total, Mzmt_total_total, Mxymt_total_total, t_readout_mt, Mxy_readout_mt] = seq_T1MOLLI_MT2(TI_array, TD, npulse,...
+    alpha, TR, MT_para_remote, MT_prep, num_rampup, M0_remote, restore_pulse, trigger, trigger2, ddt);
 
 F_array = 0:0.002:0.1;
 Kf_array = 0:0.6:10.2;
@@ -332,3 +365,92 @@ adiabatic.pulseWidth = trf_prep;  % RF pulse duration [ms] % According to siemen
 adiabatic.A0 = 0.12; 
 
 [t_total, M_total_total_fat3t, t_readout, Mxy_readout_fat3t] = seq_T1MOLLI_noMT_bloch3(TI_array, TD, npulse, T1_fat3t, T2_fat3t, alpha, TR, prep, M0, trigger, trigger2, df_fat3t, adiabatic, RAMP_DOWN, ddt);
+[t_total, M_total_total, t_readout, Mxy_readout] = seq_T1MOLLI_noMT_bloch3(TI_array, TD, npulse, T1, T2, alpha, TR, prep, M0, trigger, trigger2, df, adiabatic, RAMP_DOWN, ddt);
+%% Plot
+figure();
+plot(t_total/1000, M_total_total(3, :), 'LineWidth', 2);
+hold on;
+plot(t_total/1000, Mzmt_total_total, 'LineWidth', 2);
+plot(t_total/1000, M_total_total_fat3t(3, :), '-.', 'LineWidth', 2);
+
+xlabel('Time (s)'); ylabel('M_z/M_0');
+grid on;
+xlim([0 10]);
+plot([half_readout half_readout], [-1 1], 'Color', [0.9290, 0.6940, 0.1250], 'LineWidth', 1)
+hold off;
+set(gca,'fontsize', 18)
+legend({'Myo noMT', 'Myo MT', 'Fat'}, 'Location', 'SouthEast');
+xlabel('TI (s)'); ylabel('Signal')
+
+
+TI_array_sorted = sort(TI_array) + TR * ((npulse-num_rampup-RAMP_DOWN) / 2 + num_rampup);
+
+Mxy_readout_array = MOLLI_readout_reorder(Mxy_readout);
+Mxy_readout_array_PhaseEnc = Mxy_PhaseEnc(Mxy_readout_array);
+
+Mxy_readout_array_fat3t = MOLLI_readout_reorder(Mxy_readout_fat3t);
+Mxy_readout_array_PhaseEnc_fat3t = Mxy_PhaseEnc(Mxy_readout_array_fat3t);
+
+Mxy_readout_array_mt = MOLLI_readout_reorder(Mxy_readout_mt*1i);
+Mxy_readout_array_PhaseEnc_mt = Mxy_PhaseEnc(Mxy_readout_array_mt);
+
+figure();
+plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc, 'o-', 'LineWidth', 1.5)
+hold on;
+plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc_mt, 'o-', 'LineWidth', 1.5)
+plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc_fat3t, '*-', 'LineWidth', 1.5)
+legend({'Myocardium', 'Myo MT', 'Fat 3T'}, 'Location', 'SouthEast');
+xlabel('TI (s)'); ylabel('Signal')
+grid on;
+
+%% Kellman figure 2 (change between 1.5T and 3T here)
+FF = [0:1:8]/8;
+Mxy_readout_mt_new = - Mxy_readout_mt;
+figure();
+Mxy_readout_array_PhaseEnc = zeros(numel(FF), numel(Mxy_readout_mt_new));
+for i = 1:numel(FF)
+    ff = FF(i);
+    Mxy_readout_comp = (1-ff) * Mxy_readout_mt_new + ff * Mxy_readout_fat3t;
+    Mxy_readout_array = MOLLI_readout_reorder(Mxy_readout_comp);
+    Mxy_readout_array_PhaseEnc(i, :) = Mxy_PhaseEnc(Mxy_readout_array);
+    subplot(3,3,i);
+    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc(i, :), 'r-', 'LineWidth', 2)
+    hold on;
+    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc(i, :), 'o', 'LineWidth', 2)
+    ylim([-0.4 0.3])
+    grid on;
+    xlabel('Inversion Time (s)'); ylabel('Mxy');
+    title(cat(2, 'FF = ', num2str(ff)));
+    set(gca,'fontsize', 18) 
+end
+
+%% Exp fitting (kellman figure 2)
+x=TI_array_sorted';
+native_t1_noMT_array = zeros(1, numel(FF));
+figure();
+for i = 1:numel(FF)
+y=Mxy_readout_array_PhaseEnc(i, :).';
+g = fittype('a-b*exp(-c*x)');
+f0 = fit(x,y,g,'StartPoint',[.0;.0; 0.001]);
+xx = linspace(1,3500,100);
+
+subplot(3,3,i)
+plot(x,y,'ro',xx,f0(xx),'b-', 'LineWidth', 1.5);
+grid on;
+ylim([-0.4 0.3]);
+xlabel('Inversion Time (s)'); ylabel('Mxy');
+title(cat(2, 'FF = ', num2str(FF(i))));
+set(gca,'fontsize', 18)
+coef = coeffvalues(f0);
+native_t1_noMT_array(i) = 1/coef(3) * (coef(2) / coef(1) - 1);
+
+txt = cat(2, 'T1 = ', num2str(round(native_t1_noMT_array(i))), ' ms');
+if i == 4 || i == 5
+    x_text = 3000;
+    y_text = 0.1;
+else
+    x_text = 3000;
+    y_text = 0;
+end
+text(x_text, y_text, txt,'HorizontalAlignment','right', 'FontSize', 16)
+end

@@ -13,7 +13,11 @@ addpath('D:\src\function');
 base_dir = uigetdir;
 folder_glob = glob(cat(2, base_dir, '\*'));
 
-labels = {'SHMOLLI', 'T1MAP', 'MAG', 'PSIR', 'T2STAR', 'T2MAP'};
+% labels = {'SHMOLLI', 'T1MAP', 'MAG', 'PSIR', 'T2STAR', 'T2MAP'};
+% labels for 20PXX
+labels = {'T1MAP', 'MAG', 'PSIR', 'T2STAR', 'T2MAP', 'T2Mapping'};
+%                                     % T2* weighted image
+% labels for Zhengzhou
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 20P10
 % SHMOLLI
@@ -69,6 +73,17 @@ labels = {'SHMOLLI', 'T1MAP', 'MAG', 'PSIR', 'T2STAR', 'T2MAP'};
 % T2MAP
 % [158, 161, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Zhengzhou Qin Tie Gang
+% MAG
+% [48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 72, 74, 76, 78, 80, 82, 84, 86, 88]
+% PSIR
+% [49, 51, 53, 55, 57, 59, 61, 63, 65, 67, 69, 73, 75, 77, 79, 81, 83, 85, 87, 89]
+% T2STAR
+% [43]
+% T2Mapping
+% [39, 40, 41, 42]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for ll = 1:length(labels)
     label = labels{ll};
     idx_array = contains(folder_glob, label);
@@ -91,7 +106,12 @@ for ll = 1:length(labels)
         ind_array2 = zeros(size(dst_name, 1), 1);
         for i = 1:size(char_array, 1)
             cha = char_array(i, :);
-            ind_array2 = ind_array2 + contains(dst_name, cha);
+            new_cha = strip(cha,'left','0');
+            if any(contains(dst_name, cha))
+                ind_array2 = ind_array2 + contains(dst_name, cha);
+            elseif any(contains(dst_name, new_cha))
+                ind_array2 = ind_array2 + contains(dst_name, new_cha);
+            end
         end
         
         ind_array3 = find(ind_array2 == 1);
@@ -101,7 +121,13 @@ for ll = 1:length(labels)
         
         order_to_read = zeros(length(list_to_read), 1);
         for i = 1:length(list_to_read)
-            order_to_read(i) = find(contains(name_to_compare, char_array(i, :)) == 1);
+            cha = char_array(i, :);
+            new_cha = strip(cha,'left','0');
+            if any(contains(dst_name, cha))
+                order_to_read(i) = find(contains(name_to_compare, cha) == 1);
+            elseif any(contains(dst_name, new_cha))
+                order_to_read(i) = find(contains(name_to_compare, new_cha) == 1);
+            end
         end
         
         save_dir = GetFullPath(cat(2, base_dir, '\..\img\'));
@@ -115,15 +141,30 @@ for ll = 1:length(labels)
             whatsinit = dicom23D(f);
             img_cropped = CropAroundHeart_NoCentroid(whatsinit);
             
-            img_cropped = img_cropped / max(img_cropped(:));
-            img_cropped = adapthisteq(img_cropped);
-            %fname = fname_list{order_to_read(i)};
-            
-            %figure();
-            %imagesc(img_cropped); colormap gray; axis image;
-            
-            f_to_save = cat(2, save_dir, label, '_SAX', num2str(i, '%02.f'), '.png');
-            imwrite(mat2gray(img_cropped), f_to_save);
+            if size(img_cropped, 3)  == 1
+                img_cropped = img_cropped / max(img_cropped(:));
+                img_cropped = adapthisteq(img_cropped);
+                %fname = fname_list{order_to_read(i)};
+                
+                %figure();
+                %imagesc(img_cropped); colormap gray; axis image;
+                
+                f_to_save = cat(2, save_dir, label, '_SAX', num2str(i, '%02.f'), '.png');
+                imwrite(mat2gray(img_cropped), f_to_save);
+            else
+                for slc = 1:size(img_cropped, 3)
+                    img_cropped(:,:,slc) = img_cropped(:,:,slc) / max(max(img_cropped(:,:,slc)));
+                    img_cropped(:,:,slc) = adapthisteq(img_cropped(:,:,slc));
+                    
+                    if strcmp(label, 'T2Mapping')
+                        f_to_save = cat(2, save_dir, label, '_SAX', num2str(i, '%02.f'), '_TE', num2str(slc, '%02.f'), '.png');
+                        imwrite(mat2gray(img_cropped(:,:,slc)), f_to_save);
+                    else
+                        f_to_save = cat(2, save_dir, label, '_SAX', num2str(slc, '%02.f'), '.png');
+                        imwrite(mat2gray(img_cropped(:,:,slc)), f_to_save);
+                    end
+                end
+            end
         end
         
     else
