@@ -1,5 +1,5 @@
 function [t, Mzmt_total, Mxymt_total, mxymt_array, mzmt_array, Mzmt_bound_total, Mxy_readout, corespond_t] ...
-    = seq_block_MT(TD, npulse, alpha, TR, MT_para, MT_prep, M0, num_rampup, RAMP_DOWN, ddt)
+    = seq_block_MT2(TD, npulse, alpha, TR, MT_para, MT_prep, M0, num_rampup, RAMP_DOWN, ddt)
 
 % MT energy deposition (b1sqrdtau) was 4 times of the theory (maybe for 
 % inline with agar simulation?)
