@@ -60,6 +60,9 @@ if ~(exist(outputFileName, 'file') && overwrite_label == 0)
             truesize([3*size(volume_image,1), 3*size(volume_image,2)]);
             axis off;
             
+         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+         % =============================== code fot picking points =======
+         % ===============================================================
             for i = 1:p
                 [y_array(slice_num,i), x_array(slice_num,i)] = ginput(1);
                 y_array(slice_num,i) = round(y_array(slice_num,i), 1);
