@@ -7,7 +7,10 @@ close all;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-addpath('../function/');
+addpath('function/');
+
+% ================================ Identify your major folder, in this case
+% Example/
 base_dir = uigetdir; % more generic
 % base_dir = GetFullPath(cat(2, pwd, '/../../T1_Fat_Project/'));
 folder_glob = glob(cat(2, base_dir, '/Data/*'));
@@ -48,8 +51,7 @@ starting_point = find(strcmp(name_check, Names),1);
 for n = starting_point:length(Names)
 %for n = starting_point:starting_point+4
     name = Names{n};
-    %for tp = 1:length(time_points)
-    for tp = 12:12
+    for tp = 1:length(time_points)
         
     
         time_point = time_points{end-tp+1};
@@ -67,49 +69,34 @@ for n = starting_point:length(Names)
             end
             % Iterate through MAG, PSIR and LGE
             for con_idx = 1:length(con_cell)
+                % A different label for Exvivo
                 con = con_cell{con_idx};
                 if tp == 1
                     for ll = 1:length(sequence_label_exvivo)
-                    %for ll = 7:7
                         label = sequence_label_exvivo{ll};
                         % Check if the dstFolder
                         dstFolder = cat(2, OutputPath, name, '/',  name, '_', time_point, '/', label, '/');
                         
                         dicom_glob = glob(cat(2, base_dir, '/Data/', name, '/', name, '_', time_point, '/', label, '/*'));
                         
-                        if tp == 13 && (ll == 1)% D3 do not have 2D LGE, and sax5 and sax6 of D3 has different resolution
-                            % Needed to be modified here for a more generic use
-                            disp(['Skipped ', time_point, '  ', label])
-                            
-                        else
-                            
-                            ReadCVI_Workflow_Longitudinal_Study_Func(con, dicom_glob, dstFolder, dicom_fields);
-                        end
+                        
+                        ReadCVI_Workflow_Longitudinal_Study_Func(con, dicom_glob, dstFolder, dicom_fields);
+                        
                     end
                 else
                     for ll = 1:length(sequence_label)
-                        %for ll = 2:2
-                            label = sequence_label{ll};
-                            % Check if the dstFolder
-                            dstFolder = cat(2, OutputPath, name, '/',  name, '_', time_point, '/', label, '/');
-                            
-                            dicom_glob = glob(cat(2, base_dir, '/Data/', name, '/', name, '_', time_point, '/', label, '/*'));
-                            
-                        if tp == 13 && (ll == 1)% D3 do not have 2D LGE, and sax5 and sax6 of D3 has different resolution
-                            % Needed to be modified here for a more generic use
-                            disp(['Skipped ', time_point, '  ', label])
-                            
-                        else
-                            
-                            ReadCVI_Workflow_Longitudinal_Study_Func(con, dicom_glob, dstFolder, dicom_fields);
-                        end
+                        label = sequence_label{ll};
+                        % Check if the dstFolder
+                        dstFolder = cat(2, OutputPath, name, '/',  name, '_', time_point, '/', label, '/');
+                        
+                        dicom_glob = glob(cat(2, base_dir, '/Data/', name, '/', name, '_', time_point, '/', label, '/*'));
+                        
+                        ReadCVI_Workflow_Longitudinal_Study_Func(con, dicom_glob, dstFolder, dicom_fields);
+                        
                     end
                 end
                 
             end
-            % break; 
-            % Not looking at most chronic time point, this line needs to be
-            % deleted for future dev.
         end
     end
 end
