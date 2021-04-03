@@ -203,42 +203,47 @@ end
 TE_array = [2.55, 5.80, 9.90, 15.56, 21.22]';
 signal_gre = zeros(Ny, Nx, length(TE_array));
 remote_gre = zeros(Ny, Nx, length(TE_array),1);
-sigma = 0.02;
 hemo_t2star = ones(Ny, Nx) * 15;
 remote_t2star = ones(Ny, Nx) * 38;
+% sigma = 0.02;
 
-for i = 1:length(TE_array)
-    TE = TE_array(i);
-    noise = randn(Ny, Nx) * sigma; 
-    signal_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, hemo_t2star) + noise;
-    remote_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, remote_t2star) + noise;
-end
+sigma_array = 0.01:0.01:0.1;
+C_t2star_fit_reshape = zeros(Ny, Nx, length(res_array), length(sigma_array));
 
-t = signal_gre .* t_hemo + remote_gre .* t_remote;
-res_array = [0.4, 0.6, 0.8, 1.2, 1.6, 2];
-C = zeros([Ny, Nx, length(res_array), size(t,3)]);
-
-for i = 1:length(res_array)
-    res = res_array(i);
-    for te = 1:length(TE_array)
-        C(:,:,i,te) = Func_map_to_bloc(dx, Nx, res, t(:,:,te));
+for s = 1:length(sigma_array)
+    sigma = sigma_array(s)
+    for i = 1:length(TE_array)
+        TE = TE_array(i);
+        noise = randn(Ny, Nx) * sigma;
+        signal_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, hemo_t2star) + noise;
+        remote_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, remote_t2star) + noise;
     end
+    
+    t = signal_gre .* t_hemo + remote_gre .* t_remote;
+    res_array = [0.4, 0.6, 0.8, 1.2, 1.6, 2];
+    C = zeros([Ny, Nx, length(res_array), size(t,3)]);
+    
+    for i = 1:length(res_array)
+        res = res_array(i);
+        for te = 1:length(TE_array)
+            C(:,:,i,te) = Func_map_to_bloc(dx, Nx, res, t(:,:,te));
+        end
+    end
+    %
+    
+    C_gre = reshape(C, [], length(TE_array));
+    C_t2star_fit = zeros(size(C_gre, 1), 1);
+    options = fitoptions('Method', 'NonlinearLeastSquares');
+    options.Lower = [0 -10];
+    options.Upper = [1, -0.01];
+    for i = 1:Nx*Ny*length(res_array)
+        f_t = fit(TE_array, C_gre(i,:)', 'exp1', options);
+        C_t2star_fit(i) = -1/f_t.b;
+        %f_remote = fit(TE_array, remote_gre, 'exp1');
+    end
+    
+    C_t2star_fit_reshape(:,:,:,s) = reshape(C_t2star_fit, Ny, Nx, length(res_array));
 end
-%
-
-C_gre = reshape(C, [], length(TE_array));
-C_t2star_fit = zeros(size(C_gre, 1), 1);
-options = fitoptions('Method', 'NonlinearLeastSquares');
-options.Lower = [0 -10];
-options.Upper = [1, -0.01];
-for i = 1:Nx*Ny*length(res_array)
-    f_t = fit(TE_array, C_gre(i,:)', 'exp1', options);
-    C_t2star_fit(i) = -1/f_t.b;
-    %f_remote = fit(TE_array, remote_gre, 'exp1');
-end
-
-C_t2star_fit_reshape = reshape(C_t2star_fit, Ny, Nx, length(res_array));
-
 %% Plot
 
 %% Directly partial voluming on T2* values
