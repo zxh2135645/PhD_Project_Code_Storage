@@ -136,7 +136,7 @@ for i = 1:length(res_array)
     axis([-5 5 -5 5]);
 end
 end
-%% Matrixization
+%% Matrixization (Should be deprecated)
 dx = 0.1; % mm
 dy = 0.1; % mm
 X = 10;
@@ -171,7 +171,7 @@ for w = 1:length(res_array)
 end
 
 
-%% Is it necessary to simulate SNR effect?
+%% Is it necessary to simulate SNR effect? (Yes I'm doing that)
 dx = 0.1; % mm
 dy = 0.1; % mm
 X = 10;
@@ -211,7 +211,7 @@ sigma_array = 0.01:0.01:0.1;
 C_t2star_fit_reshape = zeros(Ny, Nx, length(res_array), length(sigma_array));
 
 for s = 1:length(sigma_array)
-    sigma = sigma_array(s)
+    sigma = sigma_array(s);
     for i = 1:length(TE_array)
         TE = TE_array(i);
         noise = randn(Ny, Nx) * sigma;
@@ -233,11 +233,11 @@ for s = 1:length(sigma_array)
     
     C_gre = reshape(C, [], length(TE_array));
     C_t2star_fit = zeros(size(C_gre, 1), 1);
-    options = fitoptions('Method', 'NonlinearLeastSquares');
-    options.Lower = [0 -10];
-    options.Upper = [1, -0.01];
+    %options = fitoptions('Method', 'NonlinearLeastSquares');
+    %options.Lower = [0 -10];
+    %options.Upper = [1, -0.01];
     for i = 1:Nx*Ny*length(res_array)
-        f_t = fit(TE_array, C_gre(i,:)', 'exp1', options);
+        f_t = fit(TE_array, C_gre(i,:)', 'exp1', 'Lower', [0 -10], 'Upper', [1 -0.01]);
         C_t2star_fit(i) = -1/f_t.b;
         %f_remote = fit(TE_array, remote_gre, 'exp1');
     end
@@ -245,6 +245,21 @@ for s = 1:length(sigma_array)
     C_t2star_fit_reshape(:,:,:,s) = reshape(C_t2star_fit, Ny, Nx, length(res_array));
 end
 %% Plot
+for s = 1:length(sigma_array)
+figure();
+for i = 1:length(res_array)
+   subplot(3,2,i);
+   imagesc(C_t2star_fit_reshape(:,:,i,s));
+   caxis([0 50]);
+end
+end
+%% Save as mat
+SimPhantom_04042021.res_array = res_array;
+SimPhantom_04042021.sigma_array = sigma_array;
+SimPhantom_04042021.C_t2star_fit_reshape = C_t2star_fit_reshape;
+save_dir = uigetdir;
+fname = 'SimPhantom_04042021';
+save(cat(2, save_dir, '/', fname), 'SimPhantom_04042021');
 
 %% Directly partial voluming on T2* values
 t_gre = reshape(t, [], length(TE_array));
