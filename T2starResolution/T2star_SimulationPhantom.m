@@ -261,7 +261,70 @@ save_dir = uigetdir;
 fname = 'SimPhantom_04042021';
 save(cat(2, save_dir, '/', fname), 'SimPhantom_04042021');
 
-%% Directly partial voluming on T2* values
+%% Load SimPhantom_04042021.mat
+clear all;
+close all;
+addpath('../function/');
+
+base_dir = uigetdir;
+f_to_read = cat(2, base_dir, '/Simulation_Results/Phantom/SimPhantom_04042021.mat');
+load(f_to_read);
+%% Save images
+res_array = SimPhantom_04042021.res_array;
+sigma_array = SimPhantom_04042021.sigma_array;
+save_dir = cat(2, base_dir, '/img/Simulation_Phantom/');
+for s = 1:length(sigma_array)
+    figure();
+    for i = 1:length(res_array)
+        subplot(3,2,i);
+        imagesc(SimPhantom_04042021.C_t2star_fit_reshape(:,:,i,s));
+        caxis([0 50]);; axis image; axis off;
+        colormap(brewermap([],'RdBu'));
+    end
+    sigma = sigma_array(s);
+    sigma_str = num2str(sigma,'%0.2f');
+    fname = cat(2, 'SimPhantom_04222021_Sigma_', sigma_str([1 3 4]) ,'.tif');
+    saveas(gcf, cat(2, save_dir, fname));
+end
+%% SimPhantom_04042021 analysis
+dx = 0.1;
+Nx = size(SimPhantom_04042021.C_t2star_fit_reshape, 2);
+Ny = size(SimPhantom_04042021.C_t2star_fit_reshape, 1);
+hemo_mask = zeros(size(squeeze(SimPhantom_04042021.C_t2star_fit_reshape(:,:,:,1))));
+myo_mask = zeros(size(squeeze(SimPhantom_04042021.C_t2star_fit_reshape(:,:,:,1))));
+for i = 1:length(res_array)
+    res = res_array(i);
+    
+    % Nx_hemo = res / dx;
+    hemo_w = res/dx;
+    hemo_ww = fix(hemo_w/2);
+    
+    if mod(hemo_ww, 2) == 0
+        hemo_mask(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww-1), i) = ones(Ny, length((Nx/2-hemo_ww):(Nx/2+hemo_ww-1)));
+        myo_mask(:,:,i) = ~hemo_mask(:,:,i);
+    else
+        hemo_mask(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww), i) = ones(Ny, length((Nx/2-hemo_ww):(Nx/2+hemo_ww)));
+        myo_mask(:,:,i) = ~hemo_mask(:,:,i);
+    end
+end
+
+mean_hemo_array = zeros(length(sigma_array), length(res_array));
+mean_myo_array = zeros(length(sigma_array), length(res_array));
+std_myo_array = zeros(length(sigma_array), length(res_array));
+CNR_array = zeros(length(sigma_array), length(res_array));
+
+for s = 1:length(sigma_array)
+    hemo_temp = reshape(hemo_mask(:,:,:) .* SimPhantom_04042021.C_t2star_fit_reshape(:,:,:,s), [], length(res_array));
+    myo_temp = reshape(myo_mask(:,:,:) .* SimPhantom_04042021.C_t2star_fit_reshape(:,:,:,s), [], length(res_array));
+    for i = 1:length(res_array)
+        mean_hemo_array(s,i) = mean(nonzeros(hemo_temp(:,i)));
+        mean_myo_array(s,i) = mean(nonzeros(myo_temp(:,i)));
+        std_myo_array(s,i) = std(nonzeros(myo_temp(:,i)));
+    end
+end
+
+CNR_array = abs(mean_hemo_array - mean_myo_array) ./ std_myo_array;
+%% Directly partial voluming on T2* values (needs to be deprecated too)
 t_gre = reshape(t, [], length(TE_array));
 t_t2star_fit = zeros(size(t_gre, 1), 1);
 options = fitoptions('Method', 'NonlinearLeastSquares');
