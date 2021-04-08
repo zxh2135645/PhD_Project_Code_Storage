@@ -67,7 +67,7 @@ else
         Navdata_sm=Navdata_tensor;
     end
 end
-morozov
+% morozov
 
 ranks=[16, cL,cbins,rbins, params.NEco]; % Default ranks: # of basis ims, # of T1 recovery basis functions, # of T2* decay basis functions, # of "wall clock" basis functions
 ranks(ranks==1)=[];
@@ -115,6 +115,8 @@ Ridx_full(1,1) = Ridx_full(1,2);
 
 % Segidx_full=repmat(reshape(1:Nseg,SGblock,[]),[params.NEco, 1]);
 % Segidx_full=repmat(Segidx_full(:),[numel(Hidx_full)/numel(Segidx_full), 1]);
+
+% TODO navline/SGblock
 Segidx_full = Hidx_full;
 Segidx_full(:) = 1;
 % interp1(nav_indices,Ridx(:),1:Nread,'nearest','extrap');
