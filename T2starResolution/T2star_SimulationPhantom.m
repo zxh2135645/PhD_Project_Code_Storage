@@ -324,6 +324,25 @@ for s = 1:length(sigma_array)
 end
 
 CNR_array = abs(mean_hemo_array - mean_myo_array) ./ std_myo_array;
+SNR_array = mean_myo_array ./ std_myo_array;
+SimPhantom_analysis.CNR_array = CNR_array;
+SimPhantom_analysis.SNR_array = SNR_array;
+SimPhantom_analysis.res_array = res_array;
+SimPhantom_analysis.sigma_array = sigma_array;
+save_dir = cat(2, base_dir, '/Simulation_Results/Phantom/');
+fname = 'SimPhantom_analysis.mat';
+save(cat(2, save_dir, fname), 'SimPhantom_analysis');
+%% Heatmap of CNR
+figure();
+subplot(1,2,1);
+imagesc(CNR_array); axis image; axis off;
+colorbar;
+subplot(1,2,2);
+imagesc(SNR_array); axis image; axis off;
+caxis([7 30]);
+colormap(brewermap([],'*RdYlBu'));
+%colormap(brewermap([],'*YlGnBu'));
+colorbar;
 %% Directly partial voluming on T2* values (needs to be deprecated too)
 t_gre = reshape(t, [], length(TE_array));
 t_t2star_fit = zeros(size(t_gre, 1), 1);
