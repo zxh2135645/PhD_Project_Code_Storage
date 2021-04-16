@@ -1,17 +1,18 @@
 %v0.2
 
 Segidx=mod(nav_indices-1,params.lSegments)+1;
-Segidx(:) = 1;
-cL=1;
+% Segidx(:) = 1;
+cL=5;
 
 its=35;
 
 
 % XG
+clear Phi_rt_FirstEcho
 save_Phi_rt_small_init = Phi_rt_small_init;
 Phi_rt_FirstEcho(:,:) = Phi_rt_small_init(:,1:8:end);
 % Phi_rt_small_init = sgolayfilt(Phi_rt_FirstEcho.',0,5);
-clear Phi_rt_small_init;
+% clear Phi_rt_small_init;
 Phi_rt_small_init = Phi_rt_FirstEcho;
 
 
@@ -49,10 +50,10 @@ winwidth=ceil((winwidth-1)/2)*2+1; %make odd
 
 
 %% Original
-% 
-curvePhi = ceil(rand(size(Phi_rt_small_init,2),1));
-curvePhi(:) = 1;
-Segidx = curvePhi.';
+% What is curvePhi here?
+%curvePhi = ceil(rand(size(Phi_rt_small_init,2),1));
+%curvePhi(:) = 1;
+%Segidx = curvePhi.';
 
 Phiresp=zeros(rbins,L_init,cL);
 bestresnorm=inf;
@@ -104,21 +105,21 @@ for outerit=1:min(15,L_init)
 
 
   
-%   plot(Z(1:100));
+%   figure, plot(Z(1:100));
   
 %   figure,plot(Z(1:1000));
   
   resmat=zeros(rbins,numel(Z));
   for it=1:its
     for j=1:rbins
-%       Phiresp(j,:,:)=Phi_rt_small_init(:,Z==j)*pinv(curvePhi(Segidx(Z==j),:).');
-%       Phiresp(j,:,:)=mean(abs(Phi_rt_small_init(:,Z==j)),2);
-      Phiresp(j,:,:)=mean(Phi_rt_small_init(:,Z==j),2);
+      Phiresp(j,:,:)=Phi_rt_small_init(:,Z==j)*pinv(curvePhi(Segidx(Z==j),:).');
+      % Phiresp(j,:,:)=mean(abs(Phi_rt_small_init(:,Z==j)),2);
+      % Phiresp(j,:,:)=mean(Phi_rt_small_init(:,Z==j),2); % XG
     end
 
     parfor j=1:size(Phi_rt_small_init,2)
       resmat(:,j)=sum(abs(bsxfun(@minus,(Phi_rt_small_init(:,j)),reshape(reshape(Phiresp,[],cL)*curvePhi(Segidx(j),:).',rbins,[]).')).^2);
-%       resmat(:,j)=sum(abs(bsxfun(@minus,abs(Phi_rt_small_init(:,j)),reshape(reshape(Phiresp,[],cL)*curvePhi(Segidx(j),:).',rbins,[]).')).^2);
+%     resmat(:,j)=sum(abs(bsxfun(@minus,abs(Phi_rt_small_init(:,j)),reshape(reshape(Phiresp,[],cL)*curvePhi(Segidx(j),:).',rbins,[]).')).^2);
     end
     resmat=bsxfun(@minus,resmat,mean(resmat));
     resmat_filt=sgolayfilt(resmat.',0,winwidth).';
@@ -202,8 +203,8 @@ for outerit=1:min(15,L_init)
 %   end
   
   for j=1:rbins
-%     Phiresp(j,:,:)=Phi_rt_small_init(:,Z==j)*pinv(curvePhi(Segidx(Z==j),:).');
-    Phiresp(j,:,:)=mean(Phi_rt_small_init(:,Z==j),2);
+    Phiresp(j,:,:)=Phi_rt_small_init(:,Z==j)*pinv(curvePhi(Segidx(Z==j),:).');
+    % Phiresp(j,:,:)=mean(Phi_rt_small_init(:,Z==j),2);
   end
   
   res=zeros(size(Z));
@@ -257,8 +258,8 @@ end
 % Ridx(Z_final>=3.5) = ceil(Z_final(Z_final>=3.5));
 
 for j=1:rbins
-%     Phiresp(j,:,:)=Phi_rt_small_init(:,Ridx==j)*pinv(curvePhi(Segidx(Ridx==j),:).');
-    Phiresp(j,:,:)=mean(Phi_rt_small_init(:,Ridx==j),2);
+    Phiresp(j,:,:)=Phi_rt_small_init(:,Ridx==j)*pinv(curvePhi(Segidx(Ridx==j),:).');
+    % Phiresp(j,:,:)=mean(Phi_rt_small_init(:,Ridx==j),2);
   end
   
   res=zeros(size(Z));

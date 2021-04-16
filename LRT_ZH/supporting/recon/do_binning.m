@@ -97,8 +97,12 @@ switch ScanType
     Ridx = reshape(repmat(Ridx,1,8).',[],1);
     
     % TODO
-    Segidx = Ridx; % 
-    Segidx(:) = 1;
+    % Segidx = Ridx; 
+    % Segidx(:) = 1;
+    % The scheme is: 1 1 2 2 3 3 4 4 ... 95 95 96 96 1 1 2 2 ...
+    % Is it 1 2 3 ... 95 96 ...
+    % or 1 3 5 ... 189 191 ... ?
+    % Segidx = vec(repmat((1:params.lSegments/2).', [1, numel(Ridx)/(params.lSegments/2)]));
     Hidx = reshape(repmat(Hidx,1,8).',[],1);
     wall_clock = vec(repmat((1:params.NEco).',[1,numel(Ridx)/params.NEco]));
 end

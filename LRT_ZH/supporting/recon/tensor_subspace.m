@@ -6,7 +6,7 @@ switch ScanType
     WallClock=true;
 end
 
-Nseg = 1;
+Nseg = 192;
 [Navdata_tensor,mask]=regate(navdata_temp,Segidx,Hidx,Ridx,wall_clock);
 if size(Navdata_tensor,2)<Nseg
   Navdata_tensor(:,Nseg,:,:)=0;
@@ -20,7 +20,7 @@ morozov=msdev^2*norm(double(mask(:)))^2
 
 % doBloch=~isempty(curvePhi)
 % doSpline=sum(abs(sms))~=0
-doBloch = 0;
+doBloch = 1;
 doSpline = 0;
 % isUndersampled=~exp(sum(log(mask(:)))); %~prod(mask(:));
 
@@ -28,7 +28,7 @@ doSpline = 0;
 if ~doSpline && ~doBloch%if ~doSpline && isUndersampled && ~doBloch
   tempdim=3; %find(sizes~=1,1,'last');
   tempsizes=ones(size(sizes));
-  tempsizes(tempdim)=sizes(tempdim);
+  tempsizes(tempdim)=sizes(tempdim); % TODO
   Navdata_sm=repmat(sum(Navdata_tensor.*mask,tempdim)./sum(mask,tempdim),tempsizes);
   Navdata_sm(logical(mask))=Navdata_tensor(logical(mask));
   Navdata_sm(isnan(Navdata_sm))=0;
@@ -43,7 +43,7 @@ if doBloch
 end
 
 if true
-%     Navdata_sm=Navdata_bloch;
+     Navdata_sm=Navdata_bloch;
 else
     if doBloch && doSpline
         if strcmp(ScanType,'T2prep')
@@ -68,15 +68,17 @@ else
     end
 end
 % morozov
-
+% TODO
+% cL shouldn't be 1
+% cL = 96;
 ranks=[16, cL,cbins,rbins, params.NEco]; % Default ranks: # of basis ims, # of T1 recovery basis functions, # of T2* decay basis functions, # of "wall clock" basis functions
-ranks(ranks==1)=[];
+%ranks(ranks==1)=[];
 % [C,UU,ranks]=choose_C(squeeze(Navdata_sm),ranks,squeeze(Navdata_tensor),squeeze(mask));
 [C,UU,ranks]=choose_C(squeeze(Navdata_sm),ranks);
 ranks
 
 if doBloch %reinforce dictionary subspace
-%   UU=reshape(curvePhi*(pinv(curvePhi)*reshape(UU,Nseg,[])),size(UU));
+    UU=reshape(curvePhi*(pinv(curvePhi)*reshape(UU,Nseg,[])),size(UU));
 end
 
 Phi=C*UU';
@@ -117,8 +119,11 @@ Ridx_full(1,1) = Ridx_full(1,2);
 % Segidx_full=repmat(Segidx_full(:),[numel(Hidx_full)/numel(Segidx_full), 1]);
 
 % TODO navline/SGblock
-Segidx_full = Hidx_full;
-Segidx_full(:) = 1;
+% Segidx_full = Hidx_full;
+% Segidx_full(:) = 1;
+Segidx_full = interp1(nav_indices, Segidx(:), 1:Nread, 'nearest', 'extrap');
+Segidx_full = circshift(Segidx_full, 1);
+Segidx_full(1,1) = Segidx_full(1,2);
 % interp1(nav_indices,Ridx(:),1:Nread,'nearest','extrap');
 wall_clock_full=interp1(nav_indices,wall_clock(:),1:Nread,'nearest','extrap');
 wall_clock_full = circshift(wall_clock_full,1);

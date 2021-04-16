@@ -1,6 +1,6 @@
 %v0.2.1
 
-Segidx(:) = 1;
+%Segidx(:) = 1;
 %Segidx=mod(nav_indices-1,params.lSegments)+1;
 ccL=1;
 

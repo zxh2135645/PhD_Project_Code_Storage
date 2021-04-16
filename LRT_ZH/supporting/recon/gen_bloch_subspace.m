@@ -7,7 +7,7 @@ Nseg = params.lSegments;
 %       cL = 5;
 %     case 'T2IR'
 %       alpha0_deg='T2IR';
-%       cL=5;
+%       cL = 5;
 %     case 'T2prep'
 %       alpha0_deg = 'T2';
 %       cL = 5;
@@ -18,11 +18,14 @@ Nseg = params.lSegments;
 %       %%%%%%%%%%%%%%%%%%
 %   end
 %   
-%   [curveU,curveS]=gen_curve_subspace(Nseg,params.lEchoSpacing,alpha_deg,alpha0_deg,(params.alTR_seconds-params.lEchoSpacing*Nseg)/2);
+alpha_deg = params.adFlipAngleDegree;
+alpha0_deg = 180;
+cL = 5;
+   [curveU,curveS]=gen_curve_subspace(Nseg,params.lEchoSpacing,alpha_deg,alpha0_deg,(params.alTR_seconds-params.lEchoSpacing*Nseg)/2);
 %   
-%   curvePhi = curveU(:,1:cL);
+   curvePhi = curveU(:,1:cL);
 %   
 % else
-  cL = 1;
+  %cL = 1;
 %   curvePhi = [];
 % end

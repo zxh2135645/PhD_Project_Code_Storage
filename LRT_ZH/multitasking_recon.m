@@ -88,6 +88,8 @@ cbins=14; %Set # of cardiac bins here
 
 resp = 1;
 card = 1;
+%Phi_rt_small_init = save_Phi_rt_small_init;
+
 do_binning;
 
 % card = 1;
@@ -143,7 +145,7 @@ if ~exist(save_dir, 'dir')
    mkdir(save_dir); 
 end
 save(cat(2, save_dir, save_results), 'save_results', 'lambda', 'rbins', 'cbins', 'fid_file', 'Gr', 'L', 'Nx', 'Ny', 'Nz', 'Phi', 'U', 'SGblock',...
-    'dispim', 'vec', 'sizes', 'ScanType', 'Phi_rt_small_init', 'Phi_rt_full', 'Phi_rt_full_init', 'params', 'Ridx', 'Hidx', 'total_time', 'USR');
+    'dispim', 'vec', 'sizes', 'ScanType', 'Phi_rt_small_init', 'Phi_rt_full', 'Phi_rt_full_init', 'Phi', 'params', 'Ridx', 'Hidx', 'total_time', 'USR');
 %save('20P48_4wk_3mm_5meas_binningResults_0214.mat', 'Gr','L','Nx', 'Ny', 'Nz','Phi','U','dispim', 'vec','sizes','ScanType','Phi_rt_full','Phi_rt_full_init','params','Ridx','Hidx');
 % save('20P48_4wk_6mm_2meas_0125_modifiedBinning.mat','-v7.3');
 disp('Results saved.')
