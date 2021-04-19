@@ -172,6 +172,8 @@ end
 
 
 %% Is it necessary to simulate SNR effect? (Yes I'm doing that)
+% To do that in work stastion; 
+% TODO need to iterate tissue width: [0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 3.0]
 dx = 0.1; % mm
 dy = 0.1; % mm
 X = 10;
@@ -184,65 +186,73 @@ d2r = @(x) x/180*pi;
 vec = @(x) x(:);
 
 % Width of the tissue
-width_max = [0.3, 0.6, 1, 2];
-t_width = width_max(1);
-hemo_w = round(t_width / dx);
-hemo_ww = fix(hemo_w/2);
-t_hemo = zeros(Ny, Nx);
-t_remote = zeros(Ny, Nx);
-
-if mod(hemo_w, 2) == 0
-    t_hemo(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww-1)) = 1;
-    t_remote = ~t_hemo;
-else
-    t_hemo(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww)) = 1;
-    t_remote = ~t_hemo;
-end
-
-%gre(1, d2r(60), 790, 1200, 40, 15)
+width_max = [0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 3.0];
 TE_array = [2.55, 5.80, 9.90, 15.56, 21.22]';
-signal_gre = zeros(Ny, Nx, length(TE_array));
-remote_gre = zeros(Ny, Nx, length(TE_array),1);
-hemo_t2star = ones(Ny, Nx) * 15;
-remote_t2star = ones(Ny, Nx) * 38;
-% sigma = 0.02;
+t2star_hemo = 15;
+t2star_remote = 38;
+tissue_canvas = struct;
 
-sigma_array = 0.01:0.01:0.1;
-C_t2star_fit_reshape = zeros(Ny, Nx, length(res_array), length(sigma_array));
-
-for s = 1:length(sigma_array)
-    sigma = sigma_array(s);
-    for i = 1:length(TE_array)
-        TE = TE_array(i);
-        noise = randn(Ny, Nx) * sigma;
-        signal_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, hemo_t2star) + noise;
-        remote_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, remote_t2star) + noise;
+for w = 1:length(width_max)
+    t_width = width_max(w);
+    tissue_canvas(w).t_width = t_width;
+    hemo_w = round(t_width / dx);
+    hemo_ww = fix(hemo_w/2);
+    t_hemo = zeros(Ny, Nx);
+    t_remote = zeros(Ny, Nx);
+    
+    if mod(hemo_w, 2) == 0
+        t_hemo(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww-1)) = 1;
+        t_remote = ~t_hemo;
+    else
+        t_hemo(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww)) = 1;
+        t_remote = ~t_hemo;
     end
     
-    t = signal_gre .* t_hemo + remote_gre .* t_remote;
-    res_array = [0.4, 0.6, 0.8, 1.2, 1.6, 2];
-    C = zeros([Ny, Nx, length(res_array), size(t,3)]);
+    %gre(1, d2r(60), 790, 1200, 40, 15)
+    signal_gre = zeros(Ny, Nx, length(TE_array));
+    remote_gre = zeros(Ny, Nx, length(TE_array),1);
+    hemo_t2star = ones(Ny, Nx) * t2star_hemo;
+    remote_t2star = ones(Ny, Nx) * t2star_remote;
+    % sigma = 0.02;
     
-    for i = 1:length(res_array)
-        res = res_array(i);
-        for te = 1:length(TE_array)
-            C(:,:,i,te) = Func_map_to_bloc(dx, Nx, res, t(:,:,te));
+    sigma_array = 0.01:0.01:0.1;
+    C_t2star_fit_reshape = zeros(Ny, Nx, length(res_array), length(sigma_array));
+    
+    for s = 1:length(sigma_array)
+        sigma = sigma_array(s);
+        for i = 1:length(TE_array)
+            TE = TE_array(i);
+            noise = randn(Ny, Nx) * sigma;
+            signal_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, hemo_t2star) + noise;
+            remote_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, remote_t2star) + noise;
         end
+        
+        t = signal_gre .* t_hemo + remote_gre .* t_remote;
+        res_array = [0.4, 0.6, 0.8, 1.2, 1.6, 2];
+        C = zeros([Ny, Nx, length(res_array), size(t,3)]);
+        
+        for i = 1:length(res_array)
+            res = res_array(i);
+            for te = 1:length(TE_array)
+                C(:,:,i,te) = Func_map_to_bloc(dx, Nx, res, t(:,:,te));
+            end
+        end
+        %
+        
+        C_gre = reshape(C, [], length(TE_array));
+        C_t2star_fit = zeros(size(C_gre, 1), 1);
+        %options = fitoptions('Method', 'NonlinearLeastSquares');
+        %options.Lower = [0 -10];
+        %options.Upper = [1, -0.01];
+        for i = 1:Nx*Ny*length(res_array)
+            f_t = fit(TE_array, C_gre(i,:)', 'exp1', 'Lower', [0 -10], 'Upper', [1 -0.01]);
+            C_t2star_fit(i) = -1/f_t.b;
+            %f_remote = fit(TE_array, remote_gre, 'exp1');
+        end
+        
+        C_t2star_fit_reshape(:,:,:,s) = reshape(C_t2star_fit, Ny, Nx, length(res_array));
     end
-    %
-    
-    C_gre = reshape(C, [], length(TE_array));
-    C_t2star_fit = zeros(size(C_gre, 1), 1);
-    %options = fitoptions('Method', 'NonlinearLeastSquares');
-    %options.Lower = [0 -10];
-    %options.Upper = [1, -0.01];
-    for i = 1:Nx*Ny*length(res_array)
-        f_t = fit(TE_array, C_gre(i,:)', 'exp1', 'Lower', [0 -10], 'Upper', [1 -0.01]);
-        C_t2star_fit(i) = -1/f_t.b;
-        %f_remote = fit(TE_array, remote_gre, 'exp1');
-    end
-    
-    C_t2star_fit_reshape(:,:,:,s) = reshape(C_t2star_fit, Ny, Nx, length(res_array));
+    tissue_canvas(w).C_t2star_fit_reshape = C_t2star_fit_reshape;
 end
 %% Plot
 for s = 1:length(sigma_array)
@@ -284,7 +294,7 @@ for s = 1:length(sigma_array)
     sigma = sigma_array(s);
     sigma_str = num2str(sigma,'%0.2f');
     fname = cat(2, 'SimPhantom_04222021_Sigma_', sigma_str([1 3 4]) ,'.tif');
-    saveas(gcf, cat(2, save_dir, fname));
+    %saveas(gcf, cat(2, save_dir, fname));
 end
 %% SimPhantom_04042021 analysis
 dx = 0.1;
@@ -331,7 +341,7 @@ SimPhantom_analysis.res_array = res_array;
 SimPhantom_analysis.sigma_array = sigma_array;
 save_dir = cat(2, base_dir, '/Simulation_Results/Phantom/');
 fname = 'SimPhantom_analysis.mat';
-save(cat(2, save_dir, fname), 'SimPhantom_analysis');
+%save(cat(2, save_dir, fname), 'SimPhantom_analysis');
 %% Heatmap of CNR
 figure();
 subplot(1,2,1);
@@ -343,6 +353,9 @@ caxis([7 30]);
 colormap(brewermap([],'*RdYlBu'));
 %colormap(brewermap([],'*YlGnBu'));
 colorbar;
+
+
+
 %% Directly partial voluming on T2* values (needs to be deprecated too)
 t_gre = reshape(t, [], length(TE_array));
 t_t2star_fit = zeros(size(t_gre, 1), 1);
