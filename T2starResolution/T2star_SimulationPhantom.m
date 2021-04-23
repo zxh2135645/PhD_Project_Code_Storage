@@ -174,6 +174,7 @@ end
 %% Is it necessary to simulate SNR effect? (Yes I'm doing that)
 % To do that in work stastion; 
 % TODO need to iterate tissue width: [0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 3.0]
+% This has become the main body
 dx = 0.1; % mm
 dy = 0.1; % mm
 X = 10;
@@ -194,6 +195,8 @@ tissue_canvas = struct;
 
 for w = 1:length(width_max)
     t_width = width_max(w);
+    disp(['width is: ', num2str(t_width)])
+    tic;
     tissue_canvas(w).t_width = t_width;
     hemo_w = round(t_width / dx);
     hemo_ww = fix(hemo_w/2);
@@ -252,9 +255,11 @@ for w = 1:length(width_max)
         
         C_t2star_fit_reshape(:,:,:,s) = reshape(C_t2star_fit, Ny, Nx, length(res_array));
     end
+    toc;
     tissue_canvas(w).C_t2star_fit_reshape = C_t2star_fit_reshape;
 end
 %% Plot
+C_t2star_fit_reshape = tissue_canvas(1).C_t2star_fit_reshape;
 for s = 1:length(sigma_array)
 figure();
 for i = 1:length(res_array)
@@ -264,13 +269,147 @@ for i = 1:length(res_array)
 end
 end
 %% Save as mat
-SimPhantom_04042021.res_array = res_array;
-SimPhantom_04042021.sigma_array = sigma_array;
-SimPhantom_04042021.C_t2star_fit_reshape = C_t2star_fit_reshape;
-save_dir = uigetdir;
-fname = 'SimPhantom_04042021';
-save(cat(2, save_dir, '/', fname), 'SimPhantom_04042021');
+% SimPhantom_04042021.res_array = res_array;
+% SimPhantom_04042021.sigma_array = sigma_array;
+% SimPhantom_04042021.C_t2star_fit_reshape = C_t2star_fit_reshape;
+% save_dir = uigetdir;
+% fname = 'SimPhantom_04042021';
+% save(cat(2, save_dir, '/', fname), 'SimPhantom_04042021');
 
+SimPhantom_04202021.res_array = res_array;
+SimPhantom_04202021.sigma_array = sigma_array;
+SimPhantom_04202021.width_max = width_max;
+SimPhantom_04202021.tissue_canvas = tissue_canvas;
+save_dir = uigetdir;
+fname = 'SimPhantom_04202021';
+save(cat(2, save_dir, '/', fname), 'SimPhantom_04202021');
+
+%% Load SimPhantom_04202021.mat
+clear all;
+close all;
+addpath('../function/');
+
+base_dir = uigetdir;
+% f_to_read = cat(2, base_dir, '/Simulation_Results/Phantom/SimPhantom_04202021.mat');
+f_to_read = cat(2, base_dir, '/SimPhantom_04202021.mat');
+load(f_to_read);
+%% Save images 04202021
+res_array = SimPhantom_04202021.res_array;
+sigma_array = SimPhantom_04202021.sigma_array;
+width_max = SimPhantom_04202021.width_max;
+save_dir = cat(2, base_dir, '/img/Simulation_Phantom/');
+for v = 1:length(width_max)
+    w = width_max(v);
+    C_t2star_fit_reshape = SimPhantom_04202021.tissue_canvas(v).C_t2star_fit_reshape;
+for s = 1:length(sigma_array)
+    figure();
+    for i = 1:length(res_array)
+        subplot(3,2,i);
+        imagesc(C_t2star_fit_reshape(:,:,i,s));
+        caxis([0 50]); axis image; axis off;
+        colormap(brewermap([],'RdBu'));
+    end
+    sigma = sigma_array(s);
+    sigma_str = num2str(sigma,'%0.2f');
+    fname = cat(2, 'SimPhantom_04202021_Sigma_', sigma_str([1 3 4]), '_', num2str(w), 'mm', '.tif');
+    saveas(gcf, cat(2, save_dir, fname));
+end
+close all;
+end
+%% SimPhantom_04202021 analysis
+dx = 0.1;
+v = 1;
+SimPhantom_analysis = struct;
+
+for v = 1:length(width_max)
+w = width_max(v);
+C_t2star_fit_reshape = SimPhantom_04202021.tissue_canvas(v).C_t2star_fit_reshape;
+Nx = size(C_t2star_fit_reshape, 2);
+Ny = size(C_t2star_fit_reshape, 1);
+hemo_mask = zeros(size(squeeze(C_t2star_fit_reshape(:,:,:,1))));
+myo_mask = zeros(size(squeeze(C_t2star_fit_reshape(:,:,:,1))));
+for i = 1:length(res_array)
+    res = res_array(i);
+    
+    % Nx_hemo = res / dx;
+    hemo_w = res/dx;
+    hemo_ww = fix(hemo_w/2);
+    
+    if mod(hemo_ww, 2) == 0
+        hemo_mask(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww-1), i) = ones(Ny, length((Nx/2-hemo_ww):(Nx/2+hemo_ww-1)));
+        myo_mask(:,:,i) = ~hemo_mask(:,:,i);
+    else
+        hemo_mask(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww), i) = ones(Ny, length((Nx/2-hemo_ww):(Nx/2+hemo_ww)));
+        myo_mask(:,:,i) = ~hemo_mask(:,:,i);
+    end
+end
+
+mean_hemo_array = zeros(length(sigma_array), length(res_array));
+mean_myo_array = zeros(length(sigma_array), length(res_array));
+std_myo_array = zeros(length(sigma_array), length(res_array));
+CNR_array = zeros(length(sigma_array), length(res_array));
+
+for s = 1:length(sigma_array)
+    hemo_temp = reshape(hemo_mask(:,:,:) .* C_t2star_fit_reshape(:,:,:,s), [], length(res_array));
+    myo_temp = reshape(myo_mask(:,:,:) .* C_t2star_fit_reshape(:,:,:,s), [], length(res_array));
+    for i = 1:length(res_array)
+        mean_hemo_array(s,i) = mean(nonzeros(hemo_temp(:,i)));
+        mean_myo_array(s,i) = mean(nonzeros(myo_temp(:,i)));
+        std_myo_array(s,i) = std(nonzeros(myo_temp(:,i)));
+    end
+end
+
+CNR_array = abs(mean_hemo_array - mean_myo_array) ./ std_myo_array;
+SNR_array = mean_myo_array ./ std_myo_array;
+SimPhantom_analysis(v).t_width = w;
+SimPhantom_analysis(v).CNR_array = CNR_array;
+SimPhantom_analysis(v).SNR_array = SNR_array;
+SimPhantom_analysis(v).res_array = res_array;
+SimPhantom_analysis(v).sigma_array = sigma_array;
+end
+save_dir = cat(2, base_dir, '/Simulation_Results/Phantom/');
+fname = 'SimPhantom04202021_analysis.mat';
+save(cat(2, save_dir, fname), 'SimPhantom_analysis');
+
+%% Heatmap of CNR (04/20/2021)
+
+
+
+save_dir = cat(2, base_dir, '/img/Simulation_Phantom/');
+for i = 1:length(SimPhantom_analysis)
+    CNR_array = SimPhantom_analysis(i).CNR_array;
+    SNR_array = SimPhantom_analysis(i).SNR_array;
+    w = width_max(i);
+    figure();
+    subplot(1,2,1);
+    imagesc(CNR_array); axis image; axis off;
+    colorbar;
+    subplot(1,2,2);
+    imagesc(SNR_array); axis image; axis off;
+    caxis([7 30]);
+    %colormap(brewermap([],'*RdYlBu'));
+    colormap(brewermap([],'*YlGnBu'));
+    colorbar;
+    fname = cat(2, 'SimPhantom_04202021_CNRSNR_', num2str(w), 'mm', '.tif');
+    saveas(gcf, cat(2, save_dir, fname));
+end
+%% Save images
+res_array = SimPhantom_04042021.res_array;
+sigma_array = SimPhantom_04042021.sigma_array;
+save_dir = cat(2, base_dir, '/img/Simulation_Phantom/');
+for s = 1:length(sigma_array)
+    figure();
+    for i = 1:length(res_array)
+        subplot(3,2,i);
+        imagesc(SimPhantom_04042021.C_t2star_fit_reshape(:,:,i,s));
+        caxis([0 50]); axis image; axis off;
+        colormap(brewermap([],'RdBu'));
+    end
+    sigma = sigma_array(s);
+    sigma_str = num2str(sigma,'%0.2f');
+    fname = cat(2, 'SimPhantom_04222021_Sigma_', sigma_str([1 3 4]) ,'.tif');
+    %saveas(gcf, cat(2, save_dir, fname));
+end
 %% Load SimPhantom_04042021.mat
 clear all;
 close all;
