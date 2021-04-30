@@ -1,11 +1,11 @@
 close all;
 clear all;
 
-addpath('../function/');
-addpath('../lib_EPGX/')
-addpath('../EPGX-src/')
-addpath('../BlochSimDemo/');
-addpath('../M219/');
+addpath('../../function/');
+addpath('../../lib_EPGX/')
+addpath('../../EPGX-src/')
+addpath('../../BlochSimDemo/');
+addpath('../../M219/');
 
 %% T1 mapping MOLLI
 lSegment = 192;
@@ -640,7 +640,7 @@ for tff = 1:length(flip_prep_array)
     end
 end
 
-%%
+%% Adding noise 100 times
 % figure(); plot(Mz_recov_TE_dict{1, 1, 1});
 iters = 100;
 Mz_recov_TE_dict_noise = cell(length(T1_array), length(N_array), length(flip_prep_array), iters);
@@ -668,7 +668,30 @@ plot(Mz_recov_TE_dict_noise{1, n, 1, 1});
 hold on;
 plot(Mz_recov_TE_dict{51, n, 1}, 'LineWidth', 1.5);
 ylim([-1.2 1.2]);
-%% Iterate 100 times with gaussian noise level
+%% Plot abs value
+n = 65;
+N = N_array(n);
+total_time = (TI*Nshot + TR * N) * N_ti;
+t = [dt:dt:total_time];
+figure();
+plot(abs(Mz_recov_TE_dict_noise{4, n, 2, 1}(end-N+1:end)));
+hold on;
+plot(abs(Mz_recov_TE_dict{201, n, 2}(end-N+1:end)), 'LineWidth', 1.5);
+ylim([0 1.2]);
+%% Plot inverted abs value
+n = 65;
+N = N_array(n);
+total_time = (TI*Nshot + TR * N) * N_ti;
+t = [dt:dt:total_time];
+figure();
+Mz_recov_TE_noise_abs = abs(Mz_recov_TE_dict_noise{4, n, 2, 1}(end-N+1:end));
+idx = find(Mz_recov_TE_noise_abs == min(Mz_recov_TE_noise_abs));
+Mz_recov_TE_noise_abs(1:idx) = -Mz_recov_TE_noise_abs(1:idx);
+plot(Mz_recov_TE_noise_abs);
+hold on;
+plot(Mz_recov_TE_dict{201, n, 2}(end-N+1:end), 'LineWidth', 1.5);
+ylim([-1.2 1.2]);
+%% Dictionary Matching
 SumSQRT = @(x,y) sum(sqrt((x-y).^2))/length(x);
 figure();
 error_mat_cat = [];
@@ -680,7 +703,12 @@ for t111 = 1:length(T1_array2)
         for tff = 1:length(flip_prep_array)
             flip_prep = flip_prep_array(tff);
             for its = 1:iters
-                temp = Mz_recov_TE_dict_noise{t111,n,tff,its}(end-N+1:end);
+                temp = abs(Mz_recov_TE_dict_noise{t111,n,tff,its}(end-N+1:end)); % Changed to absolute value
+                % Added for a more realistic case
+                %if tff == 2
+                %    idx = find(temp == min(temp));
+                %    temp(1:idx) = -temp(1:idx);
+                %end
                 Mz_recov_TE_noise{n,tff,its} = temp;
             end
         end
@@ -694,7 +722,7 @@ for t111 = 1:length(T1_array2)
             for t11 = 1:length(T1_array)
                 T1 = T1_array(t11);
                 for its = 1:iters
-                    RMS_mat(t11, n, tff, its) = SumSQRT(Mz_recov_TE_noise{n,tff,its}, Mz_recov_TE_dict{t11,n,tff}(end-N+1:end));
+                    RMS_mat(t11, n, tff, its) = SumSQRT(Mz_recov_TE_noise{n,tff,its}, abs(Mz_recov_TE_dict{t11,n,tff}(end-N+1:end)));
                 end
             end
         end
@@ -737,7 +765,7 @@ xt = [1,2];
 xtlbl = {'SR', 'IR'};
 for t111 = 1:length(T1_array2)
     subplot(2,2,t111);
-    imagesc(squeeze(error_mat(t111,:,:,1))); colorbar; caxis([0 30]);
+    imagesc(squeeze(error_mat(t111,:,:,1))); colorbar; caxis([0 10]);
     title(['T1 = ', num2str(T1_array2(t111)), ' ms']);
     set(gca, 'XTick',xt, 'XTickLabel',xtlbl);
     set(gca, 'YTick',yt, 'YTickLabel',ytlbl);
