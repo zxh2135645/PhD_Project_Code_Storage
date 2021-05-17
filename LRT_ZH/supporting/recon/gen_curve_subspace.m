@@ -1,5 +1,5 @@
 function [curveU,curveS]=gen_curve_subspace(Nseg,TR,alpha_deg,alpha0_deg,TI)
-
+% 8 echo - echo spacing
 if nargin < 5
   TI=2*TR;
 end

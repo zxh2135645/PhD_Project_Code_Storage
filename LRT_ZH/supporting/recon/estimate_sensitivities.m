@@ -66,6 +66,7 @@ switch Trajectory
   case 'Cartesian'
     % Spatially-varying coil compression for faster computation
     newcoils=12;
+    %%% TODO
     nonavs=true(Nread,1); nonavs(nav_indices)=0;
     
     % Start with Nx/2+1 (center of readout dimension)

@@ -1,8 +1,34 @@
 %v0.2
+% =======================================================================>>
+% XZ - 1 (Will get averaged T1 weighting)
+%indices_temp = 1:1:length(nav_indices);
+%Segidx = mod(indices_temp-1,params.lSegments)+1;
+%Segidx = vec(repmat(Segidx, [params.NEco, 1]));
+%Segidx = Segidx(1:length(nav_indices), 1);
+% =========================================================================
+% =========================================================================
+% XZ - 2 (will have temporal resolved T1 weighting)
+num_time_interval = params.Averages / 3;
+time_interval_seg = (nav_indices(end)+cutoff+1) / num_time_interval;
 
-Segidx=mod(nav_indices-1,params.lSegments)+1;
-% Segidx(:) = 1;
-cL=5;
+seg_multiplier = fix((nav_indices-1+cutoff)/time_interval_seg)+1;
+
+Segidx_temp = mod(nav_indices-1,params.lSegments)+1;
+Segidx_temp = Segidx_temp(1:length(Segidx_temp)/params.NEco);
+
+seg_multiplier_temp = [];
+for i = 1:num_time_interval
+   len_temp = sum(seg_multiplier == i);
+   seg_multiplier_temp =  [seg_multiplier_temp, ones(1, len_temp / params.NEco)];
+end
+
+Segidx = Segidx_temp + (seg_multiplier_temp - 1).* params.lSegments;
+Segidx = vec(repmat(Segidx, [params.NEco, 1]));
+% =======================================================================<<
+
+%Segidx = interp1(nav_indices, Segidx(:), 1:Nread, 'nearest', 'extrap');
+%Segidx(:) = 1;
+%cL=5;
 
 its=35;
 

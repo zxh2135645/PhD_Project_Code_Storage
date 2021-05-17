@@ -67,7 +67,9 @@ fprintf('done.\n');
 %%
 switch ScanType
   case 'T2star'
+      % TODO: This needs to be modified strictly
     cutoff = params.lSegments*params.NEco*2; %throw out approach to steady-state
+    % cutoff = 0;
     fprintf('input cutoff_end_n');
 %     keyboard;
     cutoff_end = size(kspace_data,1);% - params.lSegments*params.NEco*cutoff_end_n %-params.lSegments*params.NEco*120;
@@ -108,10 +110,11 @@ end
 
 DC_kz=floor(params.lPartitions/2+1);
 %%%%%%%%%%%%%%%%%%%%
+% Hard-coded
 SGblock = 2;
 %%%%%%%%%%%%%%%%%%%%
 
-%Interleave imaging and nav echos
+% Interleave imaging and nav echos
 sz=size(kspace_data);
 kspace_data=reshape(kspace_data,params.NEco,SGblock,[]);
 kspace_data=reshape(permute(kspace_data,[2 1 3]),sz);
@@ -119,6 +122,8 @@ kspace_data=reshape(permute(kspace_data,[2 1 3]),sz);
 sz=size(pe_indices);
 pe_indices=reshape(pe_indices,params.NEco,SGblock,[]);
 pe_indices=reshape(permute(pe_indices,[2 1 3]),sz);
+% xz
+figure(); scatter(pe_indices(1:SGblock:10000,1), pe_indices(1:SGblock:10000, 2));
 
 cutoff_shift=1; %Segments may not be a multiple of SGblock
 
@@ -131,9 +136,9 @@ if ~iscartesian
   kspace_data(nav_indices,:,:,:)=[];
 end
 
-Ncoils=size(kspace_data,4);
+Ncoils=size(kspace_data,4); % 12
 Norig = params.lBaseResolution;
-% Norig = 128;
+% Norig = 192;
 Nzorig = params.NImagePar;
 ovs = Norig*~iscartesian; %FOV extension
 sl_ovs=params.lPartitions-Nzorig; %Slice oversampling extension

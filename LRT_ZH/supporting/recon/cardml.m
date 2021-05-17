@@ -63,6 +63,7 @@ for outerit=1:10
         Phicard(j,k,:,:)= mean(Phi_rt_small_init(:,(Ridx==j)&(Z==k)),2);
       end
     end
+    Phicard(isnan(Phicard)) = 0; %XZ
     %switch systole/diastole?
     nucnorm=zeros(2^(rbins-1),1);
     parfor j=1:2^(rbins-1) %never switch first one
@@ -102,6 +103,8 @@ for outerit=1:10
       Phicard(j,k,:,:)=mean(Phi_rt_small_init(:,(Ridx==j)&(Z==k)),2);
     end
   end
+  %XZ
+  Phicard(isnan(Phicard)) = 0; %XZ
   %switch systole/diastole?
   nucnorm=zeros(2^(rbins-1),1);
   parfor j=1:2^(rbins-1) %never switch first one

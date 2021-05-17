@@ -6,8 +6,10 @@ switch ScanType
     WallClock=true;
 end
 
-Nseg = 192;
-[Navdata_tensor,mask]=regate(navdata_temp,Segidx,Hidx,Ridx,wall_clock);
+Nseg = params.lSegments;
+% TODO
+% [Navdata_tensor,mask]=regate(navdata_temp,Segidx,Hidx,Ridx,wall_clock);
+[Navdata_tensor,mask]=regate_5D(navdata_temp,Segidx,Hidx,Ridx,wall_clock,seg_multiplier);
 if size(Navdata_tensor,2)<Nseg
   Navdata_tensor(:,Nseg,:,:)=0;
   mask(:,Nseg,:,:)=0;
@@ -36,9 +38,10 @@ else
   Navdata_sm=Navdata_tensor;
 end
 if doBloch
-  Navdata_bloch=pcg(@(x)vec((reshape(permute(mask.^2,[1 3 4 5 2]),[],Nseg).*(reshape(x,[],cL)*curvePhi.'))*curvePhi),...
-    vec(reshape(permute(mask.^2.*Navdata_tensor,[1 3 4 5 2]),[],Nseg)*curvePhi),[],200);
-  Navdata_bloch=ipermute(reshape(reshape(Navdata_bloch,[],cL)*curvePhi.',sizes([1 3 4 5 2])),[1 3 4 5 2]);
+    % TODO, still 13452?
+  Navdata_bloch=pcg(@(x)vec((reshape(permute(mask.^2,[1 3 4 5 6 2]),[],Nseg).*(reshape(x,[],cL)*curvePhi.'))*curvePhi),...
+    vec(reshape(permute(mask.^2.*Navdata_tensor,[1 3 4 5 6 2]),[],Nseg)*curvePhi),[],200);
+  Navdata_bloch=ipermute(reshape(reshape(Navdata_bloch,[],cL)*curvePhi.',sizes([1 3 4 5 6 2])),[1 3 4 5 6 2]);
   %     morozov_new=morozov-norm((Navdata_bloch(:)-Navdata_tensor(:)).*mask(:))^2
 end
 
@@ -71,7 +74,7 @@ end
 % TODO
 % cL shouldn't be 1
 % cL = 96;
-ranks=[16, cL,cbins,rbins, params.NEco]; % Default ranks: # of basis ims, # of T1 recovery basis functions, # of T2* decay basis functions, # of "wall clock" basis functions
+ranks=[16, cL,cbins,rbins, params.NEco, params.Averages/4]; % Default ranks: # of basis ims, # of T1 recovery basis functions, # of T2* decay basis functions, # of "wall clock" basis functions
 %ranks(ranks==1)=[];
 % [C,UU,ranks]=choose_C(squeeze(Navdata_sm),ranks,squeeze(Navdata_tensor),squeeze(mask));
 [C,UU,ranks]=choose_C(squeeze(Navdata_sm),ranks);
@@ -132,7 +135,13 @@ wall_clock_full(1,1) = wall_clock_full(1,2);
 % Ridx_full=repmat((1:params.NEco),[SGblock,1,numel(Segidx_full)/SGblock/params.NEco]);
 % Ridx_full=Ridx_full(:);
 
-Phi_rt_full = degate(Phi(:,:).',[size(C,1) sizes(2:end)],Segidx_full,Hidx_full,Ridx_full,wall_clock_full); %(C*UU').'
+seg_multiplier_full = interp1(nav_indices, seg_multiplier(:), 1:Nread, 'nearest', 'extrap');
+seg_multiplier_full = circshift(seg_multiplier_full, 1);
+seg_multiplier_full(1,1) = seg_multiplier_full(1,2);
+
+%Phi_rt_full = degate(Phi(:,:).',[size(C,1) sizes(2:end)],Segidx_full,Hidx_full,Ridx_full,wall_clock_full); %(C*UU').'
+
+Phi_rt_full = degate_5D(Phi(:,:).',[size(C,1) sizes(2:end)],Segidx_full,Hidx_full,Ridx_full,wall_clock_full,seg_multiplier_full); %(C*UU').'
 Phi_rt_small=Phi_rt_full(:,nav_indices);
 Phi_rt=Phi_rt_full;
 

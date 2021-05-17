@@ -107,8 +107,8 @@ switch ScanType
     wall_clock = vec(repmat((1:params.NEco).',[1,numel(Ridx)/params.NEco]));
 end
 
-figure,subplot(2,1,1),plot(Hidx)
-subplot(2,1,2),plot(Ridx)
+figure,subplot(2,1,1),plot(Hidx(1:2000))
+subplot(2,1,2),plot(Ridx(1:2000))
 
 % clear temp;
 % for j=1:rbins

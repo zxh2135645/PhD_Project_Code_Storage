@@ -25,6 +25,7 @@ addpath(genpath((fullfile(mainpath,'supporting','mapVBVD'))));
 % irtdir=pwd; %reset irtdir to use absolute pathname
 % setup;
 % cd(current_dir);
+addpath(genpath(fullfile(mainpath,'supporting_RY'))); %Supporting utilities
 
 %% Loading and preprocessing
 useGPU=(exist('gpuNUFFT', 'file')>1); %true if using gpuNUFFT. false if using irt.
@@ -86,6 +87,9 @@ TPR = params.dThickness_mm/params.NTruePar;
 rbins=6; %Set # of respiratory bins here
 cbins=14; %Set # of cardiac bins here
 
+%rbins = 1;
+%cbins = 1;
+
 resp = 1;
 card = 1;
 %Phi_rt_small_init = save_Phi_rt_small_init;
@@ -100,6 +104,9 @@ do_binning;
 Phi_rt_small_init = save_Phi_rt_small_init;
 % clear Phi_rt_FirstEcho
 disp('Finished section binning.')
+%% Load binning that worked somehow
+load_dir = uigetdir;
+load(cat(2, load_dir, '/FID16017_21P18_D4_6mm_USR7%_L32_results_2021_04_15_02_33_T1T2star.mat'));
 %% tensor subspace estimation
 set_tensor_params; %change smoothness/low-rankness parameters in here
 tensor_subspace;
@@ -107,12 +114,12 @@ tensor_subspace;
 %VERY approximate preview
 %U=vec(reshape(U_init,[],L_init)*(Phi_rt_full_init*pinv(Phi_rt_full)));
 U=vec(reshape(U_init,[],L_init)*(bsxfun(@times,Phi_rt_init,lrw)*pinv(Phi_rt)));
-tensor_display;
+%tensor_display;
 
 disp('Finished section tensor subspace estimation.')
 %u recon
 ls_recon; %set least-squares iterations in here
-tensor_display;
+%tensor_display;
 
 % Whiten 
 Wt=reshape(U0,[],L);
@@ -129,7 +136,7 @@ end
 % wavelet_recon_aniso3D;
 % tensor_display;
 tv_recon_aniso3D;
-tensor_display;
+%tensor_display;
 %%
 USR = size(kspace_data, 1)/SGblock/params.NEco/Ny/Nz/rbins/cbins*100
 specialNotes = input('Special Notes?:  ', 's');
