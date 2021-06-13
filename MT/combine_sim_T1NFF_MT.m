@@ -464,7 +464,7 @@ for f = 1:length(F_array)
 end
 %% 
 figure();
-imagesc(native_t1_mat)
+imagesc(native_t1_mat(:,2:end));
 %% This part isn't working for Linux
 %% Because bloch is compiled for OS/Windows
 % A final half-alpha 'restore pulse' to return the magnetization into Mz
@@ -493,7 +493,7 @@ adiabatic.A0 = 0.12;
 figure();
 plot(t_total/1000, M_total_total(3, :), 'LineWidth', 2);
 hold on;
-plot(t_total/1000, Mzmt_total_total, 'LineWidth', 2);
+plot(t_total/1000, Mzmt_total_total', 'LineWidth', 2);
 plot(t_total/1000, M_total_total_fat3t(3, :), '-.', 'LineWidth', 2);
 
 xlabel('Time (s)'); ylabel('M_z/M_0');

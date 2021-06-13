@@ -493,8 +493,103 @@ colormap(brewermap([],'*RdYlBu'));
 %colormap(brewermap([],'*YlGnBu'));
 colorbar;
 
+%% Pure noise map
+addpath('../function/');
+%%
+Ny = 10;
+Nx = 10;
+sigma = 0.05;
+noise_map = randn(Ny, Nx) * sigma;
 
+figure(); imagesc(noise_map);
+axis image; axis off;
+colormap(brewermap([],'*RdYlBu'));
 
+%% hemo/remote + noise
+Ny = 11;
+Nx = 11;
+gray1 = [233 234 235]/255;
+gray2 = [214 216 217]/255;
+gray3 = [195 198 199]/255;
+gray4 = [176 178 181]/255;
+gray5 = [157 159 162]/255;
+
+hemo1 = [214 216 217]/255;
+hemo2 = [195 198 199]/255;
+hemo3 = [176 178 181]/255;
+hemo4 = [139 141 144]/255;
+hemo5 = [99 100 102]/255;
+
+% 1
+hemo_map = zeros(Ny, Nx, 3);
+hemo_map(:,:,1) = ones(Ny,Nx).*gray1(1);
+hemo_map(:,:,2) = ones(Ny,Nx).*gray1(2);
+hemo_map(:,:,3) = ones(Ny,Nx).*gray1(3);
+hemo_map(:,6,1) = ones(Ny,1).*hemo1(1);
+hemo_map(:,6,2) = ones(Ny,1).*hemo1(2);
+hemo_map(:,6,3) = ones(Ny,1).*hemo1(3);
+
+noise_map = randn(Ny, Nx) * sigma;
+hemo_graymap = rgb2gray(hemo_map);
+figure(); imagesc(hemo_graymap+noise_map);
+axis image; axis off; caxis([0 1]);
+colormap gray;
+
+% 2
+hemo_map = zeros(Ny, Nx, 3);
+hemo_map(:,:,1) = ones(Ny,Nx).*gray2(1);
+hemo_map(:,:,2) = ones(Ny,Nx).*gray2(2);
+hemo_map(:,:,3) = ones(Ny,Nx).*gray2(3);
+hemo_map(:,6,1) = ones(Ny,1).*hemo2(1);
+hemo_map(:,6,2) = ones(Ny,1).*hemo2(2);
+hemo_map(:,6,3) = ones(Ny,1).*hemo2(3);
+noise_map = randn(Ny, Nx) * sigma;
+hemo_graymap = rgb2gray(hemo_map);
+figure(); imagesc(hemo_graymap+noise_map);
+axis image; axis off; caxis([0 1]);
+colormap gray;
+
+% 3
+hemo_map = zeros(Ny, Nx, 3);
+hemo_map(:,:,1) = ones(Ny,Nx).*gray3(1);
+hemo_map(:,:,2) = ones(Ny,Nx).*gray3(2);
+hemo_map(:,:,3) = ones(Ny,Nx).*gray3(3);
+hemo_map(:,6,1) = ones(Ny,1).*hemo3(1);
+hemo_map(:,6,2) = ones(Ny,1).*hemo3(2);
+hemo_map(:,6,3) = ones(Ny,1).*hemo3(3);
+noise_map = randn(Ny, Nx) * sigma;
+hemo_graymap = rgb2gray(hemo_map);
+figure(); imagesc(hemo_graymap+noise_map);
+axis image; axis off; caxis([0 1]);
+colormap gray;
+
+% 4
+hemo_map = zeros(Ny, Nx, 3);
+hemo_map(:,:,1) = ones(Ny,Nx).*gray4(1);
+hemo_map(:,:,2) = ones(Ny,Nx).*gray4(2);
+hemo_map(:,:,3) = ones(Ny,Nx).*gray4(3);
+hemo_map(:,6,1) = ones(Ny,1).*hemo4(1);
+hemo_map(:,6,2) = ones(Ny,1).*hemo4(2);
+hemo_map(:,6,3) = ones(Ny,1).*hemo4(3);
+noise_map = randn(Ny, Nx) * sigma;
+hemo_graymap = rgb2gray(hemo_map);
+figure(); imagesc(hemo_graymap+noise_map);
+axis image; axis off; caxis([0 1]);
+colormap gray;
+
+% 5
+hemo_map = zeros(Ny, Nx, 3);
+hemo_map(:,:,1) = ones(Ny,Nx).*gray5(1);
+hemo_map(:,:,2) = ones(Ny,Nx).*gray5(2);
+hemo_map(:,:,3) = ones(Ny,Nx).*gray5(3);
+hemo_map(:,6,1) = ones(Ny,1).*hemo5(1);
+hemo_map(:,6,2) = ones(Ny,1).*hemo5(2);
+hemo_map(:,6,3) = ones(Ny,1).*hemo5(3);
+noise_map = randn(Ny, Nx) * sigma;
+hemo_graymap = rgb2gray(hemo_map);
+figure(); imagesc(hemo_graymap+noise_map);
+axis image; axis off; caxis([0 1]);
+colormap gray;
 %% Directly partial voluming on T2* values (needs to be deprecated too)
 t_gre = reshape(t, [], length(TE_array));
 t_t2star_fit = zeros(size(t_gre, 1), 1);
