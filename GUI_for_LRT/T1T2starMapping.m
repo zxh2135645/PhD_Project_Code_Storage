@@ -10,8 +10,10 @@ qMRinfo('mono_t2'); % set it up first in qMRLab
 % sizes(3) -> Cardiac
 % sizes(4) -> resp
 TE_array = [1.41, 3.38, 5.39, 7.40, 9.41, 11.42]; % 13.43, 15.44 ms
-t1_map = zeros(Ny, Nx, Nz, sizes(3), sizes(4), sizes(5));
+IR_array = repmat(TE_array, [sizes(2), 1]) + repmat((0:1:(sizes(2)-1)) * params.lEchoSpacing, [sizes(5), 1]).'*1000;
+t1_map = zeros(Ny, Nx, Nz, 1, 1, sizes(5));
 t2star_map = zeros(Ny, Nx, Nz, 1, 1, sizes(2));
+mask = zeros(Ny, Nx, Nz);
 for i = 1:Nz
     dispim = @(x,st)fftshift(x(:,:,i,:),1);
     for j = 1:1
@@ -22,10 +24,16 @@ for i = 1:Nz
             figure();
             imagesc(abs(temp(:,:,end,1))/cw); axis image;
             roi = drawpolygon;
-            mask = createMask(roi);
-            
+            mask(:,:,i) = createMask(roi);
+        end
+    end
+end
+
+for i = 1:Nz
+    dispim = @(x,st)fftshift(x(:,:,i,:),1);
+    for j = 1:1
+        for k = sizes(4):sizes(4)
             for l = 1:sizes(2)
-                
                 % Reshape matrix as [Width x Height x #Slice x #TE]
                 ipt = abs(temp(:,:,l,:));
                 Model = mono_t2;  % Create class from model
@@ -38,15 +46,28 @@ for i = 1:Nz
                 Model.options.FitType = 'Linear';
                 data = struct;  % Create data structure
                 data.SEdata = ipt;
-                data.Mask = mask;
+                data.Mask = mask(:,:,i);
                 FitResults = FitData(data, Model); %fit data
-                
                 t2star_map(:,:,i,1,1,l) = FitResults.T2;
+            end
+            
+            for m = 1:sizes(5)
+                % a - create object
+                Model = inversion_recovery;
+                % Reshape matrix as [Width x Height x #Slice x #TE]
+                ipt = abs(reshape(temp(:,:,:,m), Ny, Nx, 1, []));
+                
+                data = struct;
+                data.IRData= double(ipt);
+                data.Mask= double(mask(:,:,i));
+
+                Model.Prot.IRData.Mat = IR_array(:,m);
+                Model.voxelwise = 1;
+
+                % b- fit dataset
+                FitResults = FitData(data,Model,0);
+                t1_map(:,:,i,1,1,l) = FitResults.T1 .* (-FitResults.b ./ FitResults.a - 1);
             end
         end
     end
 end
-
-
-
-ax1 = implay(abs(temp(:,:,:,1)/cw));
