@@ -1,9 +1,11 @@
 % XZ
-Phi=reshape(Phi,[L sizes(2:end)]);
-temp=Gr\reshape(Phi(:,:,1,1,:),L,[]);
+dispim2 = @(x,st)fftshift(x(:,:,15,:),1);
 
-temp=(reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp,Ny,Nx,[],params.NEco));
-cw=max(vec(abs(temp)));
+Phi=reshape(Phi,[L sizes(2:end)]);
+temp=Gr\reshape(Phi(:,end,:,end,:),L,[]);
+
+temp=(reshape(reshape(dispim2(reshape(U,Ny,Nx,Nz,[])),[],L)*temp,Ny,Nx,[],params.NEco));
+cw=0.5*max(vec(abs(temp)));
 
 h = implay(abs(temp(:,:,:,1))/cw);
 set(h.Parent,'Name','old_basal_echo1');
@@ -12,7 +14,20 @@ set(h.Parent,'Name','old_basal_echo1');
 tempp = reshape(permute(temp, [1 2 4 3]), Ny, Nx, []);
 h = implay(abs(tempp)/cw);
 set(h.Parent,'Name','old_basal_echo1');
+%% stack of slices
 
+figure();
+for slc = 1:Nz
+dispim2 = @(x,st)fftshift(x(:,:,slc,:),1);
+
+Phi=reshape(Phi,[L sizes(2:end)]);
+temp=Gr\reshape(Phi(:,:,1,1,:),L,[]);
+
+temp=(reshape(reshape(dispim2(reshape(U,Ny,Nx,Nz,[])),[],L)*temp,Ny,Nx,[],params.NEco));
+%cw=0.5*max(vec(abs(temp)));
+
+subplot(6,6,slc); imagesc(abs(temp(:,:,end,1)));
+end
 %% 5D 
 Phi=reshape(Phi,[L sizes(2:end)]);
 temp=Gr\reshape(Phi(:,:,1,1,:,4),L,[]);

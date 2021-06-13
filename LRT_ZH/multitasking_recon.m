@@ -93,7 +93,7 @@ cbins=14; %Set # of cardiac bins here
 resp = 1;
 card = 1;
 %Phi_rt_small_init = save_Phi_rt_small_init;
-
+seg = 1;
 do_binning;
 
 % card = 1;

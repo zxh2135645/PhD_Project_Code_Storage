@@ -171,7 +171,7 @@ end
     
     df=fs/size(resp_Phi_rt,2);
     winhp=floor((150/60)/df); %highest HR: 150 bpm
-    winlp=floor((80/60)/df); %lowest HR: 40 bpm
+    winlp=floor((60/60)/df); %lowest HR: 40 bpm
     l_hwindow = size(resp_Phi_rt,2);
     hwindow=zeros(size(resp_Phi_rt,2),1);
     hwindow(winlp:winhp) = 1;
@@ -202,8 +202,8 @@ end
     figure(106),subplot(3,1,2),plot(abs(card_Z));
     
     RR_int = 1000/((find(card_Z(2:end) == max(card_Z(2:end/2)),1)-1)*df)  %theoretical R-R interval seconds
-    cbins = floor(RR_int/1000/params.lEchoSpacing/SGblock/2)*2;
-    cbins = 10;
+    %cbins = floor(RR_int/1000/params.lEchoSpacing/SGblock/2)*2;
+    %cbins = 10;
   
     
     
@@ -252,8 +252,8 @@ end
     % Phi_rt Cardiac binning
 
     card_Phi_rt= abs(temp_Phi_rt_small(:,Bin_start:Bin_end));
-
-    
+    Hidx(Bin_start:Bin_end) = card_Z_ICA;
+%%    
     for idx = 1:L_init
         card_Z = abs(card_Phi_rt(idx,:)).';
         card_Z = fft(card_Z);
@@ -593,7 +593,7 @@ xlabel('RR interval (ms)')
 %   imagesc(abs(temp1))
 % end
   
-temp_Phi_rt_small_2 = Phi_rt_small_init(:,8:params.NEco:end);
+temp_Phi_rt_small_2 = Phi_rt_small_init(:,1:params.NEco:end);
 
 clear Phiresp;
 for j=1:rbins
@@ -623,7 +623,7 @@ set(h.Parent,'Name','card_binning');
 
 
 %%
-num_time_interval = params.Averages / 4;
+num_time_interval = params.Averages / seg;
 time_interval_seg = (nav_indices(end)+cutoff+1) / num_time_interval;
 
 seg_multiplier = fix((nav_indices-1+cutoff)/time_interval_seg)+1;
@@ -650,7 +650,7 @@ Hidx = interp1(1:params.NEco:(params.NEco*length(Hidx)),Hidx,1:(params.NEco*leng
 wall_clock = vec(repmat((1:params.NEco).',[1,numel(Ridx)/params.NEco])).';
 
 figure, 
-subplot(4,1,1); plot(Hidx(1:10000));
-subplot(4,1,2); plot(Ridx(1:10000));
-subplot(4,1,3); plot(Segidx(1:10000));
-subplot(4,1,4); plot(seg_multiplier(1:10000));
+subplot(4,1,1); plot(Hidx(1:1000));
+subplot(4,1,2); plot(Ridx(1:1000));
+subplot(4,1,3); plot(Segidx(1:1000));
+subplot(4,1,4); plot(seg_multiplier(1:1000));
