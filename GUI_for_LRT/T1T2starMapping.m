@@ -71,3 +71,10 @@ for i = 1:Nz
         end
     end
 end
+
+map_to_save = struct;
+map_to_save.mask = mask;
+map_to_save.t2star_map = t2star_map;
+map_to_save.t1_map = t1_map;
+save_f = cat(2, fid_path, fid_file(1:15), 'LRT_Mappings.mat');
+save(save_f, 'map_to_save');
