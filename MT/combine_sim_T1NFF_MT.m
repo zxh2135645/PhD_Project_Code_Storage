@@ -350,8 +350,9 @@ save(cat(2, save_dir, '/', f_save), '-struct', 'Dict');
 % load Dict
 % ddt = 0.4;
 
-f = 50;
-k = 18;
+ddt = 0.2;
+f = 1;
+k = 1;
 
 
 TI_array = [102, 182, 935, 1010, 1762, 1840, 2587, 3410];
@@ -372,15 +373,15 @@ npulse = 60; % Single-shot
 t_delay = TI_array(1); % TI = 650 ms
 flip = 180; % prep flip angle = 180 degree
 alpha = 35;
-T1_bound = 1000;
+% T1_bound = 1000;
 T2_bound = 8.1e-3;
 T1 = 1133.2;
 T2 = 45;
-TR = 2.4;
+%TR = 2.4;
 
-prep = struct;
-prep.flip = d2r(flip);
-prep.t_delay = t_delay;
+%prep = struct;
+%prep.flip = d2r(flip);
+%prep.t_delay = t_delay;
 Mz0 = 1;
 gam = 267.5221 *1e-3; % rad /ms /uT
 
@@ -408,7 +409,7 @@ M0_remote = [0 0 1-MT_para_remote.F MT_para_remote.F]';
 
 %% Try to plot
 load('../../T1_Fat_Project/Results/MT_MOLLI_Dict.mat');
-%%
+
 F_array = 0:0.002:0.1;
 Kf_array = 0:0.6:10.2;
 
@@ -416,7 +417,7 @@ f = 50;
 k = 18;
 Mzmt_total_total = squeeze(Mzmt_dict(f,k,:));
 Mxymt_total_total = squeeze(Mxymt_dict(f,k,:));
-
+%%
 figure(); plot(Mzmt_total_total);
 hold on;
 plot(abs(Mxymt_total_total));
@@ -428,20 +429,22 @@ end
 
 %% To do/ TO fit
 addpath('../EffectOfFatNIron/');
-Mzmt_readout = Mzmt_dict(:,:,readout_array);
-Mxymt_readout = Mxymt_dict(:,:,readout_array);
+%Mzmt_readout = Mzmt_dict(:,:,readout_array);
+%Mxymt_readout = Mxymt_dict(:,:,readout_array);
+Mzmt_readout = Mzmt_total_total(readout_array);
+Mxymt_readout = Mxymt_total_total(readout_array);
 
 %f = 1;
 %k = 1;
 native_t1_mat = zeros(length(F_array), length(Kf_array));
-for f = 1:length(F_array)
-    for k = 1:length(Kf_array)
+%for f = 1:length(F_array)
+%    for k = 1:length(Kf_array)
         %f = F_array(i);
         %k = Kf_array(j);
         %figure();
         %plot(squeeze(Mzmt_readout));
-        Mzmt_readout_reordered = squeeze(MOLLI_readout_reorder(Mzmt_readout(f,k,:)));
-        Mxymt_readout_reordered = squeeze(MOLLI_readout_reorder(abs(Mxymt_readout(f,k,:))));
+        Mzmt_readout_reordered = squeeze(MOLLI_readout_reorder(Mzmt_readout(:)));
+        Mxymt_readout_reordered = squeeze(MOLLI_readout_reorder(abs(Mxymt_readout(:))));
         %figure();
         %plot(Mzmt_readout_reordered);
         %hold on;
@@ -455,13 +458,18 @@ for f = 1:length(F_array)
             end
         end
         Mxymt_readout_reordered_sign = Mxymt_readout_reordered .* sign_array';
-        
+        TI_array_sorted = sort(TI_array);
         g = fittype('a-b*exp(-c*x)');
-        f0 = fit(TI_array',Mxymt_readout_reordered_sign,g,'StartPoint',[.0;.0; 0.001]);
+        f0 = fit(TI_array_sorted',Mxymt_readout_reordered_sign,g,'StartPoint',[.0;.0; 0.001]);
         coef = coeffvalues(f0);
-        native_t1_mat(f,k) = 1/coef(3) * (coef(2) / coef(1) - 1);
-    end
-end
+        % native_t1_mat(f,k) = 1/coef(3) * (coef(2) / coef(1) - 1);
+        native_t1 = 1/coef(3) * (coef(2) / coef(1) - 1)
+        
+        xx = linspace(1,3500,100);
+        figure();
+        plot(TI_array_sorted',Mxymt_readout_reordered_sign,'ro',xx,f0(xx),'b-', 'LineWidth', 1.5);
+ %   end
+%end
 %% 
 figure();
 imagesc(native_t1_mat(:,2:end));

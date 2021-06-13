@@ -819,6 +819,16 @@ for t111 = 1:length(T1_array2)
     title(['T1 = ', num2str(T1_array2(t111)), ' ms']);
     text(xx+5, 25, ['X = ', num2str(xxlbl)]);
 end
+%% Save mat
+save_results = ['IRorSR_SimPhantom.mat']
+%clear twix.obj;
+%cd(fid_path);
+save_dir = GetFullPath(cat(2, mainpath, '/../../../Data/Results/Simulation/'));
+if ~exist(save_dir, 'dir')
+   mkdir(save_dir); 
+end
+save(cat(2, save_dir, save_results), 'Mz_recov_TE_dict', 'Mz_recov_TE_dict_noise', 'T1_array', 'N_array', 'flip_prep_array', 'its', 'RMS_mat', 'best_fit_mat',...
+    'best_fit_mat_stats', 'error_mat');
 %[Atr,Btr] = freeprecess(TR,T1,T2,df);
 %[Ate,Bte] = freeprecess(TE,T1,T2,df);
 %Rflip = yrot(alpha);
