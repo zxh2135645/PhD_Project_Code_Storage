@@ -102,6 +102,7 @@ for i = 1:length(whatsinit)
     % FitResultsSave_mat(FitResults);
     FitResults_struct(i).FitResults = FitResults;
 end
+
 %% T2* map (Console generated)
 [list_to_read, order_to_read] = NamePicker(folder_glob);
 T2star_map = cell(length(list_to_read), 1);
