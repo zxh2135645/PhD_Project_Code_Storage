@@ -1,0 +1,123 @@
+<deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
+  <configuration file="D:\src\GUI2021_code\GUI2021_Win.prj" location="D:\src\GUI2021_code" name="GUI2021_Win" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>GUI2021_Win</param.appname>
+    <param.icon />
+    <param.icons />
+    <param.version>1.0</param.version>
+    <param.authnamewatermark>Xinheng Zhang</param.authnamewatermark>
+    <param.email>zxh2135645@gmail.com</param.email>
+    <param.company />
+    <param.summary>A GUI for cardiac MI contouring</param.summary>
+    <param.description />
+    <param.screenshot />
+    <param.guid />
+    <param.installpath.string>\GUI2021_Win\</param.installpath.string>
+    <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
+    <param.logo />
+    <param.install.notes />
+    <param.target.install.notes />
+    <param.intermediate>${PROJECT_ROOT}\GUI2021_Win\for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\GUI2021_Win\for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}\GUI2021_Win\for_redistribution</param.output>
+    <param.logdir>${PROJECT_ROOT}\GUI2021_Win</param.logdir>
+    <param.enable.clean.build>false</param.enable.clean.build>
+    <param.user.defined.mcr.options />
+    <param.target.type>subtarget.standalone</param.target.type>
+    <param.support.packages />
+    <param.web.mcr>false</param.web.mcr>
+    <param.package.mcr>true</param.package.mcr>
+    <param.no.mcr>false</param.no.mcr>
+    <param.web.mcr.name>MyAppInstaller_web</param.web.mcr.name>
+    <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
+    <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
+    <param.windows.command.prompt>true</param.windows.command.prompt>
+    <param.create.log>false</param.create.log>
+    <param.log.file />
+    <param.native.matlab>false</param.native.matlab>
+    <param.checkbox>false</param.checkbox>
+    <param.example />
+    <param.help.text>Syntax 
+	 GUI2021 -? 
+	 GUI2021 app 
+ Input Arguments 
+	 -?  print help on how to use the application 
+	 app  input arguments</param.help.text>
+    <unset>
+      <param.icon />
+      <param.icons />
+      <param.version />
+      <param.company />
+      <param.description />
+      <param.screenshot />
+      <param.guid />
+      <param.installpath.string />
+      <param.installpath.combo />
+      <param.logo />
+      <param.install.notes />
+      <param.target.install.notes />
+      <param.intermediate />
+      <param.files.only />
+      <param.output />
+      <param.logdir />
+      <param.enable.clean.build />
+      <param.user.defined.mcr.options />
+      <param.target.type />
+      <param.support.packages />
+      <param.no.mcr />
+      <param.web.mcr.name />
+      <param.package.mcr.name />
+      <param.no.mcr.name />
+      <param.windows.command.prompt />
+      <param.create.log />
+      <param.log.file />
+      <param.native.matlab />
+      <param.checkbox />
+      <param.example />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\GUI2021.m</file>
+    </fileset.main>
+    <fileset.resources>
+      <file>${PROJECT_ROOT}\functions\ConvertToBiggerCatg.m</file>
+      <file>${PROJECT_ROOT}\functions\CropAroundHeart.m</file>
+      <file>${PROJECT_ROOT}\functions\CVI_NamingConvert.m</file>
+      <file>${PROJECT_ROOT}\functions\dicom23D.m</file>
+      <file>${PROJECT_ROOT}\functions\double2rgb.m</file>
+      <file>${PROJECT_ROOT}\functions\DrawPixelMask_GUI2020.m</file>
+      <file>${PROJECT_ROOT}\functions\DrawRectMask_V2_GUI2020.m</file>
+      <file>${PROJECT_ROOT}\functions\ExtractNames.m</file>
+      <file>${PROJECT_ROOT}\functions\ExtractSloc.m</file>
+      <file>${PROJECT_ROOT}\functions\glob.m</file>
+    </fileset.resources>
+    <fileset.package>
+      <file>${PROJECT_ROOT}\Dicom_ForKhalid</file>
+      <file>${PROJECT_ROOT}\functions</file>
+    </fileset.package>
+    <fileset.depfun />
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}\GUI2021_Win\for_testing" name="splash.png" optional="false">D:\src\GUI2021_code\GUI2021_Win\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\GUI2021_Win\for_testing" name="readme.txt" optional="true">D:\src\GUI2021_code\GUI2021_Win\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\GUI2021_Win\for_testing" name="GUI2021_Win.exe" optional="false">D:\src\GUI2021_code\GUI2021_Win\for_testing\GUI2021_Win.exe</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>D:\Program Files\MATLAB\R2020a</root>
+      <toolboxes />
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.0</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>
