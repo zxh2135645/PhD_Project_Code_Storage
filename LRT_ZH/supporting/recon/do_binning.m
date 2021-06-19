@@ -93,8 +93,11 @@ switch ScanType
 % %     wall_clock=ceil((1:numel(Ridx))/(2*params.NEco*NnavsPerBlock)).'; %every 2 SR periods (~1 sec)
 % %     wall_clock=ceil((1:numel(Ridx))/(params.NEco*NnavsPerBlock)).'; %every SR period (~0.5 sec)
     
+    % Are this 8 hard-coded? Number of Echoes?
     Ridx = reshape(repmat(Ridx,1,8).',[],1);
-    Segidx = Ridx;
+    
+    % TODO
+    Segidx = Ridx; % 
     Segidx(:) = 1;
     Hidx = reshape(repmat(Hidx,1,8).',[],1);
     wall_clock = vec(repmat((1:params.NEco).',[1,numel(Ridx)/params.NEco]));

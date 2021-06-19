@@ -1,0 +1,299 @@
+---
+title: "RForT1FP"
+author: "Xinheng (James) Zhang"
+date: "04/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r cars}
+library(ggplot2)
+library(cowplot) 
+# Main plot
+pmain <- ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species))+
+  geom_point()+
+  ggpubr::color_palette("jco")
+
+# Marginal densities along x axis
+xdens <- axis_canvas(pmain, axis = "x")+
+  geom_density(data = iris, aes(x = Sepal.Length, fill = Species),
+              alpha = 0.7, size = 0.2)+
+  ggpubr::fill_palette("jco")
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+# ydens <- axis_canvas(pmain, axis = "y", coord_flip = TRUE)+
+#   geom_density(data = iris, aes(x = Sepal.Width, fill = Species),
+#                 alpha = 0.7, size = 0.2)+
+#   coord_flip()+
+#   ggpubr::fill_palette("jco")
+# p1 <- insert_xaxis_grob(pmain, xdens, grid::unit(.2, "null"), position = "top")
+# p1 <- aes(pmain, xdens)
+# p2 <- insert_yaxis_grob(p1, ydens, grid::unit(.2, "null"), position = "right")
+ggdraw(xdens)
+```
+
+``` {r load_mat}
+library(R.matlab)
+library(ggplot2)
+library(cowplot) 
+library(tibble)
+library(tidyverse)
+#df_rim <- readMat("/Users/jameszhang/Documents/MATLAB/T1_Fat_Project/Results/data_for_R.mat")
+df_rim <- readMat("/Users/jameszhang/Documents/MATLAB/T1_Fat_Project/Results/data_storage_rim.mat")
+
+# check out data structure
+# str(df_rim)
+a <- rbind(cbind(as.vector(df_rim[[1]][[2]][[2]]), rep("ROI",length((as.vector(df_rim[[1]][[2]][[2]]))))),
+cbind(as.vector(df_rim[[1]][[2]][[3]]), rep("REMOTE",length((as.vector(df_rim[[1]][[2]][[3]])))))
+)%>%as.data.frame()%>%mutate(V1=as.numeric(V1))
+colnames(a)<-c("FF","Status")
+
+a$r2star <- rbind(cbind(as.vector(df_rim[[1]][[2]][[4]])),
+cbind(as.vector(df_rim[[1]][[2]][[5]]))
+)
+
+a <- a[, c("FF", "r2star", "Status")]
+
+
+pmain <- ggplot(a, aes(x = FF, y = r2star, color = Status))+
+  geom_point()+
+  ggpubr::color_palette("jco")
+
+# Marginal densities along x axis
+xdens <- axis_canvas(pmain, axis = "x") +
+  geom_density(data = a, aes(x = FF, fill = Status),
+              alpha = 0.7, size = 0.2)+
+  ggpubr::fill_palette("jco")
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+ydens <- axis_canvas(pmain, axis = "y", coord_flip = TRUE)+
+  geom_density(data = a, aes(x = r2star, fill = Status),
+                alpha = 0.7, size = 0.2)+
+                coord_flip()+
+                ggpubr::fill_palette("jco")
+
+p1 <- insert_xaxis_grob(pmain, xdens, grid::unit(.2, "null"), position = "top")
+p2 <- insert_yaxis_grob(p1, ydens, grid::unit(.2, "null"), position = "right")
+ggdraw(p2)
+```
+
+``` {r t1_ff}
+library(R.matlab)
+library(ggplot2)
+library(cowplot) 
+library(tibble)
+library(tidyverse)
+df_rim <- readMat("/Users/jameszhang/Documents/MATLAB/T1_Fat_Project/Results/data_for_R.mat")
+
+# check out data structure
+# str(df_rim)
+l1 <- sum(lengths(df_rim[[1]][[2]][[5]]))
+seq1 <- c(1:l1)
+count <- 0
+t1_mean <- vector()
+t1_sd <- vector()
+ff <- vector()
+r2star <- vector()
+status <- vector()
+l2 <- sum(lengths(df_rim[[1]][[2]][[12]]))
+seq2 <- c(1:l2)
+
+ll1 <- 0
+for (i in seq1){
+  if(!is.na(df_rim[[1]][[2]][[5]][[i]][[1]])){
+    t1_mean <- c(t1_mean, df_rim[[1]][[2]][[5]][[i]][[1]])
+    t1_sd <- c(t1_sd, df_rim[[1]][[2]][[6]][[i]][[1]])
+    ll1 <- ll1 + 1
+  }
+  if(!is.na(df_rim[[1]][[2]][[7]][[i]][[1]])){
+    ff <- c(ff, df_rim[[1]][[2]][[7]][[i]][[1]])
+  }
+  if(!is.na(df_rim[[1]][[2]][[8]][[i]][[1]])){
+    r2star <- c(r2star, df_rim[[1]][[2]][[8]][[i]][[1]])
+  }
+}
+
+ll2 <- 0
+for (i in seq2){
+  if(!is.na(df_rim[[1]][[2]][[12]][[i]][[1]])){
+    t1_mean <- c(t1_mean, df_rim[[1]][[2]][[12]][[i]][[1]])
+    t1_sd <- c(t1_sd, df_rim[[1]][[2]][[13]][[i]][[1]])
+    ll2 <- ll2 + 1
+  }
+  if(!is.na(df_rim[[1]][[2]][[14]][[i]][[1]])){
+    ff <- c(ff, df_rim[[1]][[2]][[14]][[i]][[1]])
+  }
+  if(!is.na(df_rim[[1]][[2]][[15]][[i]][[1]])){
+    r2star <- c(r2star, df_rim[[1]][[2]][[15]][[i]][[1]])
+  }
+}
+
+status <- c(rep("ROI",ll1), rep("REMOTE",ll2))
+
+# a <- rbind(cbind(as.vector(df_rim[[1]][[2]][[2]]), rep("ROI",length((as.vector(df_rim[[1]][[2]][[2]]))))),
+# cbind(as.vector(df_rim[[1]][[2]][[3]]), rep("REMOTE",length((as.vector(df_rim[[1]][[2]][[3]])))))
+# )%>%as.data.frame()%>%mutate(V1=as.numeric(V1))
+# colnames(a)<-c("FF","Status")
+
+#a$r2star <- rbind(cbind(as.vector(df_rim[[1]][[2]][[4]])),
+#cbind(as.vector(df_rim[[1]][[2]][[5]])))
+
+#a <- a[, c("FF", "r2star", "Status")]
+
+a <- data.frame(t1_mean, t1_sd, ff, r2star, status)
+
+## t1_mean vs ff
+pmain <- ggplot(a, aes(x = t1_mean, y = ff, color = status))+
+  geom_point()+
+  ggpubr::color_palette("jco")
+
+# Marginal densities along x axis
+xdens <- axis_canvas(pmain, axis = "x") +
+  geom_density(data = a, aes(x = t1_mean, fill = status),
+              alpha = 0.7, size = 0.2)+
+  ggpubr::fill_palette("jco")
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+ydens <- axis_canvas(pmain, axis = "y", coord_flip = TRUE, )+
+  geom_density(data = a, aes(x = ff, fill = status),
+                alpha = 0.7, size = 0.2)+
+                coord_flip()+
+                ggpubr::fill_palette("jco")
+
+p1 <- insert_xaxis_grob(pmain, xdens, grid::unit(.2, "null"), position = "top")
+p2 <- insert_yaxis_grob(p1, ydens, grid::unit(.2, "null"), position = "right")
+ggdraw(p2)
+
+## t1_sd vs ff
+pmain <- ggplot(a, aes(x = t1_sd, y = ff, color = status))+
+  geom_point()+
+  ggpubr::color_palette("jco")
+
+# Marginal densities along x axis
+xdens <- axis_canvas(pmain, axis = "x") +
+  geom_density(data = a, aes(x = t1_sd, fill = status),
+              alpha = 0.7, size = 0.2)+
+  ggpubr::fill_palette("jco")
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+ydens <- axis_canvas(pmain, axis = "y", coord_flip = TRUE)+
+  geom_density(data = a, aes(x = ff, fill = status),
+                alpha = 0.7, size = 0.2)+
+                coord_flip()+
+                ggpubr::fill_palette("jco")
+
+p1 <- insert_xaxis_grob(pmain, xdens, grid::unit(.2, "null"), position = "top")
+p2 <- insert_yaxis_grob(p1, ydens, grid::unit(.2, "null"), position = "right")
+ggdraw(p2)
+
+## t1_mean vs t1_sd
+pmain <- ggplot(a, aes(x = t1_mean, y = t1_sd, color = status))+
+  geom_point()+
+  ggpubr::color_palette("jco")
+
+# Marginal densities along x axis
+xdens <- axis_canvas(pmain, axis = "x") +
+  geom_density(data = a, aes(x = t1_mean, fill = status),
+              alpha = 0.7, size = 0.2)+
+  ggpubr::fill_palette("jco")
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+ydens <- axis_canvas(pmain, axis = "y", coord_flip = TRUE)+
+  geom_density(data = a, aes(x = t1_sd, fill = status),
+                alpha = 0.7, size = 0.2)+
+                coord_flip()+
+                ggpubr::fill_palette("jco")
+
+p1 <- insert_xaxis_grob(pmain, xdens, grid::unit(.2, "null"), position = "top")
+p2 <- insert_yaxis_grob(p1, ydens, grid::unit(.2, "null"), position = "right")
+ggdraw(p2)
+```
+
+``` {r t1 vs r2star}
+
+## t1_mean vs ff
+pmain <- ggplot(a, aes(x = t1_mean, y = r2star, color = status))+
+  geom_point()+
+  ggpubr::color_palette("jco")
+
+# Marginal densities along x axis
+xdens <- axis_canvas(pmain, axis = "x") +
+  geom_density(data = a, aes(x = t1_mean, fill = status),
+              alpha = 0.7, size = 0.2)+
+  ggpubr::fill_palette("jco")
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+ydens <- axis_canvas(pmain, axis = "y", coord_flip = TRUE)+
+  geom_density(data = a, aes(x = r2star, fill = status),
+                alpha = 0.7, size = 0.2)+
+                coord_flip()+
+                ggpubr::fill_palette("jco")
+
+p1 <- insert_xaxis_grob(pmain, xdens, grid::unit(.2, "null"), position = "top")
+p2 <- insert_yaxis_grob(p1, ydens, grid::unit(.2, "null"), position = "right")
+ggdraw(p2)
+
+## t1_sd vs ff
+pmain <- ggplot(a, aes(x = t1_sd, y = r2star, color = status))+
+  geom_point()+
+  ggpubr::color_palette("jco")
+
+# Marginal densities along x axis
+xdens <- axis_canvas(pmain, axis = "x") +
+  geom_density(data = a, aes(x = t1_sd, fill = status),
+              alpha = 0.7, size = 0.2)+
+  ggpubr::fill_palette("jco")
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+ydens <- axis_canvas(pmain, axis = "y", coord_flip = TRUE)+
+  geom_density(data = a, aes(x = r2star, fill = status),
+                alpha = 0.7, size = 0.2)+
+                coord_flip()+
+                ggpubr::fill_palette("jco")
+
+p1 <- insert_xaxis_grob(pmain, xdens, grid::unit(.2, "null"), position = "top")
+p2 <- insert_yaxis_grob(p1, ydens, grid::unit(.2, "null"), position = "right")
+ggdraw(p2)
+
+## t1_mean vs t1_sd
+pmain <- ggplot(a, aes(x = t1_mean, y = t1_sd, color = status))+
+  geom_point()+
+  ggpubr::color_palette("jco")
+
+# Marginal densities along x axis
+xdens <- axis_canvas(pmain, axis = "x") +
+  geom_density(data = a, aes(x = t1_mean, fill = status),
+              alpha = 0.7, size = 0.2)+
+  ggpubr::fill_palette("jco")
+
+# Marginal densities along y axis
+# Need to set coord_flip = TRUE, if you plan to use coord_flip()
+
+ydens <- axis_canvas(pmain, axis = "y", coord_flip = TRUE)+
+  geom_density(data = a, aes(x = t1_sd, fill = status),
+                alpha = 0.7, size = 0.2)+
+                coord_flip()+
+                ggpubr::fill_palette("jco")
+
+p1 <- insert_xaxis_grob(pmain, xdens, grid::unit(.2, "null"), position = "top")
+p2 <- insert_yaxis_grob(p1, ydens, grid::unit(.2, "null"), position = "right")
+ggdraw(p2)
+
+```

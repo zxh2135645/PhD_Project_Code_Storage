@@ -69,3 +69,6 @@ Thumbs.db
 *.eot
 *.ttf
 *.woff
+
+# Ongoing Matlab files #
+*.m~

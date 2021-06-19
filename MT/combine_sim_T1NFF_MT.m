@@ -258,7 +258,7 @@ t_delay = TI_array(1); % TI = 650 ms
 flip = 180; % prep flip angle = 180 degree
 alpha = 35;
 T1_bound = 1000;
-T2_bound = 8.5e-3;
+T2_bound = 8.1e-3;
 T1 = 1133.2;
 T2 = 45;
 TR = 2.4;
@@ -283,22 +283,25 @@ MT_prep.flip = d2r(flip);
 MT_prep.t_delay = t_delay;
 %% Dictionary generation needs to run on workstation
 % Assuming pulse duration is 20 ms
+addpath('../T1NFF/');
 trf_prep = 20.00;
 alpha_inv = 180;
 MT_prep.B1SqrdTau = (d2r(alpha_inv)./(trf_prep.*gam)).^2.*trf_prep; 
-ddt = 0.6;
+%ddt = 0.6;
 M0_remote = [0 0 1-MT_para_remote.F MT_para_remote.F]';
 
-[t_total, Mzmt_total_total, Mxymt_total_total, t_readout_mt, Mxy_readout_mt] = seq_T1MOLLI_MT2(TI_array, TD, npulse,...
-    alpha, TR, MT_para_remote, MT_prep, num_rampup, M0_remote, restore_pulse, trigger, trigger2, ddt);
+%[t_total, Mzmt_total_total, Mxymt_total_total, t_readout_mt, Mxy_readout_mt] = seq_T1MOLLI_MT2(TI_array, TD, npulse,...
+%    alpha, TR, MT_para_remote, MT_prep, num_rampup, M0_remote, restore_pulse, trigger, trigger2, ddt);
 
 F_array = 0:0.002:0.1;
 Kf_array = 0:0.6:10.2;
-for f = 1:length(F_array)
-    for k = 1:length(Kf_array)
+%for f = 1:length(F_array)
+for f = 1:1
+    %for k = 1:length(Kf_array)
+    for k = 1:1
         MT_para_remote = struct;
         MT_para_remote.T1x = [T1 T1];
-        MT_para_remote.T2x = [T2, 8.1e-3];
+        MT_para_remote.T2x = [T2, T2_bound];
         % MT_para_remote.b1sqrdtau_array = b1sqrdtau_array;
         MT_para_remote.F = F_array(f);
         MT_para_remote.Kf = Kf_array(k);
@@ -342,6 +345,134 @@ f_save = 'MT_MOLLI_Dict.mat';
 save(cat(2, save_dir, '/', f_save), '-struct', 'Dict');
 %% Should create another script for parsing the dictionary
 % We can refer to the script below 
+% 05/01/2021
+
+% load Dict
+% ddt = 0.4;
+
+ddt = 0.2;
+f = 1;
+k = 1;
+
+
+TI_array = [102, 182, 935, 1010, 1762, 1840, 2587, 3410];
+TR = 2.4;
+PhaseEnc = 60;
+num_rampup = 5;
+restore_pulse = 1;
+HR = 60*1000/(((TI_array(8) - TI_array(7)) + (TI_array(7) - TI_array(6)) + (TI_array(6) - TI_array(4)) + ...
+    (TI_array(4) - TI_array(2)) + (TI_array(5) - TI_array(3)) + (TI_array(3) - TI_array(1))) / 6);
+window = round(60*1000 / HR);
+acq_win = TR*(PhaseEnc+num_rampup+restore_pulse);
+trigger = window-TI_array(1)-acq_win;
+trigger2 = 7 * window - TI_array(2) - acq_win;
+
+TI_array = [102, 935, 1762, 182, 1010, 1840, 2587, 3410];
+TD = trigger;
+npulse = 60; % Single-shot 
+t_delay = TI_array(1); % TI = 650 ms
+flip = 180; % prep flip angle = 180 degree
+alpha = 35;
+% T1_bound = 1000;
+T2_bound = 8.1e-3;
+T1 = 1133.2;
+T2 = 45;
+%TR = 2.4;
+
+%prep = struct;
+%prep.flip = d2r(flip);
+%prep.t_delay = t_delay;
+Mz0 = 1;
+gam = 267.5221 *1e-3; % rad /ms /uT
+
+MT_para_remote = struct;
+MT_para_remote.T1x = [T1 T1];
+MT_para_remote.T2x = [T2, T2_bound];
+% MT_para_remote.b1sqrdtau_array = b1sqrdtau_array;
+MT_para_remote.F = F_array(f);
+MT_para_remote.Kf = Kf_array(k);
+MT_para_remote.trf = 0.600; % ms
+
+MT_prep = struct;
+MT_prep.flip = d2r(flip);
+MT_prep.t_delay = t_delay;
+% Assuming pulse duration is 20 ms
+trf_prep = 20.00;
+alpha_inv = 180;
+MT_prep.B1SqrdTau = (d2r(alpha_inv)./(trf_prep.*gam)).^2.*trf_prep;
+
+M0_remote = [0 0 1-MT_para_remote.F MT_para_remote.F]';
+
+% t_readout_mt is useful here
+[t_total, Mzmt_total_total, Mxymt_total_total, t_readout_mt, Mxy_readout_mt] = seq_T1MOLLI_MT2(TI_array, TD, npulse,...
+    alpha, TR, MT_para_remote, MT_prep, num_rampup, M0_remote, restore_pulse, trigger, trigger2, ddt);
+
+%% Try to plot
+load('../../T1_Fat_Project/Results/MT_MOLLI_Dict.mat');
+
+F_array = 0:0.002:0.1;
+Kf_array = 0:0.6:10.2;
+
+f = 50;
+k = 18;
+Mzmt_total_total = squeeze(Mzmt_dict(f,k,:));
+Mxymt_total_total = squeeze(Mxymt_dict(f,k,:));
+%%
+figure(); plot(Mzmt_total_total);
+hold on;
+plot(abs(Mxymt_total_total));
+readout_array = round(t_readout_mt/ddt);
+
+for i = 1:length(readout_array)
+    xline(readout_array(i));
+end
+
+%% To do/ TO fit
+addpath('../EffectOfFatNIron/');
+%Mzmt_readout = Mzmt_dict(:,:,readout_array);
+%Mxymt_readout = Mxymt_dict(:,:,readout_array);
+Mzmt_readout = Mzmt_total_total(readout_array);
+Mxymt_readout = Mxymt_total_total(readout_array);
+
+%f = 1;
+%k = 1;
+native_t1_mat = zeros(length(F_array), length(Kf_array));
+%for f = 1:length(F_array)
+%    for k = 1:length(Kf_array)
+        %f = F_array(i);
+        %k = Kf_array(j);
+        %figure();
+        %plot(squeeze(Mzmt_readout));
+        Mzmt_readout_reordered = squeeze(MOLLI_readout_reorder(Mzmt_readout(:)));
+        Mxymt_readout_reordered = squeeze(MOLLI_readout_reorder(abs(Mxymt_readout(:))));
+        %figure();
+        %plot(Mzmt_readout_reordered);
+        %hold on;
+        %plot(Mxymt_readout_reordered);
+        
+        idx = find(Mxymt_readout_reordered == min(Mxymt_readout_reordered));
+        sign_array = ones(1, length(Mxymt_readout_reordered));
+        for i = 1:length(Mxymt_readout_reordered)
+            if i < idx
+                sign_array(i) = -1;
+            end
+        end
+        Mxymt_readout_reordered_sign = Mxymt_readout_reordered .* sign_array';
+        TI_array_sorted = sort(TI_array);
+        g = fittype('a-b*exp(-c*x)');
+        f0 = fit(TI_array_sorted',Mxymt_readout_reordered_sign,g,'StartPoint',[.0;.0; 0.001]);
+        coef = coeffvalues(f0);
+        % native_t1_mat(f,k) = 1/coef(3) * (coef(2) / coef(1) - 1);
+        native_t1 = 1/coef(3) * (coef(2) / coef(1) - 1)
+        
+        xx = linspace(1,3500,100);
+        figure();
+        plot(TI_array_sorted',Mxymt_readout_reordered_sign,'ro',xx,f0(xx),'b-', 'LineWidth', 1.5);
+ %   end
+%end
+%% 
+figure();
+imagesc(native_t1_mat(:,2:end));
 %% This part isn't working for Linux
 %% Because bloch is compiled for OS/Windows
 % A final half-alpha 'restore pulse' to return the magnetization into Mz
@@ -370,7 +501,7 @@ adiabatic.A0 = 0.12;
 figure();
 plot(t_total/1000, M_total_total(3, :), 'LineWidth', 2);
 hold on;
-plot(t_total/1000, Mzmt_total_total, 'LineWidth', 2);
+plot(t_total/1000, Mzmt_total_total', 'LineWidth', 2);
 plot(t_total/1000, M_total_total_fat3t(3, :), '-.', 'LineWidth', 2);
 
 xlabel('Time (s)'); ylabel('M_z/M_0');

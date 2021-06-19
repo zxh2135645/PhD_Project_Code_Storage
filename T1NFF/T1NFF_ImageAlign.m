@@ -52,8 +52,8 @@ for n = 1:length(Names)
         mkdir(name_data_save_dir);
     end
     
-    %for tp = 1:length(time_points)
-    for tp = 9:9
+    for tp = 1:length(time_points)
+    %for tp = 9:9
         time_point = time_points{end-tp+1};
         tp_dir = cat(2, base_dir, '/ContourData/',  name, '/', name, '_', time_point,  '/');
         if ~exist(tp_dir, 'dir')
@@ -198,16 +198,19 @@ for n = 1:length(Names)
             Segn = 50;
             Groove = 0;
             MI_Chord_Analysis_fname = cat(2, name_data_save_dir, '/MIChordAnalysis_', name, '_', time_point, '.mat');
+            Remote_Chord_Analysis_fname = cat(2, name_data_save_dir, '/RemoteChordAnalysis_', name, '_', time_point, '.mat');
             
             %[MI_Chord_Analysis, center_mask_ff] = Func_MI_Chord_Analysis(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff,...
             %    roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, MI_Chord_Analysis_fname);
-            [MI_Chord_Analysis2, ~] = Func_MI_Chord_Analysis2(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff,...
-                roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, MI_Chord_Analysis_fname);
+            %[MI_Chord_Analysis2, ~] = Func_MI_Chord_Analysis2(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff,...
+            %    roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, MI_Chord_Analysis_fname);
+            [Remote_Chord_Analysis2, ~] = Func_Remote_Chord_Analysis2(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff,...
+                remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star, Remote_Chord_Analysis_fname);
             % Plot figures and save
             %Func_plot_chord_analysis_general(MI_Chord_Analysis, tp_dir2);
             %Func_plot_chord_analysis_EpiEndo(MI_Chord_Analysis, tp_dir2);
-            Func_plot_chord_analysis_general2(MI_Chord_Analysis2, tp_dir2);
-            Func_plot_chord_analysis_EpiEndo2(MI_Chord_Analysis2, tp_dir2);
+            %Func_plot_chord_analysis_general2(MI_Chord_Analysis2, tp_dir2);
+            %Func_plot_chord_analysis_EpiEndo2(MI_Chord_Analysis2, tp_dir2);
         end
     end
     close all;

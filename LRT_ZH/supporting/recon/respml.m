@@ -432,7 +432,7 @@ implay(abs(temp)/max(abs(temp(:))))
 
 
 %%
-gray_im = fftshift(reshape(U_reshap*Phi_small,Nz,Nx,[]),1);
+%gray_im = fftshift(reshape(U_reshap*Phi_small,Nz,Nx,[]),1);
 
 
 

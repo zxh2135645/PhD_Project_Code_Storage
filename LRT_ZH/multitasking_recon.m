@@ -6,7 +6,7 @@
 mainpath = uigetdir; %Put your path here.
 
 % mainpath='/mnt/DharmakumarRLab/Files/Diane/Multitasking/LRT_ZH';
-
+addpath('../function/');
 addpath(genpath(fullfile(mainpath,'supporting','recon'))); %Supporting reconstruction scripts
 addpath(genpath(fullfile(mainpath,'supporting','utils'))); %Supporting utilities
 
@@ -27,21 +27,24 @@ addpath(genpath((fullfile(mainpath,'supporting','mapVBVD'))));
 % cd(current_dir);
 
 %% Loading and preprocessing
-useGPU=(exist('gpuNUFFT','file')>1); %true if using gpuNUFFT. false if using irt.
+useGPU=(exist('gpuNUFFT', 'file')>1); %true if using gpuNUFFT. false if using irt.
 
 total_time = inf; %amount of data to use, in seconds. Use "inf" to use all.
 %rep = 1; %only for repeatability studies
  
 load_data;
-%%
+disp('Data loaded');
+%
 setup_trajectories;
+disp('Finished setup trajectories')
 %
 setup_functions;
+disp('Finished setup functions');
 %
 pre_whiten;
+disp('Finished setup pre whiten');
 %
 estimate_sensitivities;
-
 disp('Finished SEs.')
 %% initial reconstruction
 realtime_subspace; %default is probably overconstrained, but enough to identify respiration
@@ -74,11 +77,14 @@ realtime_display;
 gen_bloch_subspace;
 
 % clear twix_obj;
-save('Phantom_T1_beforeBinning.mat','-v7.3');
+% save('Phantom_T1_beforeBinning.mat','-v7.3');
+%% Before binning 
+Sub_ID = input('What is subject ID:  ', 's');
+TPR = params.dThickness_mm/params.NTruePar;
 %% binning
 % disp('Starting binning...')
-rbins=1; %Set # of respiratory bins here
-cbins=1; %Set # of cardiac bins here
+rbins=6; %Set # of respiratory bins here
+cbins=14; %Set # of cardiac bins here
 
 resp = 1;
 card = 1;
@@ -123,12 +129,25 @@ end
 tv_recon_aniso3D;
 tensor_display;
 %%
-
+USR = size(kspace_data, 1)/SGblock/params.NEco/Ny/Nz/rbins/cbins*100
+specialNotes = input('Special Notes?:  ', 's');
+if ~isempty(specialNotes)
+    specialNotes = cat(2, '_', specialNotes);
+end
+save_results = [fid_file(15:22), '_', Sub_ID, '_', num2str(round(TPR)), 'mm_USR', num2str(round(USR)), ...
+    '%_L', num2str(L), '_', 'results_', datestr(now, 'yyyy_mm_dd_HH_MM'), specialNotes, '.mat']
 %clear twix.obj;
-save('20P48_4wk_3mm_5meas_binningResults_0214.mat', 'Gr','L','Nx', 'Ny', 'Nz','Phi','U','dispim', 'vec','sizes','ScanType','Phi_rt_full','Phi_rt_full_init','params','Ridx','Hidx');
+%cd(fid_path);
+save_dir = GetFullPath(cat(2, mainpath, '/../../../Data/Results/', Sub_ID, '/'));
+if ~exist(save_dir, 'dir')
+   mkdir(save_dir); 
+end
+save(cat(2, save_dir, save_results), 'save_results', 'lambda', 'rbins', 'cbins', 'fid_file', 'Gr', 'L', 'Nx', 'Ny', 'Nz', 'Phi', 'U', 'SGblock',...
+    'dispim', 'vec', 'sizes', 'ScanType', 'Phi_rt_small_init', 'Phi_rt_full', 'Phi_rt_full_init', 'params', 'Ridx', 'Hidx', 'total_time', 'USR');
+%save('20P48_4wk_3mm_5meas_binningResults_0214.mat', 'Gr','L','Nx', 'Ny', 'Nz','Phi','U','dispim', 'vec','sizes','ScanType','Phi_rt_full','Phi_rt_full_init','params','Ridx','Hidx');
 % save('20P48_4wk_6mm_2meas_0125_modifiedBinning.mat','-v7.3');
-disp('Saved.')
+disp('Results saved.')
 
 
-% diary off
+%% diary off
 clear all
