@@ -2,10 +2,11 @@
 % And generate all its masks
 % For - T1_fat_Project
 
+% The size of 90min does not match the rest
 function ReadCVI_Workflow_Longitudinal_Study_Func(con, dicom_glob, dstFolder, dicom_fields, old_freeROI_label)
 
 if nargin == 4
-    old_freeROI_label = 0;
+    old_freeROI_label = 0; % What does this mean?
 end
 % if ispc
 %     strings = strsplit(dicom_glob{1}, '\');
