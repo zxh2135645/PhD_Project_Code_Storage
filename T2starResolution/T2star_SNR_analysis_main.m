@@ -72,6 +72,16 @@ for i = 1:length(whatsinit)
     %caxis([0 100])
 end
 
+% For scheme figures
+figure('Position', [100 0 1600 1600]);
+row = 2;
+col = 3;
+for i = 1:size(whatsinit{1}, 3)
+    subplot(row,col,i);
+    imagesc(whatsinit{1}(:,:,i)); axis image;
+    %caxis([0 100])
+    colormap gray;
+end
 %% Draw contours @ epi, endo, MI, remote, fluid
 % Coords and Masks should be generated already in data folder
 % But I'm still not assuming that
