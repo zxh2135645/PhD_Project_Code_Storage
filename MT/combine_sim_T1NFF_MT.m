@@ -408,15 +408,22 @@ M0_remote = [0 0 1-MT_para_remote.F MT_para_remote.F]';
     alpha, TR, MT_para_remote, MT_prep, num_rampup, M0_remote, restore_pulse, trigger, trigger2, ddt);
 
 %% Try to plot
-load('../../T1_Fat_Project/Results/MT_MOLLI_Dict.mat');
-
+%load('../../T1_Fat_Project/Results/MT_MOLLI_Dict.mat');
+load('../../../Data/T1FP/MT_MOLLI_Dict.mat');
 F_array = 0:0.002:0.1;
 Kf_array = 0:0.6:10.2;
 
-f = 50;
-k = 18;
+f = 1;
+k = 10;
 Mzmt_total_total = squeeze(Mzmt_dict(f,k,:));
 Mxymt_total_total = squeeze(Mxymt_dict(f,k,:));
+
+figure();
+subplot(2,1,1);
+plot(Mzmt_total_total);
+subplot(2,1,2);
+plot(abs(Mxymt_total_total));
+% Should discard Kf and introduce FF
 %%
 figure(); plot(Mzmt_total_total);
 hold on;
