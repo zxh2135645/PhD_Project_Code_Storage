@@ -1,0 +1,76 @@
+---
+title: "Ting_R_Analysis"
+author: "Xinheng Zhang"
+date: "6/19/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+``` {r t1}
+library(R.matlab)
+library(ggplot2)
+library(cowplot) 
+library(tibble)
+library(tidyverse)
+library(hrbrthemes)
+library(dplyr)
+# ting <- readMat("/Users/jameszhang/Documents/MATLAB/Ting/T1_data_storage2.mat")
+ting <- readMat("/Users/jameszhang/Documents/MATLAB/Ting/T1_data_storage_biggestROI.mat")
+
+# check out data structure
+l <- sum(lengths(ting[[1]][[2]][[1]]))
+
+seq <- c(1:l)
+lbl <- c("Before", "10min", "20min", "30min", "40min", "50min", "60min", "90min")
+
+for (i in seq){
+  # print(i)
+  count <- 0
+  t1 <- vector()
+  ll <- 0
+
+  if(!is.na(ting[[1]][[2]][[1]][[i]][[1]][[1]])){
+    t1 <- c(t1, as.vector(ting[[1]][[2]][[1]][[i]][[1]]))
+    t1 <- c(t1, as.vector(ting[[1]][[2]][[2]][[i]][[1]]))
+    #ll <- ll + 1
+  }
+  len1 <- length(ting[[1]][[2]][[1]][[i]][[1]])
+  len2 <- length(ting[[1]][[2]][[2]][[i]][[1]])
+
+
+status <- c(rep("ROI",len1), rep("REMOTE",len2))
+
+df1 <- data.frame(t1, status)
+
+# Represent it
+p <- df1 %>%
+  ggplot( aes(x=t1, fill=status)) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 30) +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    xlim(1000, 1500)+
+    theme_ipsum() +
+    labs(fill="")
+
+# Marginal densities along x axis
+xdens <- axis_canvas(p, axis = "x") +
+  geom_density(data = df1, aes(x = t1, fill = status),
+              alpha = 0.7, size = 0.2)+
+  # xlim(1100, 1500)+
+  scale_fill_manual(values=c("#69b3a2", "#404080"))
+  #ggpubr::fill_palette("jco")
+
+# extrafont::font_import()
+# extrafont::loadfonts()
+# To figure out the font issue
+
+p1 <- insert_xaxis_grob(p, xdens, grid::unit(.2, "null"), position = "top")
+fsave <- paste0('/Users/jameszhang/Documents/MATLAB/Ting/saved_image_biggestROI_', lbl[i], '.png')
+
+ggsave(fsave, plot=p1,  width = 16, height = 9, dpi = 300)
+}
+ggdraw(p1)
+```
+
