@@ -29,6 +29,7 @@ for i = 1:Nz
     end
 end
 
+%%
 for i = 1:Nz
     dispim = @(x,st)fftshift(x(:,:,i,:),1);
     for j = 1:1
@@ -66,7 +67,7 @@ for i = 1:Nz
 
                 % b- fit dataset
                 FitResults = FitData(data,Model,0);
-                t1_map(:,:,i,1,1,l) = FitResults.T1 .* (-FitResults.b ./ FitResults.a - 1);
+                t1_map(:,:,i,1,1,l) = FitResults.T1 .* (-FitResults.rb ./ FitResults.ra - 1);
             end
         end
     end
@@ -78,3 +79,5 @@ map_to_save.t2star_map = t2star_map;
 map_to_save.t1_map = t1_map;
 save_f = cat(2, fid_path, fid_file(1:15), 'LRT_Mappings.mat');
 save(save_f, 'map_to_save');
+
+%% AHA analysis

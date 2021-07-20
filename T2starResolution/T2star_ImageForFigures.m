@@ -214,9 +214,9 @@ set(gca,'TickDir','out'); % The only other option is 'in'
 %X = [ones(length(trans16_avg_sorted),1), trans16_avg_sorted];
 
 figure('Position', [100 0 700 350]);
-scatter(trans16_avg_sorted, auc_subjects_mean_avg16(I), 72, 'filled', 'MarkerFaceColor', [.75 .75 1], 'MarkerEdgeColor', 'none' );
+scatter(trans16_avg_sorted, auc_subjects_mean_avg16(I), 200, 'filled', 'MarkerFaceColor', [.75 .75 1], 'MarkerEdgeColor', 'none' );
 hold on;
-scatter(trans16_avg_sorted, auc_subjects_mean_invivo(I), 72, 'filled', 'MarkerFaceColor', [253,190,133]/255);
+scatter(trans16_avg_sorted, auc_subjects_mean_invivo(I), 200, 'filled', 'MarkerFaceColor', [253,190,133]/255);
 %xlabel('Transmurality'); ylabel('Mean AUC');
 
 
@@ -593,17 +593,16 @@ patch([x(1) x(2) x(2) x(1)], [max(ylim) max(ylim) 0 0], [247 247 247]/255, 'Face
 patch([x(2) x(3) x(3) x(2)], [max(ylim) max(ylim) 0 0], [204 204 204]/255, 'FaceAlpha',.5)
 patch([x(3) x(4) x(4) x(3)], [max(ylim) max(ylim) 0 0], [150 150 150]/255, 'FaceAlpha',.5)
 patch([x(4) x(5) x(5) x(4)], [max(ylim) max(ylim) 0 0], [99 99 99]/255, 'FaceAlpha',.5)
-
+plotHandles(:,3) = plot(avg_x.', avg_compare.', 'LineWidth', 2, 'Color', color_cell{1});hold on;
 plotHandles(:,1) = errorbar(avg_x.', avg_compare.', avg_err.', 'LineWidth', 2, 'Color', color_cell{1});
-%plotHandles(:,1) = plot(avg_x.', avg_compare.', 'LineWidth', 2, 'Color', color_cell{1});hold on;
 
 avg_temp = mean_snr_remote_invivo_1d;
 avg_sd_temp = sd_snr_remote_invivo_1d;
 avg_x = reshape(mask_idx_array, [], 4).';
 avg_compare = reshape(avg_temp, [], 4).';
 avg_err = reshape(avg_sd_temp, [], 4).';
+plotHandles(:,4) = plot(avg_x.', avg_compare.', 'LineWidth', 2, 'Color', color_cell{2}); hold on;
 plotHandles(:,2) = errorbar(avg_x.', avg_compare.', avg_err.', 'LineWidth', 2, 'Color', color_cell{2});
-% plotHandles(:,2) = plot(avg_x.', avg_compare.', 'LineWidth', 2, 'Color', color_cell{2});hold on;
 
 set(gca, 'FontSize', 18);
 %grid on;
@@ -629,6 +628,10 @@ set(plotHandles(:,2), 'LineStyle', 'none', 'Marker', 's', 'Color', color_cell_in
 set(plotHandles(:,2), 'LineWidth', 1, 'Marker', 's', 'MarkerSize', 8, ...
     'MarkerEdgeColor', color_cell_invivo{5}, 'MarkerFaceColor' , color_cell_invivo{2})
 %legend(plotHandles(1,:), avg_array, 'Location', 'southeast');
+
+set(plotHandles(:,3), 'LineWidth', 1, 'Color', color_cell_avg16{4});
+set(plotHandles(:,4), 'LineWidth', 1, 'Color', color_cell_invivo{4});
+
 set(gca, 'Xcolor', 'w', 'Ycolor', 'w')
 set(gca, 'XTick', []);
 set(gca, 'YTick', []);
@@ -665,17 +668,16 @@ patch([x(1) x(2) x(2) x(1)], [max(ylim) max(ylim) 0 0], [247 247 247]/255, 'Face
 patch([x(2) x(3) x(3) x(2)], [max(ylim) max(ylim) 0 0], [204 204 204]/255, 'FaceAlpha',.5)
 patch([x(3) x(4) x(4) x(3)], [max(ylim) max(ylim) 0 0], [150 150 150]/255, 'FaceAlpha',.5)
 patch([x(4) x(5) x(5) x(4)], [max(ylim) max(ylim) 0 0], [99 99 99]/255, 'FaceAlpha',.5)
-
+plotHandles(:,3) = plot(avg_x.', avg_compare.', 'LineWidth', 2, 'Color', color_cell{1}); hold on;
 plotHandles(:,1) = errorbar(avg_x.', avg_compare.', avg_err.', 'LineWidth', 2, 'Color', color_cell{1});
-%plotHandles(:,1) = plot(avg_x.', avg_compare.', 'LineWidth', 2, 'Color', color_cell{1});hold on;
 
 avg_temp = mean_snr_air_invivo_1d;
 avg_sd_temp = sd_snr_air_invivo_1d;
 avg_x = reshape(mask_idx_array, [], 4).';
 avg_compare = reshape(avg_temp, [], 4).';
 avg_err = reshape(avg_sd_temp, [], 4).';
+plotHandles(:,4) = plot(avg_x.', avg_compare.', 'LineWidth', 2, 'Color', color_cell{2}); hold on;
 plotHandles(:,2) = errorbar(avg_x.', avg_compare.', avg_err.', 'LineWidth', 2, 'Color', color_cell{2});
-%plotHandles(:,2) = plot(avg_x.', avg_compare.', 'LineWidth', 2, 'Color', color_cell{2});
 set(gca, 'FontSize', 18);
 %grid on;
 %xticks([1.2 4 6.5 8.5 11 13.5 15.5 18 20.5 22.5 25 27.5]);
@@ -701,6 +703,10 @@ color_cell_invivo = {[241, 238, 246]/255, [189, 201, 225]/255, [116, 169, 207]/2
 set(plotHandles(:,2), 'LineStyle', 'none', 'Marker', 's', 'Color', color_cell_invivo{4});
 set(plotHandles(:,2), 'LineWidth', 1, 'Marker', 's', 'MarkerSize', 8, ...
     'MarkerEdgeColor', color_cell_invivo{5}, 'MarkerFaceColor' , color_cell_invivo{2});
+
+set(plotHandles(:,3), 'LineWidth', 1, 'Color', color_cell_avg16{4});
+set(plotHandles(:,4), 'LineWidth', 1, 'Color', color_cell_invivo{4});
+
 set(gca, 'Xcolor', 'w', 'Ycolor', 'w')
 set(gca, 'XTick', []);
 set(gca, 'YTick', []);
@@ -736,6 +742,7 @@ mean_mean_res_invivo = mean(mean_res_invivo, 2);
 std_res_avg16 = std(mean_res_avg16, 0, 2);
 std_res_invivo = std(mean_res_invivo, 0, 2);
 %% 5.2 Plot fitting residual
+avg_array2 = {'Ideal', 'Practical'};
 d = 7;
 x = [0, d, 2*d, 3*d, 4*d] + [0 , 0.5, 0.5, 0.5, 1];
 inplane_res = 1:d;
@@ -763,8 +770,8 @@ avg_sd_temp = std_res_avg16;
 avg_x = reshape(1:length(avg_temp), [], 4).';
 avg_compare = reshape(avg_temp, [], 4).';
 avg_err = reshape(avg_sd_temp, [], 4).';
-
-plotHandles(:,1) = errorbar(avg_x.', avg_compare.', avg_err.', '-o',  'LineWidth', 2, 'Color', color_cell{1}); hold on;
+plotHandles(:,3) = plot(avg_x.', avg_compare.', 'LineWidth', 2, 'Color', color_cell{1}); hold on;
+plotHandles(:,1) = errorbar(avg_x.', avg_compare.', avg_err.', '-o',  'LineWidth', 2, 'Color', color_cell{1}); 
 %plot(mean_mean_res_invivo);
 
 avg_temp = mean_mean_res_invivo;
@@ -772,7 +779,9 @@ avg_sd_temp = std_res_invivo;
 avg_x = reshape(mask_idx_array, [], 4).';
 avg_compare = reshape(avg_temp, [], 4).';
 avg_err = reshape(avg_sd_temp, [], 4).';
-plotHandles(:,2) = errorbar(avg_x.', avg_compare.', avg_err.', '-o', 'LineWidth', 2, 'Color', color_cell{2}); hold on;
+plotHandles(:,4) = plot(avg_x.', avg_compare.', 'LineWidth', 2, 'Color', color_cell{2}); hold on;
+plotHandles(:,2) = errorbar(avg_x.', avg_compare.', avg_err.', '-o', 'LineWidth', 2, 'Color', color_cell{2}); 
+
 
 set(gca, 'FontSize', 18);
 grid on;
@@ -787,7 +796,7 @@ xlim([0 x(5)]);ylim([ylim_lb, ylim_ub]);
 %set(gca,'xticklabel',{[]}); 
 %ylabel('Fitting Residual (A.U.)');
 %title(cat(2, 'TE = ', num2str(TE_avg16(i)), '/', num2str(TE_invivo(i)), ' ms'));
-legend(plotHandles(1,:), avg_array, 'Location', 'northeast');
+legend(plotHandles(1,:), avg_array2, 'Location', 'northeast');
 
 
 color_cell_avg16 = {[254,240,217]/255, [253,204,138]/255, [252,141,89]/255, [227,74,51]/255, [179,0,0]/255};
@@ -800,6 +809,10 @@ color_cell_invivo = {[241, 238, 246]/255, [189, 201, 225]/255, [116, 169, 207]/2
 set(plotHandles(:,2), 'LineStyle', 'none', 'Marker', 's', 'Color', color_cell_invivo{4});
 set(plotHandles(:,2), 'LineWidth', 1, 'Marker', 's', 'MarkerSize', 8, ...
     'MarkerEdgeColor', color_cell_invivo{5}, 'MarkerFaceColor' , color_cell_invivo{2});
+
+set(plotHandles(:,3), 'LineWidth', 1, 'Color', color_cell_avg16{4});
+set(plotHandles(:,4), 'LineWidth', 1, 'Color', color_cell_invivo{4});
+
 set(gca, 'Xcolor', 'w', 'Ycolor', 'w')
 set(gca, 'XTick', []);
 set(gca, 'YTick', []);
