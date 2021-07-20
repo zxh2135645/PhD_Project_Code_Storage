@@ -33,6 +33,7 @@ end
             slc_start = 1;
             slc_end = 1;
             clear vol_img_3D mask_heart_3D mask_myocardium_3D mask_blood_3D excludeMask_3D myoRefMask_3D noReflowMask_3D freeROIMask_3D volume_image
+            
             for i = 1:size(dicom, 1)
                 dicom_file = glob(cat(2, dicom(i,:), '*.dcm'));
                 if isempty(dicom_file)
@@ -76,6 +77,17 @@ end
                     % slice_data = slice_data(echo_idx);
                 end
                 id_cell{i} = slice_data.MediaStorageSOPInstanceUID; % Didn't do anything to it
+                
+                
+                % hard-coded
+%                 if i == 8
+%                     old_freeROI_label = 1;
+%                 else
+%                     old_freeROI_label = 0;
+%                 end
+                
+                
+                
                 [mask_heart, mask_myocardium, mask_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count] = ...
                     CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder, old_freeROI_label);
                 
@@ -137,6 +149,7 @@ end
                 if ~isempty(freeROICell)
                     if ~isempty(freeROICell{1})
                         temp_mat = zeros(size(volume_image));
+                        %temp_mat = [];
                         temp_idx = freeROICell{2};
                         %if size(freeROICell{1}, 3) > 1
                         for j = 1:size(freeROICell{1}, 3)
