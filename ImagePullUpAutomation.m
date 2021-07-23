@@ -84,7 +84,9 @@ labels = {'T1MAP', 'MAG', 'PSIR', 'T2STAR', 'T2MAP', 'T2Mapping', 'T2_MAP'};
 % T2Mapping
 % [39, 40, 41, 42]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-labels = {'T1MAP', 'T2STAR', 'T2_MAP'};
+
+
+%labels = {'T1MAP', 'T2STAR', 'T2_MAP'};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TMRP resolution study - 8-week data
 % 20P40 8wk
@@ -104,18 +106,27 @@ labels = {'T1MAP', 'T2STAR', 'T2_MAP'};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 20P48 8wk
 % T1MOLLI
-% [46, 49, 52]
-% MAG
-% [247 249 251]
-% PSIR
-% [248 250 252]
-% T2star
-% [194 196 198 200]
-% T2Mapping
-% [149 152 155 158]
+% [64]
+% T2STAR
+% [201]
 % T2_MAP weighted image
-% [197]
+% [200]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% LRT - postCon
+labels = {'POSTCON', 'POSTCON', 'POSTCON'};
+labels = {'POSTCON1', 'POSTCON2', 'POSTCON3', 'POSTCON4'};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 20P41-BL
+% T1MOLLI
+% [173, 179, 196, 202]
+% T2star mapping
+% [175, 181, 198, 204]
+% T2star weighted
+% [174, 180, 197, 203]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 for ll = 1:length(labels)
     label = labels{ll};
     idx_array = contains(folder_glob, label);
@@ -180,9 +191,9 @@ for ll = 1:length(labels)
                 
                 %figure();
                 %imagesc(img_cropped); colormap gray; axis image;
-                
                 f_to_save = cat(2, save_dir, label, '_SAX', num2str(i, '%02.f'), '.png');
                 imwrite(mat2gray(img_cropped), f_to_save);
+                
             else
                 for slc = 1:size(img_cropped, 3)
                     img_cropped(:,:,slc) = img_cropped(:,:,slc) / max(max(img_cropped(:,:,slc)));
@@ -190,6 +201,12 @@ for ll = 1:length(labels)
                     
                     if strcmp(label, 'T2Mapping') || strcmp(label, 'T2_MAP')
                         f_to_save = cat(2, save_dir, label, '_SAX', num2str(i, '%02.f'), '_TE', num2str(slc, '%02.f'), '.png');
+                        imwrite(mat2gray(img_cropped(:,:,slc)), f_to_save);
+                    elseif strcmp(label, 'POSTCON')
+                        f_to_save = cat(2, save_dir, label, num2str(slc, '%02.f'), '.png');
+                        imwrite(mat2gray(img_cropped(:,:,slc)), f_to_save);
+                    elseif strcmp(label, 'POSTCON1') || strcmp(label, 'POSTCON2') || strcmp(label, 'POSTCON3') || strcmp(label, 'POSTCON4')
+                        f_to_save = cat(2, save_dir, label, '_TE', num2str(slc, '%02.f'), '.png');
                         imwrite(mat2gray(img_cropped(:,:,slc)), f_to_save);
                     else
                         f_to_save = cat(2, save_dir, label, '_SAX', num2str(slc, '%02.f'), '.png');
