@@ -175,6 +175,9 @@ end
 % To do that in work stastion; 
 % TODO need to iterate tissue width: [0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 3.0]
 % This has become the main body
+
+res_array = [0.4, 0.6, 0.8, 1.2, 1.6, 2];
+
 dx = 0.1; % mm
 dy = 0.1; % mm
 X = 10;
@@ -278,13 +281,19 @@ end
 
 % Need to send from remote desktop
 
-SimPhantom_04202021.res_array = res_array;
-SimPhantom_04202021.sigma_array = sigma_array;
-SimPhantom_04202021.width_max = width_max;
-SimPhantom_04202021.tissue_canvas = tissue_canvas;
+% SimPhantom_04202021.res_array = res_array;
+% SimPhantom_04202021.sigma_array = sigma_array;
+% SimPhantom_04202021.width_max = width_max;
+% SimPhantom_04202021.tissue_canvas = tissue_canvas;
+
+SimPhantom_10132021.res_array = res_array;
+SimPhantom_10132021.sigma_array = sigma_array;
+SimPhantom_10132021.width_max = width_max;
+SimPhantom_10132021.tissue_canvas = tissue_canvas;
+
 save_dir = uigetdir;
-fname = 'SimPhantom_04202021';
-save(cat(2, save_dir, '/', fname), 'SimPhantom_04202021');
+fname = 'SimPhantom_10132021';
+save(cat(2, save_dir, '/', fname), 'SimPhantom_10132021');
 
 %% Load SimPhantom_04202021.mat
 clear all;
