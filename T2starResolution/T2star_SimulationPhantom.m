@@ -276,6 +276,8 @@ end
 % fname = 'SimPhantom_04042021';
 % save(cat(2, save_dir, '/', fname), 'SimPhantom_04042021');
 
+% Need to send from remote desktop
+
 SimPhantom_04202021.res_array = res_array;
 SimPhantom_04202021.sigma_array = sigma_array;
 SimPhantom_04202021.width_max = width_max;
@@ -372,8 +374,6 @@ fname = 'SimPhantom04202021_analysis.mat';
 save(cat(2, save_dir, fname), 'SimPhantom_analysis');
 
 %% Heatmap of CNR (04/20/2021)
-
-
 
 save_dir = cat(2, base_dir, '/img/Simulation_Phantom/');
 for i = 1:length(SimPhantom_analysis)
@@ -495,7 +495,7 @@ colorbar;
 
 %% Pure noise map
 addpath('../function/');
-%%
+
 Ny = 10;
 Nx = 10;
 sigma = 0.05;
