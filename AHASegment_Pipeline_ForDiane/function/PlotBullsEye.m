@@ -26,9 +26,9 @@ set(gca, 'FontSize', 12)
 color_spec = zeros(16, 3);
 for i = 1:16
    if SegPixPerc(i) > (0.8*range(SegPixPerc) + min(SegPixPerc))
-       color_spec(i,:) = [0 0 0];
-   else
        color_spec(i,:) = [1 1 1];
+   else
+       color_spec(i,:) = [0 0 0];
    end
 end
 
@@ -48,5 +48,5 @@ h11 = text(2.1, -1.4, num2str(round(SegPixPerc(8))), 'HorizontalAlignment', 'cen
 h5 = text(2.9, -2.0, num2str(round(SegPixPerc(2))), 'HorizontalAlignment', 'center', 'Color', color_spec(2,:), 'FontSize', 16);
 h9 = text(-2.1, -1.4, num2str(round(SegPixPerc(10))), 'HorizontalAlignment', 'center', 'Color', color_spec(10,:), 'FontSize', 16);
 h3 = text(-2.9, -2.0, num2str(round(SegPixPerc(4))), 'HorizontalAlignment', 'center', 'Color', color_spec(4,:), 'FontSize', 16);
-
+colormap(brewermap([],'RdBu'));
 end

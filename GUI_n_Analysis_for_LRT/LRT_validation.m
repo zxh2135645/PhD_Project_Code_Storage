@@ -184,7 +184,7 @@ end
 LocPixCount3 = zeros(4, 1);
 SegTotalPixCount3 = zeros(4, 1);
 
-apical_idx = idx_array(aha_slice == 2);
+apical_idx = idx_array(aha_slice == 3);
 Groove = BaseGroove(apical_idx(1)) + 75;
 
 [Segmentpix, stats, Mask_Segn] = AHASegmentation(t2star_map_truc(:,:,apical_idx), myo_mask_peel(:,:,apical_idx), 4, Groove);
@@ -205,4 +205,46 @@ SegPixPerc = SegPixCount ./ SegTotalPixCount;
 % ========================================================================
 figure('Position', [400 400 800 800]);
 PlotBullsEye(SegPixPerc);
+
+%% Load maps
+addpath('../function/');
+base_dir2 = uigetdir;
+folder_glob = glob(cat(2, base_dir2, '\*'));
+labels = {'T1', 'T1MAP', 'T2', 'T2MAP', 'T2STAR', '_T2STAR', 'MGRE', 'T1_TSE', 'FATSAT', 'MT'};
+
+label = labels{5};
+idx_array = contains(folder_glob, label);
+[list_to_read, order_to_read] = NamePicker(folder_glob);
+
+dicom_fields = {...
+    'Filename',...
+    'Height', ...
+    'Width', ...
+    'Rows',...
+    'Columns', ...
+    'PixelSpacing',...
+    'SliceThickness',...
+    'SliceLocation',...
+    'ImagePositionPatient',...
+    'ImageOrientationPatient',...
+    'MediaStorageSOPInstanceUID',...
+    'RescaleSlope',...
+    };
+
+whatsinit = cell(length(list_to_read), 1);
+slice_data = cell(length(list_to_read), 1);
+for i = 1:length(list_to_read)
+    f = list_to_read{order_to_read(i)};
+    [whatsinit{i}, slice_data{i}] = dicom23D(f, dicom_fields);
+end
+
+% Display images
+figure('Position', [100 0 1600 1600]);
+for i = 1:length(whatsinit)
+    subplot(2,2,i);
+    imagesc(whatsinit{i}.*slice_data{i}.RescaleSlope); axis image;
+    caxis([0 100])
+end
+
+%% Read and parse CVI contours
 

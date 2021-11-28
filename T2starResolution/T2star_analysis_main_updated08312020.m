@@ -66,7 +66,7 @@ figure('Position', [100 0 1600 1600]);
 for i = 1:length(whatsinit)
     subplot(4,7,i);
     imagesc(whatsinit{i}); axis image;
-    caxis([0 100])
+    caxis([0 100]);
 end
 
 %% Draw contours @ epi, endo, MI, remote, fluid

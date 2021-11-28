@@ -239,7 +239,7 @@ close all;
 
 
 %% Get intensity from a pixel
-n = 28;
+n = 1;
 figure('Position', [100 0 1600 1600]);
 img2 = whatsinit{n};
 img2 = img2 .* mask_struct(n).epi_mask;
@@ -260,6 +260,9 @@ mean_v = mean(nonzeros(img2 .* roi_mask));
 % T2* is 27.50/24.67/26.40 ms @ 0.3x0.3x2
 % T2* is 37 ms @ 2.1x2.1x8
 
+% 18P95
+% T2* is 30.9354 ms @ 0.3x0.3x2
+% T2* is 33.3 ms @ 2.1x2.1x8
 %% Measure Distance of thinned wall and hemo+ (Optional)
 figure('Position', [100 0 1600 1600]);
 img2 = whatsinit{1};
@@ -282,3 +285,90 @@ myData = MeasureDist_Image(hIm, sz);
 % MI thinnest is ~ 0.6-0.7 mm
 % MI thickest is ~ 3.26 mm
 % From transmurality -> mean thickness is 1.1145 
+
+%% Display original colormap image
+
+save_array = 1:1:length(whatsinit);
+len = 36;
+base_x = size(mask_struct(7).myo_mask, 1);
+i = 1
+save_idx = save_array(i);
+figure();
+img2 = whatsinit{save_idx};
+img2 = img2 .* mask_struct(i).mi_mask;
+imagesc(img2); caxis([0 100]); axis image; %colormap default; %colorbar;
+axis off;
+colormap(brewermap([],'RdBu'));
+c = colorbar;
+w = c.FontSize;
+c.FontSize = 20;
+% '*YlGnBu'
+stats = regionprops(mask_struct(i).myo_mask);
+centroid = round(stats.Centroid);
+    
+ioi_x = size(mask_struct(i).myo_mask, 1);
+multiplier = ioi_x / base_x;
+len_mul = multiplier * len;
+img2_cropped = imcrop(img2, [centroid(1) - len_mul/2, centroid(2) - len_mul/2, len_mul, len_mul]);
+img2_cropped(img2_cropped == 0) = nan;
+figure();
+imagesc(img2_cropped);
+caxis([0 100]); axis image;
+axis off;
+colormap(brewermap([],'RdBu'));
+
+img2 = whatsinit{save_idx};
+ioi_x = size(mask_struct(i).myo_mask, 1);
+multiplier = ioi_x / base_x;
+len_mul = multiplier * len;
+mean_remote = mean(nonzeros(img2 .* mask_struct(i).remote_mask));
+std_remote = std(nonzeros(img2 .* mask_struct(i).remote_mask));
+thresh = mean_remote - 2 * std_remote;
+hemo_mask = (img2 < thresh) .* mask_struct(i).mi_mask;
+hemo_mask_cropped = imcrop(hemo_mask, [centroid(1) - len_mul/2, centroid(2) - len_mul/2, len_mul, len_mul]);
+hemo_mask_cropped(hemo_mask_cropped == 0) = nan;
+figure();
+imagesc(hemo_mask_cropped);
+caxis([0 1]);
+axis image;
+axis off;
+colormap gray;
+set(gcf, 'color', 'none');
+
+figure();
+mask = double( any(hemo_mask_cropped, 3) );
+imagesc(hemo_mask_cropped, 'AlphaData', mask );
+axis image;
+axis off;
+colormap gray;
+caxis([0 1]);
+% exportgraphics(gcf,'transparent.eps',...   % since R2020a
+%     'ContentType','vector',...
+%     'BackgroundColor','none')
+%colormap(brewermap([],'RdBu'));
+
+% map = gray(256);
+% rgbImage = ind2rgb(img2, map);
+% rgbImage(:,:,1) = rgbImage(:,:,1) + hemo_mask.*mask_struct(i).mi_mask;
+% rgbImage(:,:,2) = rgbImage(:,:,2) + hemo_mask.*mask_struct(i).mi_mask;
+% rgbImage(:,:,3) = rgbImage(:,:,3) + hemo_mask.*mask_struct(i).mi_mask;
+% figure();
+% imagesc(rgbImage);
+% axis image;
+% axis off;
+
+ii = 20;
+img2 = whatsinit{ii};
+stats = regionprops(mask_struct(ii).myo_mask);
+centroid = round(stats.Centroid);
+
+ioi_x = size(mask_struct(ii).myo_mask, 1);
+multiplier = ioi_x / base_x;
+len_mul = multiplier * len;
+img2_cropped = imcrop(img2.*mask_struct(ii).mi_mask, [centroid(1) - len_mul/2, centroid(2) - len_mul/2, len_mul, len_mul]);
+img2_cropped(img2_cropped == 0) = nan;
+figure();
+imagesc(img2_cropped);
+caxis([0 100]); axis image;
+axis off;
+colormap(brewermap([],'RdBu'));
