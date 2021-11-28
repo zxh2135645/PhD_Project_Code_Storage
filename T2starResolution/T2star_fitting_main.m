@@ -102,6 +102,22 @@ for i = 1:length(whatsinit)
     % FitResultsSave_mat(FitResults);
     FitResults_struct(i).FitResults = FitResults;
 end
+%% R2 map
+for i = 1:length(whatsinit)
+    dicom_size = size(whatsinit{i});
+    dicom_reshape_2d = reshape(whatsinit{i},[],dicom_size(3));
+    S0 = zeros(dicom_size);
+    for j = 1:length(TE_array)
+        S0(:,:,j) = FitResults_struct(i).FitResults.M0 .* exp(-TE_array(j) ./ FitResults_struct(i).FitResults.T2);
+    end
+    S0_reshape_2d = reshape(S0,[],dicom_size(3));
+    
+    dicom_reshape_2d_mean = mean(dicom_reshape_2d, 2);
+    SS_res = sum((dicom_reshape_2d - S0_reshape_2d).^2, 2);
+    SS_tot = sum((dicom_reshape_2d - dicom_reshape_2d_mean).^2, 2);
+    R2 = reshape(1 - SS_res ./ SS_tot, dicom_size(1), dicom_size(2));
+    FitResults_struct(i).FitResults.R2 = R2;
+end
 
 %% T2* map (Console generated)
 [list_to_read, order_to_read] = NamePicker(folder_glob);
@@ -143,7 +159,16 @@ for i = 1:length(whatsinit)
     imagesc(FitResults_struct(i).FitResults.res);
     colorbar;caxis([0 100]);
 end
+%% Plot R2 images
+figure('Position', [100 0 1600 1600]);
+row = 4;
+col = length(whatsinit) / row;
+for i = 1:length(whatsinit)
+    subplot(row,col,i);
+    imagesc(FitResults_struct(i).FitResults.R2);
+    colorbar;caxis([0.9 1]);
+end
 
-% Save FittedResults
+%% Save FittedResults
 save_f = cat(2, subject_data_dir, 'FitResults_', avg_name, '.mat');
 save(save_f, 'FitResults_struct');

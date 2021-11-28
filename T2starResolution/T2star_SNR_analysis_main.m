@@ -258,6 +258,8 @@ subplot(1,2,2);
 imagesc(snr_remote); axis image; colorbar;
 
 %%
+row = 4;
+col = length(whatsinit) / row;
 snr_air_max = round(max(snr_air(:)),-2);
 snr_remote_max = round(max(snr_remote(:)),-1);
 snr_air_reshape = permute(reshape(snr_air, col, row, []), [2,1,3]);

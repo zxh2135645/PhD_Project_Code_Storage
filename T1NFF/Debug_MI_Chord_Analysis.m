@@ -1,4 +1,6 @@
 %for i = 4:4
+
+%% This is the one to generate rotating segment video
     img = t1(:,:,i);
     img2 = ff(:,:,i);
     img3 = r2star(:,:,i);

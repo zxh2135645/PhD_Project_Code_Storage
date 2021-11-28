@@ -15,6 +15,8 @@ classdef GUI_for_LRT_V1 < matlab.apps.AppBase
         RespiratorySlider       matlab.ui.control.Slider
         CardiacSliderLabel      matlab.ui.control.Label
         CardiacSlider           matlab.ui.control.Slider
+        TemporalSliderLabel      matlab.ui.control.Label
+        TemporalSlider           matlab.ui.control.Slider
         LoadDataButton          matlab.ui.control.Button
     end
     
@@ -59,12 +61,21 @@ classdef GUI_for_LRT_V1 < matlab.apps.AppBase
             app.vec = df.vec;
             app.dispim = df.dispim;
             %slider_dim = length(df.sizes)-1;
+            if numel(df.sizes) == 6
+                app.TemporalSliderLabel.Enable = 'on';
+                app.TemporalSlider.Enable = 'on';
+                app.TemporalSlider.Limits = [1 df.sizes(6)];
+                app.TemporalSlider.Value = 1;
+                app.TemporalSlider.MajorTicks = [1:1:df.sizes(6)];
+                app.TemporalSlider.MinorTicks = [];
+            end
             
             app.SliceSlider.Limits = [1, app.Nz];
             app.T1Slider.Limits = [1, df.sizes(2)];
             app.CardiacSlider.Limits = [1, df.sizes(3)];
             app.RespiratorySlider.Limits = [1, df.sizes(4)];
             app.T2starSlider.Limits = [1 df.sizes(5)];
+            
             
             app.SliceSlider.Value = 4;
             app.T1Slider.Value = df.sizes(2);
@@ -173,6 +184,22 @@ classdef GUI_for_LRT_V1 < matlab.apps.AppBase
             app.img_label_old = 3;
         end
         
+        % Value changed function: CardiacSlider
+        function TemporalSliderValueChanged(app, event)
+            app.img_label = 6;
+            value = app.TemporalSlider.Value;
+            
+             % determine which discrete option the current value is closest to.
+            [~, minIdx] = min(abs(value - event.Source.MajorTicks(:)));
+            % move the slider to that option
+            event.Source.Value = event.Source.MajorTicks(minIdx);
+            % Override the selected value if you plan on using it within this function
+            app.TemporalSlider.Value = event.Source.MajorTicks(minIdx);
+            
+            update_axes(app);
+            app.img_label_old = 6;
+        end
+        
         function update_axes(app, event)
             img_label_diff = abs(app.img_label - app.img_label_old);
             
@@ -180,37 +207,80 @@ classdef GUI_for_LRT_V1 < matlab.apps.AppBase
                 app.dispim = @(x)fftshift(x(:,:,app.SliceSlider.Value,:),1);
             end
             
-            if (app.img_label == 2 && img_label_diff ~= 0) || (app.img_label == 5 && img_label_diff ~= 0)
-                app.temp1 = app.Gr\reshape(app.Phi(:,:,app.CardiacSlider.Value,app.RespiratorySlider.Value,:), app.L, []);
-                app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
-                app.cw = 0.5*max(app.vec(abs(app.temp1)));
-            elseif app.img_label == 3 && img_label_diff ~= 0
-                app.temp1 = app.Gr\reshape(app.Phi(:,app.T1Slider.Value,:,app.RespiratorySlider.Value,:), app.L, []);
-                app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
-                app.cw = 0.5*max(app.vec(abs(app.temp1)));
-            elseif app.img_label == 4 && img_label_diff ~= 0
-                app.temp1 = app.Gr\reshape(app.Phi(:,app.T1Slider.Value,app.CardiacSlider.Value,:,:), app.L, []);
-                app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
-                app.cw = 0.5*max(app.vec(abs(app.temp1)));
-            elseif app.img_label == 0
-                app.temp1 = app.Gr\reshape(app.Phi(:,end,1,1,:), app.L, []);
-                app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
-                app.cw = 0.5*max(app.vec(abs(app.temp1)));
-            elseif app.img_label == 1 
-                app.temp1 = app.Gr\reshape(app.Phi(:,app.T1Slider.Value,app.CardiacSlider.Value,app.RespiratorySlider.Value,:), app.L, []);
-                app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
-                app.cw = 0.5*max(app.vec(abs(app.temp1)));
-            end
-            
-            
-            if app.img_label == 2 || app.img_label == 5
-                imagesc(abs(app.temp1(:,:,app.T1Slider.Value, app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
-            elseif app.img_label == 3
-                imagesc(abs(app.temp1(:,:,app.CardiacSlider.Value, app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
-            elseif app.img_label == 4
-                imagesc(abs(app.temp1(:,:,app.RespiratorySlider.Value, app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
-            elseif app.img_label == 0 || app.img_label == 1
-                imagesc(abs(app.temp1(:,:,:,app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
+            if numel(size(app.Phi)) == 5
+                if (app.img_label == 2 && img_label_diff ~= 0) || (app.img_label == 5 && img_label_diff ~= 0)
+                    app.temp1 = app.Gr\reshape(app.Phi(:,:,app.CardiacSlider.Value,app.RespiratorySlider.Value,:), app.L, []);
+                    app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
+                    app.cw = 0.5*max(app.vec(abs(app.temp1)));
+                elseif app.img_label == 3 && img_label_diff ~= 0
+                    app.temp1 = app.Gr\reshape(app.Phi(:,app.T1Slider.Value,:,app.RespiratorySlider.Value,:), app.L, []);
+                    app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
+                    app.cw = 0.5*max(app.vec(abs(app.temp1)));
+                elseif app.img_label == 4 && img_label_diff ~= 0
+                    app.temp1 = app.Gr\reshape(app.Phi(:,app.T1Slider.Value,app.CardiacSlider.Value,:,:), app.L, []);
+                    app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
+                    app.cw = 0.5*max(app.vec(abs(app.temp1)));
+                elseif app.img_label == 0
+                    app.temp1 = app.Gr\reshape(app.Phi(:,end,1,1,:), app.L, []);
+                    app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
+                    app.cw = 0.5*max(app.vec(abs(app.temp1)));
+                elseif app.img_label == 1
+                    app.temp1 = app.Gr\reshape(app.Phi(:,app.T1Slider.Value,app.CardiacSlider.Value,app.RespiratorySlider.Value,:), app.L, []);
+                    app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
+                    app.cw = 0.5*max(app.vec(abs(app.temp1)));
+                end
+                
+                
+                
+                if app.img_label == 2 || app.img_label == 5
+                    imagesc(abs(app.temp1(:,:,app.T1Slider.Value, app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
+                elseif app.img_label == 3
+                    imagesc(abs(app.temp1(:,:,app.CardiacSlider.Value, app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
+                elseif app.img_label == 4
+                    imagesc(abs(app.temp1(:,:,app.RespiratorySlider.Value, app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
+                elseif app.img_label == 0 || app.img_label == 1
+                    imagesc(abs(app.temp1(:,:,:,app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
+                end
+            elseif numel(size(app.Phi)) == 6
+                 if (app.img_label == 2 && img_label_diff ~= 0) || (app.img_label == 5 && img_label_diff ~= 0)
+                    app.temp1 = app.Gr\reshape(app.Phi(:,:,app.CardiacSlider.Value,app.RespiratorySlider.Value,:,app.TemporalSlider.Value), app.L, []);
+                    app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
+                    app.cw = 0.5*max(app.vec(abs(app.temp1)));
+                elseif app.img_label == 3 && img_label_diff ~= 0
+                    app.temp1 = app.Gr\reshape(app.Phi(:,app.T1Slider.Value,:,app.RespiratorySlider.Value,:,app.TemporalSlider.Value), app.L, []);
+                    app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
+                    app.cw = 0.5*max(app.vec(abs(app.temp1)));
+                elseif app.img_label == 4 && img_label_diff ~= 0
+                    app.temp1 = app.Gr\reshape(app.Phi(:,app.T1Slider.Value,app.CardiacSlider.Value,:,:,app.TemporalSlider.Value), app.L, []);
+                    app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
+                    app.cw = 0.5*max(app.vec(abs(app.temp1)));
+                elseif app.img_label == 0
+                    app.temp1 = app.Gr\reshape(app.Phi(:,end,1,1,:,1), app.L, []);
+                    app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
+                    app.cw = 0.5*max(app.vec(abs(app.temp1)));
+                elseif app.img_label == 1
+                    app.temp1 = app.Gr\reshape(app.Phi(:,app.T1Slider.Value,app.CardiacSlider.Value,app.RespiratorySlider.Value,:,app.TemporalSlider.Value), app.L, []);
+                    app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
+                    app.cw = 0.5*max(app.vec(abs(app.temp1)));
+                elseif app.img_label == 6
+                    app.temp1 = app.Gr\reshape(app.Phi(:,app.T1Slider.Value,app.CardiacSlider.Value,app.RespiratorySlider.Value,:,:), app.L, []);
+                    app.temp1 = reshape(reshape(app.dispim(reshape(app.U,app.Ny,app.Nx,app.Nz,[])),[],app.L)*app.temp1, app.Ny, app.Nx, [], app.params.NEco);
+                    app.cw = 0.5*max(app.vec(abs(app.temp1)));
+                end
+                
+                
+                if app.img_label == 2 || app.img_label == 5
+                    imagesc(abs(app.temp1(:,:,app.T1Slider.Value, app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
+                elseif app.img_label == 3
+                    imagesc(abs(app.temp1(:,:,app.CardiacSlider.Value, app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
+                elseif app.img_label == 4
+                    imagesc(abs(app.temp1(:,:,app.RespiratorySlider.Value, app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
+                elseif app.img_label == 6
+                    imagesc(abs(app.temp1(:,:,app.TemporalSlider.Value, app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
+                elseif app.img_label == 0 || app.img_label == 1
+                    imagesc(abs(app.temp1(:,:,:,app.T2starSlider.Value)/app.cw), 'Parent', app.ax1);
+                end
+                
             end
             
             set(app.ax1, 'visible', 'off');
@@ -302,10 +372,24 @@ classdef GUI_for_LRT_V1 < matlab.apps.AppBase
             app.CardiacSlider.ValueChangedFcn = createCallbackFcn(app, @CardiacSliderValueChanged, true);
             app.CardiacSlider.Position = [90 163 117 3];
 
+            
+            % Create TemporalSliderLabel
+            app.TemporalSliderLabel = uilabel(app.ControlPanel);
+            app.TemporalSliderLabel.HorizontalAlignment = 'right';
+            app.TemporalSliderLabel.Position = [18 88 55 22];
+            app.TemporalSliderLabel.Text = 'Temporal';
+            app.TemporalSliderLabel.Enable = 'off';
+            
+            % Create TemporalSlider
+            app.TemporalSlider = uislider(app.ControlPanel);
+            app.TemporalSlider.ValueChangedFcn = createCallbackFcn(app, @TemporalSliderValueChanged, true);
+            app.TemporalSlider.Position = [90 98 117 3];
+            app.TemporalSlider.Enable = 'off';
+            
             % Create LoadDataButton
             app.LoadDataButton = uibutton(app.ControlPanel, 'push');
             app.LoadDataButton.ButtonPushedFcn = createCallbackFcn(app, @LoadDataButtonPushed, true);
-            app.LoadDataButton.Position = [8 84 100 22];
+            app.LoadDataButton.Position = [10 21 100 22];
             app.LoadDataButton.Text = 'Load Data';
 
             % Show the figure after all components are created
