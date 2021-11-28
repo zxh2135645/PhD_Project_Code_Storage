@@ -115,7 +115,12 @@ labels = {'T1MAP', 'MAG', 'PSIR', 'T2STAR', 'T2MAP', 'T2Mapping', 'T2_MAP'};
 
 % LRT - postCon
 labels = {'POSTCON', 'POSTCON', 'POSTCON'};
-labels = {'POSTCON1', 'POSTCON2', 'POSTCON3', 'POSTCON4'};
+labels = {'T1MAP', 'T2STAR', 'T2_MAP', 'POSTCON1', 'POSTCON2', 'POSTCON3', 'POSTCON4'};
+labels = {'T1MAP', 'T2STAR', 'T2_MAP', 'POSTCON1', 'POSTCON2'};
+labels = {'POSTCON1', 'POSTCON2'};
+labels = {'MAG', 'PSIR'};
+labels = {'T1MAP', 'T2STAR', 'T2_MAP', 'POSTCON1', 'POSTCON1', 'POSTCON1', 'POSTCON2', 'POSTCON2', 'POSTCON2', 'MAG', 'PSIR'};
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 20P41-BL
 % T1MOLLI
@@ -125,7 +130,56 @@ labels = {'POSTCON1', 'POSTCON2', 'POSTCON3', 'POSTCON4'};
 % T2star weighted
 % [174, 180, 197, 203]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 20P35-Day3
+% T1MOLLI-PreCon
+% [31, 34, 37, 40, 43, 46, 49, 52, 55, 58, 61]
+% T2star mapping-PreCon
+% [148, 150, 152, 154, 156, 158, 160, 162, 164, 166, 168]
+% T2star weighted-PreCon
+% [155]
+% T1MOLLI-PostCon1
+% [188]
+% T2star mapping-PostCon1
+% [190]
+% T2star weighted-PostCon1
+% [189]
+% T1MOLLI-PostCon2
+% [194]
+% T2star mapping-PostCon2
+% [196]
+% T2star weighted-PostCon2
+% [195]
+% MAG
+% [202, 204, 206, 208, 210, 212, 214, 216, 218, 220, 222, 224]
+% PSIR
+% [203, 205, 207, 209, 211, 213, 215, 217, 219, 221, 223, 225]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 20P41-Day4
+% T1MOLLI-PreCon
+% [35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 65, 68]
+% T2star mapping-PreCon
+% [162, 164, 166, 168, 170, 172, 174, 176, 178, 180, 182, 184]
+% T2star weighted-PreCon
+% [175]
+% T1MOLLI-PostCon1
+% [201]
+% T2star mapping-PostCon1
+% [203]
+% T2star weighted-PostCon1
+% [202]
+% T1MOLLI-PostCon2
+% [207]
+% T2star mapping-PostCon2
+% [209]
+% T2star weighted-PostCon2
+% [208]
+% MAG
+% [237, 235, 233, 231, 229, 227, 225, 223, 221, 219, 217, 215]
+% PSIR
+% [238, 236, 234, 232, 230, 228, 226, 224, 222, 220, 218, 216]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 for ll = 1:length(labels)
     label = labels{ll};
