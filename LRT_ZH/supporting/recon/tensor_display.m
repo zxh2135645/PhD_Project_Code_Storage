@@ -45,14 +45,14 @@ end
 %     rbin = mode(Ridx(wall_clock==j));
 %     temp(:,j) = Gr\Phi(:,ceil(end/2),ceil(end/2),rbin,j);
 % end
-
+temp=Gr\reshape(Phi(:,50:150,1,end),L,[]);
 % temp = reshape(reshape(dispim(reshape(U,Nx,Ny,Nz,[])),[],L)*temp,Nx, Ny,[]);
-
+dispim = @(x,st)fftshift(x(:,:,25,:),1);
 temp=(reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp,Ny,Nx,[]));
 
 
 % if ~exist('cw','var')
-    cw=max(vec(abs(temp)));
+    cw=0.5*max(vec(abs(temp)));
 % end
 %%
 h = implay(abs(temp)/cw);

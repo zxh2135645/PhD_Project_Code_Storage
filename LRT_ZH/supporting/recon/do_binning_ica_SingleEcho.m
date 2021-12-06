@@ -26,7 +26,7 @@ Phi_rt_small=Phi_rt_small_init;
 temp_Phi_rt_small = Phi_rt_small_init(:,1:params.NEco:end); % By only looking at first echo
 % temp_Nm = params.NRepMeas %total measurements
 temp_Nm = 1;
-temp_NLPM = (size(kspace_data,1)+cutoff)/params.NEco/SGblock/temp_Nm % Nav lines per measurement
+temp_NLPM = (Nread_orig+cutoff)/params.NEco_old/SGblock/temp_Nm % Nav lines per measurement
 temp_NLPM_2 = params.lSegments*Nz/SGblock;
 temp_Lin_check = temp_NLPM - temp_NLPM_2 % Why? What does this mean?
 
@@ -66,7 +66,7 @@ for temp_step = 0:(temp_Nm-1)
     if temp_step == 0
 %         clear Bin* resp* card*
         Bin_start = 1;
-        Bin_cutoff = cutoff/params.NEco/SGblock;
+        Bin_cutoff = cutoff/params.NEco_old/SGblock;
         Bin_end = Bin_start + temp_NLPM -1 - Bin_cutoff;
     else
         
@@ -630,9 +630,9 @@ Ridx_init = Ridx;
 Hidx_init = Hidx;
 %%
 num_time_interval = seg;
-time_interval_seg = (nav_indices(end)+cutoff+1) / num_time_interval;
+time_interval_seg = (nav_indices(end)+cutoff/params.NEco_old+1) / num_time_interval;
 
-seg_multiplier = fix((nav_indices-1+cutoff)/time_interval_seg)+1;
+seg_multiplier = fix((nav_indices-1+cutoff/params.NEco_old)/time_interval_seg)+1;
 
 Segidx_temp = mod(nav_indices-1,params.lSegments)+1;
 Segidx_temp = Segidx_temp(1:length(Segidx_temp)/params.NEco);
@@ -656,7 +656,7 @@ Hidx = interp1(1:params.NEco:(params.NEco*length(Hidx)),Hidx,1:(params.NEco*leng
 wall_clock = vec(repmat((1:params.NEco).',[1,numel(Ridx)/params.NEco])).';
 
 figure, 
-subplot(4,1,1); plot(Hidx(1:10000));
-subplot(4,1,2); plot(Ridx(1:10000));
-subplot(4,1,3); plot(Segidx(1:10000));
-subplot(4,1,4); plot(seg_multiplier(1:10000));
+subplot(4,1,1); plot(Hidx(1:1000));
+subplot(4,1,2); plot(Ridx(1:1000));
+subplot(4,1,3); plot(Segidx(1:1000));
+subplot(4,1,4); plot(seg_multiplier(1:1000));

@@ -1,12 +1,9 @@
-function [C, UU, ranks] = choose_C(X,ranks,Xorig,mask)
+function [C, UU, ranks] = choose_C_Linput(X,ranks,L_input,Xorig,mask)
 % [C, UU] = choose_C(Navdata,ranks) (individual truncation)
 % [C, UU] = choose_C(Navdata,rank) (truncate only C)
 
-orig_flag = (nargin > 2);
+orig_flag = (nargin > 3);
 
-% if nargin == 5
-%    L_init = varargin{5};
-% end
 
 if numel(ranks)==1
   rank=ranks;

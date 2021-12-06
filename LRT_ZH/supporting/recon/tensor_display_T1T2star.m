@@ -3,7 +3,7 @@ Phi=reshape(Phi,[L sizes(2:end)]);
 temp=Gr\reshape(Phi(:,:,1,1,:),L,[]);
 
 temp=(reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp,Ny,Nx,[],params.NEco));
-cw=max(vec(abs(temp)));
+cw=0.5*max(vec(abs(temp)));
 
 h = implay(abs(temp(:,:,:,1))/cw);
 set(h.Parent,'Name','old_basal_echo1');
@@ -15,14 +15,13 @@ set(h.Parent,'Name','old_basal_echo1');
 
 %% 5D 
 Phi=reshape(Phi,[L sizes(2:end)]);
-temp=Gr\reshape(Phi(:,:,1,1,:,4),L,[]);
-
+temp=Gr\reshape(Phi(:,end,:,4,:,3),L,[]);
 
 
 temp=(reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp,Ny,Nx,[],params.NEco));
 cw=max(vec(abs(temp(:,:,:,1))));
 
-h = implay(abs(temp(:,:,:,8))/cw);
+h = implay(abs(temp(:,:,:,1))/cw);
 set(h.Parent,'Name','old_basal_echo1');
 %%
 img = abs(temp(:,:,96,1));

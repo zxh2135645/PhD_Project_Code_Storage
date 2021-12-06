@@ -1,4 +1,3 @@
-[fid_file, fid_path] = uigetfile('*.dat');
 
 ScanType = 'T2star';
 Trajectory = 'Cartesian';
@@ -109,6 +108,7 @@ if iscartesian
 end
 
 DC_kz=floor(params.lPartitions/2+1);
+
 %%%%%%%%%%%%%%%%%%%%
 % Hard-coded
 SGblock = 2;
@@ -129,9 +129,26 @@ cutoff_shift=1; %Segments may not be a multiple of SGblock
 
 nav_data = double(kspace_data((cutoff+cutoff_shift):SGblock:cutoff_end,:,:,:));
 kspace_data = double(kspace_data((cutoff+1):cutoff_end,:,:,:));
+
+% Getting the single-echo data
+s_index=repmat([1:SGblock:size(kspace_data,1)],[SGblock 1])+repmat([0:SGblock-1].',[1 size(kspace_data,1)/SGblock]);
+ss_index = s_index(:,num_eco:params.NEco:end);
+ss_index = ss_index(:);
+
+Nread_orig = size(kspace_data,1);
+nav_data = nav_data(num_eco:params.NEco:end,:,:,:);
+kspace_data = kspace_data(ss_index,:,:,:);
+pe_indices = pe_indices(ss_index,:);
+
+params.NEco_old = params.NEco;
+params.NEco = 1;
+
 Nread=size(kspace_data,1);
 total_time = Nread/params.lSegments*params.alTR_seconds/params.NEco
 nav_indices = cutoff_shift:SGblock:Nread;
+
+
+
 if ~iscartesian
   kspace_data(nav_indices,:,:,:)=[];
 end

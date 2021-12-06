@@ -22,7 +22,9 @@ figmake=@(WU)sum(sum(group(WU(:,:,1,:,:)),4),5);
 
 WU=W(U);
 temp=group(WU);
+%XZ change lambda to 1/2
 lambda=2*msdev^2/mean(abs(temp(:)-median(real(temp(:)))-1i*median(imag(temp(:)))))
+% lambda=msdev^2/mean(abs(temp(:)-median(real(temp(:)))-1i*median(imag(temp(:)))))
 Y=zeros(size(WU));
 alpha=max(vec(temp))
 figure,hist(vec(temp),1000);
@@ -43,7 +45,7 @@ tic;
 for it=2:30
   WU = W(U);
 %   figure(100),imshow([im0, log(figmake(WU))],[]),drawnow;
-  figure(101),imshow(5*[exp(im0),figmake(WU)]/max(exp(im0(:)))),drawnow;
+  figure(101),imagesc(5*[exp(im0),figmake(WU)]/max(exp(im0(:)))),drawnow;
   Z=WU+Y/rho;
   Zg = group(Z);
   Zg = max(abs(Zg)-alpha,0)./Zg;

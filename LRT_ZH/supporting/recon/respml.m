@@ -8,7 +8,8 @@
 % =========================================================================
 % =========================================================================
 % XZ - 2 (will have temporal resolved T1 weighting)
-num_time_interval = params.Averages / 3;
+
+num_time_interval = params.Averages / seg;
 time_interval_seg = (nav_indices(end)+cutoff+1) / num_time_interval;
 
 seg_multiplier = fix((nav_indices-1+cutoff)/time_interval_seg)+1;
