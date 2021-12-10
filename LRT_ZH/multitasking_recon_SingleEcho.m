@@ -41,7 +41,7 @@ total_time = inf; %amount of data to use, in seconds. Use "inf" to use all.
 num_eco_total = 6;
 L_input = 64;
 
-for num_eco = 1:num_eco_total
+for num_eco = 2:num_eco_total
     
     load_data_SingleEcho;
     disp('Data loaded');
