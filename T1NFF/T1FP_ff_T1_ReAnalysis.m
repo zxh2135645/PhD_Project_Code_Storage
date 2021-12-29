@@ -17,7 +17,7 @@ close all;
 %% Re-do AHA analysis: (the main body)
 addpath('../function/');
 addpath('../AHA16Segment/');
-addpath('../function/demon_registration_version_8f/');
+addpath('../function/demon_registration_version_8f_winOS/');
 base_dir = uigetdir;
 contour_glob = glob(cat(2, base_dir, '/ContourData/*'));
 %Names = ExtractNames(contour_glob);

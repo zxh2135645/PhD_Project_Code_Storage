@@ -21,7 +21,8 @@ names_to_rule_out = {};
 RuleOutLabel = NameRuleOutFunc(Names, names_to_rule_out);
 Names = Names(RuleOutLabel == 0);
 
-name_check = {'AXEL_Day0'};
+%name_check = {'AXEL_Day0'};
+name_check = {'Evelyn_Day0'};
 name_idx_list = linspace(1, length(Names), length(Names)); % initialize with incremental add
 
 if length(name_check) == 1
@@ -348,4 +349,4 @@ if ~exist(save_dir, 'dir')
     mkdir(save_dir);
 end
 
-save(cat(2, save_dir, label, '_data_storage_biggestROI_septalRemote_3layers.mat'), 'Ting_Data_Storage');
+save(cat(2, save_dir, label, '_data_storage_biggestROI_3layers.mat'), 'Ting_Data_Storage');

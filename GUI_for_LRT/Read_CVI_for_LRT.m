@@ -15,14 +15,14 @@ for i = 1:length(name_glob)
     Names{i} = strings{end-1};
 end
 
-sequence_label = {'T1Map'};
+sequence_label = {'DICOM_E', 'DICOM_L', 'PSIR', 'MAG'};
 
 names_to_rule_out = {};
 RuleOutLabel = NameRuleOutFunc(Names, names_to_rule_out);
 Names = Names(RuleOutLabel == 0);
 
 % name_check = {'AXEL_Day0'};
-name_check = {'Evelyn_Day0'};
+name_check = {'21P35_DAY3'};
 name_idx_list = linspace(1, length(Names), length(Names)); % initialize with incremental add
 
 if length(name_check) == 1
@@ -65,11 +65,11 @@ t1w_dicom_fields = {...
     'InversionTime',...
     };
 
-output_label = {'T1'};
+output_label = {'DICOM_E', 'DICOM_L', 'PSIR', 'MAG'};
 
 %%
 % Make it not always overwrite
-for n = starting_point:length(Names)
+for n = starting_point:starting_point
     %for n = starting_point:starting_point+4
     name = Names{n};
     %for tp = 1:length(time_points)
@@ -77,7 +77,7 @@ for n = starting_point:length(Names)
     
     %time_point = time_points{end-tp+1};
     % XML file is independent on Labels
-    xml_glob = glob(cat(2, base_dir, '/',  name, '/Data', '/*.cvi42wsx'));
+    xml_glob = glob(cat(2, base_dir, '/',  name, '/Data', '/*EnL.cvi42wsx'));
     if isempty(xml_glob)
         disp(cat(2, 'Missing CVI XML: ', name));
     else
@@ -99,12 +99,15 @@ for n = starting_point:length(Names)
                 % Check if the dstFolder
                 dstFolder = cat(2, base_dir, '/', name, '/ContourData/', label_out, '/');
                 
-                dicom_glob = glob(cat(2, base_dir, '/', name, '/Data/', label, '/*'));
+                if strcmp(label, 'DICOM_E') || strcmp(label, 'DICOM_L')
+                    dicom_glob = glob(cat(2, base_dir, '/', name, '/Data/LRT_recon_Seg15/', label, '/'));
+                else
+                    dicom_glob = glob(cat(2, base_dir, '/', name, '/Data/OrigData/*', label, '_[0123456789]*/'));
+                end
                 
                 ReadCVI_Workflow_Cell_Func(con, dicom_glob, dstFolder, dicom_fields);
             end
-            
-            
+
         end
     end
     %end
