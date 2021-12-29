@@ -14,7 +14,7 @@ close all;
 % scatter(roi_ff_array(:,i), roi_t1_array(:,i))
 % end
 
-%% Re-do AHA analysis:
+%% Re-do AHA analysis: (the main body)
 addpath('../function/');
 addpath('../AHA16Segment/');
 addpath('../function/demon_registration_version_8f/');
@@ -50,8 +50,8 @@ label_t1 = sequence_label{1};
 label_lge = sequence_label{3};
 label_t2star = sequence_label{2};
 
-%for n = 1:length(Names)
-for n = 1:1
+%for n = 9:length(Names)
+for n = 8:8
     % for n = starting_point:starting_point
     % Do not need to pull up images for baseline
     name = Names{n};
@@ -64,8 +64,8 @@ for n = 1:1
         mkdir(name_data_save_dir);
     end
     
-    %for tp = 1:length(time_points)
-    for tp = 8:8
+    for tp = 1:length(time_points)
+    %for tp = 9:9
         time_point = time_points{end-tp+1};
         tp_dir = cat(2, base_dir, '/ContourData/',  name, '/', name, '_', time_point,  '/');
         if ~exist(tp_dir, 'dir')
@@ -164,6 +164,10 @@ for n = 1:1
             if ~exist(tp_dir2, 'dir')
                 mkdir(tp_dir2);
             end
+            LR_mdl_fname = cat(2, name_data_save_dir, '/LinearRegression_', name, '_', time_point, '.mat');
+            %chord_values_fname = cat(2, name_data_save_dir, '/Chord_values_', name, '_', time_point, '.mat');
+            chord_values_fname = cat(2, name_data_save_dir, '/Chord_values_pixelwise_', name, '_', time_point, '.mat');
+            chord_values_fname2 = cat(2, name_data_save_dir, '/Chord_values2_', name, '_', time_point, '.mat');
             % if condition
             center_mask_fname = cat(2, name_data_save_dir, '/CenterLine_', name, '_', time_point, '.mat');
             %if ~exist(center_mask_fname, 'file')
@@ -210,7 +214,17 @@ for n = 1:1
             Groove = 0;
             % MI_Chord_Analysis_fname = cat(2, name_data_save_dir, '/MIChordAnalysis_', name, '_', time_point, '.mat');
             % Remote_Chord_Analysis_fname = cat(2, name_data_save_dir, '/RemoteChordAnalysis_', name, '_', time_point, '.mat');
-            Func_T1FP_Chord_ReAnalysis(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star, tp_dir2, name, time_point);
+            if (strcmp(name, 'Queenie') && strcmp(time_point, '7D'))
+                %Func_T1FP_Chord_ReAnalysis2_EndoEpi(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star, tp_dir2, name, time_point, LR_mdl_fname, chord_values_fname, chord_values_fname2);
+                Func_T1FP_Chord_ReAnalysis2_Pixelwise(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,LR_mdl_fname,chord_values_fname)
+            elseif (strcmp(name, '18D16') && strcmp(time_point, '9MO'))
+                disp(cat(2, 'Skipped: ', name, ' ', time_point))
+            else
+                %Func_T1FP_Chord_ReAnalysis(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star, tp_dir2, name, time_point, LR_mdl_fname, chord_values_fname);
+                %Func_T1FP_Chord_ReAnalysis_EndoEpi(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star, tp_dir2, name, time_point, LR_mdl_fname, chord_values_fname, chord_values_fname2);
+                Func_T1FP_Chord_ReAnalysis_Pixelwise(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,LR_mdl_fname,chord_values_fname)
+
+            end
             %[MI_Chord_Analysis, center_mask_ff] = Func_MI_Chord_Analysis(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff,...
             %    roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, MI_Chord_Analysis_fname);
             %[MI_Chord_Analysis2, ~] = Func_MI_Chord_Analysis2(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff,...

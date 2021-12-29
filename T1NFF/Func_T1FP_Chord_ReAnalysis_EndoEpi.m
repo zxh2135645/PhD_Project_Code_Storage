@@ -1,4 +1,4 @@
-function Func_T1FP_Chord_ReAnalysis(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,LR_mdl_fname,chord_values_fname)
+function Func_T1FP_Chord_ReAnalysis_EndoEpi(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,LR_mdl_fname,chord_values_fname,chord_values_fname2)
 
 t1_cell = cell(50,size(roi_in_myo_t1, 3));
 ff_cell = cell(50,size(roi_in_myo_t1, 3));
@@ -9,35 +9,61 @@ mean_t1_hemo_array = zeros(50,size(roi_in_myo_t1, 3));
 mean_ff_hemo_array = zeros(50,size(roi_in_myo_t1, 3));
 mean_r2star_hemo_array = zeros(50,size(roi_in_myo_t1, 3));
 
-sd_t1_array = zeros(50,size(roi_in_myo_t1, 3));
-sd_ff_array = zeros(50,size(roi_in_myo_t1, 3));
-sd_r2star_array = zeros(50,size(roi_in_myo_t1, 3));
-sd_t1_hemo_array = zeros(50,size(roi_in_myo_t1, 3));
-sd_ff_hemo_array = zeros(50,size(roi_in_myo_t1, 3));
-sd_r2star_hemo_array = zeros(50,size(roi_in_myo_t1, 3));
+sd_t1_array = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_ff_array = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_r2star_array = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_t1_hemo_array = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_ff_hemo_array = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_r2star_hemo_array = 1000*ones(50,size(roi_in_myo_t1, 3));
 
 mean_t1_array_endo = zeros(50,size(roi_in_myo_t1, 3));
 mean_ff_array_endo = zeros(50,size(roi_in_myo_t1, 3));
 mean_r2star_array_endo = zeros(50,size(roi_in_myo_t1, 3));
+mean_t1_hemo_array_endo = zeros(50,size(roi_in_myo_t1, 3));
+mean_ff_hemo_array_endo = zeros(50,size(roi_in_myo_t1, 3));
+mean_r2star_hemo_array_endo = zeros(50,size(roi_in_myo_t1, 3));
 
-sd_t1_array_endo = zeros(50,size(roi_in_myo_t1, 3));
-sd_ff_array_endo = zeros(50,size(roi_in_myo_t1, 3));
-sd_r2star_array_endo = zeros(50,size(roi_in_myo_t1, 3));
+sd_t1_array_endo = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_ff_array_endo = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_r2star_array_endo = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_t1_hemo_array_endo = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_ff_hemo_array_endo = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_r2star_hemo_array_endo = 1000*ones(50,size(roi_in_myo_t1, 3));
 
 mean_t1_array_epi = zeros(50,size(roi_in_myo_t1, 3));
 mean_ff_array_epi = zeros(50,size(roi_in_myo_t1, 3));
 mean_r2star_array_epi = zeros(50,size(roi_in_myo_t1, 3));
+mean_t1_hemo_array_epi = zeros(50,size(roi_in_myo_t1, 3));
+mean_ff_hemo_array_epi = zeros(50,size(roi_in_myo_t1, 3));
+mean_r2star_hemo_array_epi = zeros(50,size(roi_in_myo_t1, 3));
 
-sd_t1_array_epi = zeros(50,size(roi_in_myo_t1, 3));
-sd_ff_array_epi = zeros(50,size(roi_in_myo_t1, 3));
-sd_r2star_array_epi = zeros(50,size(roi_in_myo_t1, 3));
+sd_t1_array_epi = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_ff_array_epi = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_r2star_array_epi = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_t1_hemo_array_epi = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_ff_hemo_array_epi = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_r2star_hemo_array_epi = 1000*ones(50,size(roi_in_myo_t1, 3));
 
 mean_t1_array_remote = zeros(50,size(roi_in_myo_t1, 3));
 mean_ff_array_remote = zeros(50,size(roi_in_myo_t1, 3));
 mean_r2star_array_remote = zeros(50,size(roi_in_myo_t1, 3));
-sd_t1_array_remote = zeros(50,size(roi_in_myo_t1, 3));
-sd_ff_array_remote = zeros(50,size(roi_in_myo_t1, 3));
-sd_r2star_array_remote = zeros(50,size(roi_in_myo_t1, 3));
+sd_t1_array_remote = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_ff_array_remote = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_r2star_array_remote = 1000*ones(50,size(roi_in_myo_t1, 3));
+
+mean_t1_array_remote_endo = zeros(50,size(roi_in_myo_t1, 3));
+mean_ff_array_remote_endo = zeros(50,size(roi_in_myo_t1, 3));
+mean_r2star_array_remote_endo = zeros(50,size(roi_in_myo_t1, 3));
+sd_t1_array_remote_endo = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_ff_array_remote_endo = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_r2star_array_remote_endo = 1000*ones(50,size(roi_in_myo_t1, 3));
+
+mean_t1_array_remote_epi = zeros(50,size(roi_in_myo_t1, 3));
+mean_ff_array_remote_epi = zeros(50,size(roi_in_myo_t1, 3));
+mean_r2star_array_remote_epi = zeros(50,size(roi_in_myo_t1, 3));
+sd_t1_array_remote_epi = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_ff_array_remote_epi = 1000*ones(50,size(roi_in_myo_t1, 3));
+sd_r2star_array_remote_epi = 1000*ones(50,size(roi_in_myo_t1, 3));
 
 for i = 1:size(roi_in_myo_t1, 3)
     img = t1(:,:,i);
@@ -221,6 +247,22 @@ for i = 1:size(roi_in_myo_t1, 3)
         hemo_mask_ff = Mask_Segn2 .* hemo_mask .* movingRegistered_eroded == j;
         hemo_mask_r2star = Mask_Segn3 .* hemo_mask .* movingRegistered_eroded == j;
         
+        seg_mask_t1_remote_endo = Mask_Segn_endo .* movingRegistered_remote_ff .* fixed_eroded == j;
+        seg_mask_ff_remote_endo = Mask_Segn2_endo .* movingRegistered_remote_ff .* movingRegistered_eroded == j;
+        seg_mask_r2star_remote_endo = Mask_Segn3_endo .* movingRegistered_remote_ff .* movingRegistered_eroded == j;
+        
+        seg_mask_t1_remote_epi = Mask_Segn_epi .* movingRegistered_remote_ff .* fixed_eroded == j;
+        seg_mask_ff_remote_epi = Mask_Segn2_epi .* movingRegistered_remote_ff .* movingRegistered_eroded == j;
+        seg_mask_r2star_remote_epi = Mask_Segn3_epi .* movingRegistered_remote_ff .* movingRegistered_eroded == j;
+        
+        hemo_mask_t1_endo = Mask_Segn_endo .* hemo_mask .* fixed_eroded == j;
+        hemo_mask_ff_endo = Mask_Segn2_endo .* hemo_mask .* movingRegistered_eroded == j;
+        hemo_mask_r2star_endo = Mask_Segn3_endo .* hemo_mask .* movingRegistered_eroded == j;
+        
+        hemo_mask_t1_epi = Mask_Segn_epi .* hemo_mask .* fixed_eroded == j;
+        hemo_mask_ff_epi = Mask_Segn2_epi .* hemo_mask .* movingRegistered_eroded == j;
+        hemo_mask_r2star_epi = Mask_Segn3_epi .* hemo_mask .* movingRegistered_eroded == j;
+        
         %
         if any(seg_mask_t1(:))
             t1_cell{j,i} = nonzeros(img.*seg_mask_t1);
@@ -232,21 +274,28 @@ for i = 1:size(roi_in_myo_t1, 3)
             sd_ff_array(j,i) = std(nonzeros(img2.*seg_mask_ff));
             sd_r2star_array(j,i) = std(nonzeros(img3.*seg_mask_r2star));
             
+        end
+        
+        if any(seg_mask_t1_endo(:))
             mean_t1_array_endo(j,i) = mean(nonzeros(img.*seg_mask_t1_endo));
-            mean_t1_array_epi(j,i) = mean(nonzeros(img.*seg_mask_t1_epi));
             mean_ff_array_endo(j,i) = mean(nonzeros(img2.*seg_mask_ff_endo));
-            mean_ff_array_epi(j,i) = mean(nonzeros(img2.*seg_mask_ff_epi));
             mean_r2star_array_endo(j,i) = mean(nonzeros(img3.*seg_mask_r2star_endo));
-            mean_r2star_array_epi(j,i) = mean(nonzeros(img3.*seg_mask_r2star_epi));
             
             sd_t1_array_endo(j,i) = std(nonzeros(img.*seg_mask_t1_endo));
-            sd_t1_array_epi(j,i) = std(nonzeros(img.*seg_mask_t1_epi));
             sd_ff_array_endo(j,i) = std(nonzeros(img2.*seg_mask_ff_endo));
-            sd_ff_array_epi(j,i) = std(nonzeros(img2.*seg_mask_ff_epi));
             sd_r2star_array_endo(j,i) = std(nonzeros(img3.*seg_mask_r2star_endo));
-            sd_r2star_array_epi(j,i) = std(nonzeros(img3.*seg_mask_r2star_epi));
-            
         end
+        
+        if any(seg_mask_t1_epi(:))
+            mean_t1_array_epi(j,i) = mean(nonzeros(img.*seg_mask_t1_epi));
+            mean_ff_array_epi(j,i) = mean(nonzeros(img2.*seg_mask_ff_epi));
+            mean_r2star_array_epi(j,i) = mean(nonzeros(img3.*seg_mask_r2star_epi));
+            
+            sd_t1_array_epi(j,i) = std(nonzeros(img.*seg_mask_t1_epi));
+            sd_ff_array_epi(j,i) = std(nonzeros(img2.*seg_mask_ff_epi));
+            sd_r2star_array_epi(j,i) = std(nonzeros(img3.*seg_mask_r2star_epi));
+        end
+        
         if any(seg_mask_t1_remote(:))
             % remote
             mean_t1_array_remote(j,i) = mean(nonzeros(img.*seg_mask_t1_remote));
@@ -256,6 +305,27 @@ for i = 1:size(roi_in_myo_t1, 3)
             sd_ff_array_remote(j,i) = std(nonzeros(img2.*seg_mask_ff_remote));
             sd_r2star_array_remote(j,i) = std(nonzeros(img3.*seg_mask_r2star_remote));
         end
+        
+        if any(seg_mask_t1_remote_endo(:))
+            % remote
+            mean_t1_array_remote_endo(j,i) = mean(nonzeros(img.*seg_mask_t1_remote_endo));
+            mean_ff_array_remote_endo(j,i) = mean(nonzeros(img2.*seg_mask_ff_remote_endo));
+            mean_r2star_array_remote_endo(j,i) = mean(nonzeros(img3.*seg_mask_r2star_remote_endo));
+            sd_t1_array_remote_endo(j,i) = std(nonzeros(img.*seg_mask_t1_remote_endo));
+            sd_ff_array_remote_endo(j,i) = std(nonzeros(img2.*seg_mask_ff_remote_endo));
+            sd_r2star_array_remote_endo(j,i) = std(nonzeros(img3.*seg_mask_r2star_remote_endo));
+        end
+        
+        if any(seg_mask_t1_remote_epi(:))
+            % remote
+            mean_t1_array_remote_epi(j,i) = mean(nonzeros(img.*seg_mask_t1_remote_epi));
+            mean_ff_array_remote_epi(j,i) = mean(nonzeros(img2.*seg_mask_ff_remote_epi));
+            mean_r2star_array_remote_epi(j,i) = mean(nonzeros(img3.*seg_mask_r2star_remote_epi));
+            sd_t1_array_remote_epi(j,i) = std(nonzeros(img.*seg_mask_t1_remote_epi));
+            sd_ff_array_remote_epi(j,i) = std(nonzeros(img2.*seg_mask_ff_remote_epi));
+            sd_r2star_array_remote_epi(j,i) = std(nonzeros(img3.*seg_mask_r2star_remote_epi));
+        end
+
         if any(hemo_mask_t1(:))
             mean_t1_hemo_array(j,i) = mean(nonzeros(img .* hemo_mask_t1));
             mean_ff_hemo_array(j,i) = mean(nonzeros(img2 .* hemo_mask_ff));
@@ -263,6 +333,24 @@ for i = 1:size(roi_in_myo_t1, 3)
             sd_t1_hemo_array(j,i) = std(nonzeros(img .* hemo_mask_t1));
             sd_ff_hemo_array(j,i) = std(nonzeros(img2 .* hemo_mask_ff));
             sd_r2star_hemo_array(j,i) = std(nonzeros(img3 .* hemo_mask_r2star));
+        end
+        
+        if any(hemo_mask_t1_endo(:))
+            mean_t1_hemo_array_endo(j,i) = mean(nonzeros(img .* hemo_mask_t1_endo));
+            mean_ff_hemo_array_endo(j,i) = mean(nonzeros(img2 .* hemo_mask_ff_endo));
+            mean_r2star_hemo_array_endo(j,i) = mean(nonzeros(img3 .* hemo_mask_r2star_endo));
+            sd_t1_hemo_array_endo(j,i) = std(nonzeros(img .* hemo_mask_t1_endo));
+            sd_ff_hemo_array_endo(j,i) = std(nonzeros(img2 .* hemo_mask_ff_endo));
+            sd_r2star_hemo_array_endo(j,i) = std(nonzeros(img3 .* hemo_mask_r2star_endo));
+        end
+        
+        if any(hemo_mask_t1_epi(:))
+            mean_t1_hemo_array_epi(j,i) = mean(nonzeros(img .* hemo_mask_t1_epi));
+            mean_ff_hemo_array_epi(j,i) = mean(nonzeros(img2 .* hemo_mask_ff_epi));
+            mean_r2star_hemo_array_epi(j,i) = mean(nonzeros(img3 .* hemo_mask_r2star_epi));
+            sd_t1_hemo_array_epi(j,i) = std(nonzeros(img .* hemo_mask_t1_epi));
+            sd_ff_hemo_array_epi(j,i) = std(nonzeros(img2 .* hemo_mask_ff_epi));
+            sd_r2star_hemo_array_epi(j,i) = std(nonzeros(img3 .* hemo_mask_r2star_epi));
         end
     end
 end
@@ -414,6 +502,55 @@ chord_value_results.mean_r2star_array_remote = mean_r2star_array_remote;
 chord_value_results.mean_t1_hemo_array = mean_t1_hemo_array;
 chord_value_results.mean_ff_hemo_array = mean_ff_hemo_array;
 chord_value_results.mean_r2star_hemo_array = mean_r2star_hemo_array;
+
+chord_value_results.sd_t1_array = sd_t1_array;
+chord_value_results.sd_ff_array = sd_ff_array;
+chord_value_results.sd_r2star_array = sd_r2star_array;
+chord_value_results.sd_t1_array_remote = sd_t1_array_remote;
+chord_value_results.sd_ff_array_remote = sd_ff_array_remote;
+chord_value_results.sd_r2star_array_remote = sd_r2star_array_remote;
+chord_value_results.sd_t1_hemo_array = sd_t1_hemo_array;
+chord_value_results.sd_ff_hemo_array = sd_ff_hemo_array;
+chord_value_results.sd_r2star_hemo_array = sd_r2star_hemo_array;
 save(chord_values_fname, '-struct', 'chord_value_results');
 
+chord_value_results2 = struct;
+chord_value_results2.mean_t1_array_endo = mean_t1_array_endo;
+chord_value_results2.mean_ff_array_endo = mean_ff_array_endo;
+chord_value_results2.mean_r2star_array_endo = mean_r2star_array_endo;
+chord_value_results2.mean_t1_array_remote_endo = mean_t1_array_remote_endo;
+chord_value_results2.mean_ff_array_remote_endo = mean_ff_array_remote_endo;
+chord_value_results2.mean_r2star_array_remote_endo = mean_r2star_array_remote_endo;
+chord_value_results2.mean_t1_hemo_array_endo = mean_t1_hemo_array_endo;
+chord_value_results2.mean_ff_hemo_array_endo = mean_ff_hemo_array_endo;
+chord_value_results2.mean_r2star_hemo_array_endo = mean_r2star_hemo_array_endo;
+chord_value_results2.mean_t1_array_epi = mean_t1_array_epi;
+chord_value_results2.mean_ff_array_epi = mean_ff_array_epi;
+chord_value_results2.mean_r2star_array_epi = mean_r2star_array_epi;
+chord_value_results2.mean_t1_array_remote_epi = mean_t1_array_remote_epi;
+chord_value_results2.mean_ff_array_remote_epi = mean_ff_array_remote_epi;
+chord_value_results2.mean_r2star_array_remote_epi = mean_r2star_array_remote_epi;
+chord_value_results2.mean_t1_hemo_array_epi = mean_t1_hemo_array_epi;
+chord_value_results2.mean_ff_hemo_array_epi = mean_ff_hemo_array_epi;
+chord_value_results2.mean_r2star_hemo_array_epi = mean_r2star_hemo_array_epi;
+
+chord_value_results2.sd_t1_array_endo = sd_t1_array_endo;
+chord_value_results2.sd_ff_array_endo = sd_ff_array_endo;
+chord_value_results2.sd_r2star_array_endo = sd_r2star_array_endo;
+chord_value_results2.sd_t1_array_remote_endo = sd_t1_array_remote_endo;
+chord_value_results2.sd_ff_array_remote_endo = sd_ff_array_remote_endo;
+chord_value_results2.sd_r2star_array_remote_endo = sd_r2star_array_remote_endo;
+chord_value_results2.sd_t1_hemo_array_endo = sd_t1_hemo_array_endo;
+chord_value_results2.sd_ff_hemo_array_endo = sd_ff_hemo_array_endo;
+chord_value_results2.sd_r2star_hemo_array_endo = sd_r2star_hemo_array_endo;
+chord_value_results2.sd_t1_array_epi = sd_t1_array_epi;
+chord_value_results2.sd_ff_array_epi = sd_ff_array_epi;
+chord_value_results2.sd_r2star_array_epi = sd_r2star_array_epi;
+chord_value_results2.sd_t1_array_remote_epi = sd_t1_array_remote_epi;
+chord_value_results2.sd_ff_array_remote_epi = sd_ff_array_remote_epi;
+chord_value_results2.sd_r2star_array_remote_epi = sd_r2star_array_remote_epi;
+chord_value_results2.sd_t1_hemo_array_epi = sd_t1_hemo_array_epi;
+chord_value_results2.sd_ff_hemo_array_epi = sd_ff_hemo_array_epi;
+chord_value_results2.sd_r2star_hemo_array_epi = sd_r2star_hemo_array_epi;
+save(chord_values_fname2, '-struct', 'chord_value_results2');
 end
