@@ -56,8 +56,8 @@ label_t2star = sequence_label{2};
 for_analysis = struct;
 
 
-for n = 9:length(Names)
-% for n = 1:1
+%for n = 9:length(Names)
+for n = 17:17
 % for n = starting_point:starting_point
 % Do not need to pull up images for baseline
     name = Names{n};

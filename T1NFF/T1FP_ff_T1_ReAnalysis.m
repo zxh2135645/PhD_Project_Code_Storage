@@ -13,7 +13,6 @@ close all;
 % subplot(2,2,i);
 % scatter(roi_ff_array(:,i), roi_t1_array(:,i))
 % end
-
 %% Re-do AHA analysis: (the main body)
 addpath('../function/');
 addpath('../AHA16Segment/');
@@ -50,8 +49,52 @@ label_t1 = sequence_label{1};
 label_lge = sequence_label{3};
 label_t2star = sequence_label{2};
 
-%for n = 9:length(Names)
-for n = 8:8
+metrics_save_dir = cat(2, base_dir, '/Results/');
+if ~exist(metrics_save_dir, 'dir')
+   mkdir(metrics_save_dir); 
+end
+
+% Before analysis, parse pre_QualControl
+load(cat(2, metrics_save_dir, 'pre_QualControl.mat'));
+
+status_check = struct;
+for n = 1:length(Names)
+    name = Names{n};
+    status_check(n).Name = name;
+    status_check(n).status = [];
+    status_check(n).status_final = [];
+    tp_count = 1;
+    for tp = 1:length(time_points)
+        
+        time_point = time_points{end-tp+1};
+        tp_dir = cat(2, base_dir, '/ContourData/',  name, '/', name, '_', time_point,  '/');
+        
+        if ~exist(tp_dir, 'dir')
+            disp(cat(2, 'No folder at: ', name, ' ', time_point));
+        else
+            for i = 1:(length(fieldnames(pre_QualControl(n).status))-1)
+                slc_loc = cat(2, 'Slice', num2str(i));
+                if pre_QualControl(n).status(end-tp+1).(slc_loc) == 1
+                    status_check(n).status(tp_count, i) = 1;
+                elseif pre_QualControl(n).status(end-tp+1).(slc_loc) == 0
+                    status_check(n).status(tp_count, i) = 0;
+                end
+            end
+            
+            tp_count = tp_count + 1;
+        end
+    end
+    for i = 1:(length(fieldnames(pre_QualControl(n).status))-1)
+        if i <= size(status_check(n).status,2)
+            status_check(n).status_final(1,i) = all(status_check(n).status(:,i));
+            % The timepoints of status_check goes from end to beginning
+        end
+    end
+end
+
+
+%for n = 1:length(Names)
+for n = 6:6
     % for n = starting_point:starting_point
     % Do not need to pull up images for baseline
     name = Names{n};
@@ -63,15 +106,16 @@ for n = 8:8
     if ~exist(name_data_save_dir, 'dir')
         mkdir(name_data_save_dir);
     end
-    
+    tp_count = 0;
     for tp = 1:length(time_points)
-    %for tp = 9:9
+    %for tp = 4:4
         time_point = time_points{end-tp+1};
         tp_dir = cat(2, base_dir, '/ContourData/',  name, '/', name, '_', time_point,  '/');
         if ~exist(tp_dir, 'dir')
             disp(cat(2, 'No folder at: ', name, ' ', time_point));
         else
             % T1
+            tp_count = tp_count+1;
             myo_glob = glob(cat(2, tp_dir, label_t1, '/', anatomy_label{5}, '/*'));
             roi_glob = glob(cat(2, tp_dir, label_t1, '/',anatomy_label{3}, '/*'));
             remote_glob = glob(cat(2, tp_dir, label_t1, '/',anatomy_label{6}, '/*'));
@@ -170,6 +214,9 @@ for n = 8:8
             chord_values_fname2 = cat(2, name_data_save_dir, '/Chord_values2_', name, '_', time_point, '.mat');
             % if condition
             center_mask_fname = cat(2, name_data_save_dir, '/CenterLine_', name, '_', time_point, '.mat');
+            
+            strat_fname = cat(2, name_data_save_dir, '/FF_Stratify_', name, '_', time_point, '.mat');
+            
             %if ~exist(center_mask_fname, 'file')
                 center_mask_ff = zeros(size(roi_in_myo_ff));
                 BW_skel = zeros(size(roi_in_myo_ff));
@@ -208,22 +255,23 @@ for n = 8:8
             %else
             %    load(center_mask_fname);
             %end
-            
+            status = status_check(n).status(tp_count,:);
             % AHA Segment
             Segn = 50;
             Groove = 0;
             % MI_Chord_Analysis_fname = cat(2, name_data_save_dir, '/MIChordAnalysis_', name, '_', time_point, '.mat');
             % Remote_Chord_Analysis_fname = cat(2, name_data_save_dir, '/RemoteChordAnalysis_', name, '_', time_point, '.mat');
-            if (strcmp(name, 'Queenie') && strcmp(time_point, '7D'))
-                %Func_T1FP_Chord_ReAnalysis2_EndoEpi(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star, tp_dir2, name, time_point, LR_mdl_fname, chord_values_fname, chord_values_fname2);
-                Func_T1FP_Chord_ReAnalysis2_Pixelwise(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,LR_mdl_fname,chord_values_fname)
+            if (strcmp(name, 'Queenie') && strcmp(time_point, '7D')) % || (strcmp(name, 'Evelyn') && strcmp(time_point, '6MO'))
+                %Func_T1FP_Chord_ReAnalysis2_EndoEpi(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star, tp_dir2, name, time_point, LR_mdl_fname, chord_values_fname, chord_values_fname2,status);
+                %Func_T1FP_Chord_ReAnalysis2_Pixelwise(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,LR_mdl_fname,chord_values_fname,status);
+                Func_T1FP_Stratification_Analysis2(t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,strat_fname,status);
             elseif (strcmp(name, '18D16') && strcmp(time_point, '9MO'))
                 disp(cat(2, 'Skipped: ', name, ' ', time_point))
             else
-                %Func_T1FP_Chord_ReAnalysis(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star, tp_dir2, name, time_point, LR_mdl_fname, chord_values_fname);
-                %Func_T1FP_Chord_ReAnalysis_EndoEpi(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star, tp_dir2, name, time_point, LR_mdl_fname, chord_values_fname, chord_values_fname2);
-                Func_T1FP_Chord_ReAnalysis_Pixelwise(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,LR_mdl_fname,chord_values_fname)
-
+                Func_T1FP_Chord_ReAnalysis(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star, tp_dir2, name, time_point, LR_mdl_fname, chord_values_fname);
+                Func_T1FP_Chord_ReAnalysis_EndoEpi(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star, tp_dir2, name, time_point, LR_mdl_fname, chord_values_fname, chord_values_fname2,status);
+                Func_T1FP_Chord_ReAnalysis_Pixelwise(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,LR_mdl_fname,chord_values_fname,status);
+                Func_T1FP_Stratification_Analysis(t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,strat_fname,status);
             end
             %[MI_Chord_Analysis, center_mask_ff] = Func_MI_Chord_Analysis(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff,...
             %    roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, MI_Chord_Analysis_fname);
@@ -236,6 +284,8 @@ for n = 8:8
             %Func_plot_chord_analysis_EpiEndo(MI_Chord_Analysis, tp_dir2);
             %Func_plot_chord_analysis_general2(MI_Chord_Analysis2, tp_dir2);
             %Func_plot_chord_analysis_EpiEndo2(MI_Chord_Analysis2, tp_dir2);
+            
+            
         end
     end
     close all;
@@ -797,7 +847,7 @@ ylabel('T1 (ms)');
 yl = ylim;
 xl = xlim;
 text(xl(2)-20, yl(1)+200, cat(2,'Y = ', num2str(mdl_epi.Coefficients.Estimate(2), 2), 'X + ', num2str(mdl_epi.Coefficients.Estimate(1),2), ', R^2 = ', num2str(mdl_epi.Rsquared.Ordinary,3)), 'FontSize', 12)
-
+T1FP_Stats_Analysis
 mdl_slc_epi = struct;
 for i = 1:size(roi_in_myo_t1, 3)
     mean_ff_array_nz_epi = nonzeros(mean_ff_array_epi(:,i));

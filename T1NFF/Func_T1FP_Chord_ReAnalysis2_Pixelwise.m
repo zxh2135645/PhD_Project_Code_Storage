@@ -1,4 +1,4 @@
-function Func_T1FP_Chord_ReAnalysis2_Pixelwise(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,LR_mdl_fname,chord_values_fname)
+function Func_T1FP_Chord_ReAnalysis2_Pixelwise(Segn, Groove, t1, ff, r2star, myo_t1, myo_ff, roi_in_myo_t1, roi_in_myo_ff, roi_in_myo_r2star, remote_in_myo_t1, remote_in_myo_ff, remote_in_myo_r2star,tp_dir2,name,time_point,LR_mdl_fname,chord_values_fname, status)
 
 t1_cell = cell(1,size(roi_in_myo_t1, 3));
 ff_cell = cell(1,size(roi_in_myo_t1, 3));
@@ -210,18 +210,20 @@ mean_t1_array_nz_remote = [];
 mean_ff_array_nz_remote = [];
 mean_r2star_array_nz_remote = [];
 
-for i = 1:length(t1_remote_cell)
-    mean_t1_array_nz = [mean_t1_array_nz; t1_cell{i}];
-    mean_ff_array_nz = [mean_ff_array_nz; ff_cell{i}];
-    mean_r2star_array_nz = [mean_r2star_array_nz; r2star_cell{i}];    
-    
-    mean_t1_hemo_array_nz = [mean_t1_hemo_array_nz; t1_hemo_cell{i}];
-    mean_ff_hemo_array_nz = [mean_ff_hemo_array_nz; ff_hemo_cell{i}];    
-    mean_r2star_hemo_array_nz = [mean_r2star_hemo_array_nz; r2star_hemo_cell{i}];
-    
-    mean_t1_array_nz_remote = [mean_t1_array_nz_remote; t1_remote_cell{i}];
-    mean_ff_array_nz_remote = [mean_ff_array_nz_remote; ff_remote_cell{i}];
-    mean_r2star_array_nz_remote = [mean_r2star_array_nz_remote; r2star_remote_cell{i}];
+for i = 1:size(roi_in_myo_t1, 3)
+    if status(i) == 1
+        mean_t1_array_nz = [mean_t1_array_nz; t1_cell{i}];
+        mean_ff_array_nz = [mean_ff_array_nz; ff_cell{i}];
+        mean_r2star_array_nz = [mean_r2star_array_nz; r2star_cell{i}];
+        
+        mean_t1_hemo_array_nz = [mean_t1_hemo_array_nz; t1_hemo_cell{i}];
+        mean_ff_hemo_array_nz = [mean_ff_hemo_array_nz; ff_hemo_cell{i}];
+        mean_r2star_hemo_array_nz = [mean_r2star_hemo_array_nz; r2star_hemo_cell{i}];
+        
+        mean_t1_array_nz_remote = [mean_t1_array_nz_remote; t1_remote_cell{i}];
+        mean_ff_array_nz_remote = [mean_ff_array_nz_remote; ff_remote_cell{i}];
+        mean_r2star_array_nz_remote = [mean_r2star_array_nz_remote; r2star_remote_cell{i}];
+    end
 end
 
 mean_ff_array_nz_new = mean_ff_array_nz;
@@ -322,36 +324,38 @@ mdl_general_r2vst1_in_hemo = mdl2;
 
 mdl_slc_cell = cell(size(roi_in_myo_t1, 3), 1);
 for i = 1:size(roi_in_myo_t1, 3)
-    mean_ff_array_nz = ff_cell{i};
-    mean_t1_array_nz = t1_cell{i};
-    mean_ff_array_nz_new = mean_ff_array_nz;
-    mean_t1_array_nz_new = mean_t1_array_nz;
-    mean_ff_array_nz_new(mean_ff_array_nz<0 | mean_ff_array_nz>100) = [];
-    mean_t1_array_nz_new(mean_ff_array_nz<0 | mean_ff_array_nz>100) = [];
-    
-    mean_ff_array_nz_remote = ff_remote_cell{i};
-    mean_t1_array_nz_remote = t1_remote_cell{i};
-    mean_ff_array_nz_new_remote = mean_ff_array_nz_remote;
-    mean_t1_array_nz_new_remote = mean_t1_array_nz_remote;
-    mean_ff_array_nz_new_remote(mean_ff_array_nz_remote<0 | mean_ff_array_nz_remote>100) = [];
-    mean_t1_array_nz_new_remote(mean_ff_array_nz_remote<0 | mean_ff_array_nz_remote>100) = [];
-    
-    mdl_slc = fitlm(mean_ff_array_nz_new, mean_t1_array_nz_new);
-    
-    subplot(rows,2,i);
-    scatter(mean_ff_array_nz_new, mean_t1_array_nz_new, 64, 'MarkerEdgeColor', color_cell_roi{5}, 'MarkerFaceColor', color_cell_roi{3});
-    Y = mean_ff_array_nz_new .* mdl_slc.Coefficients.Estimate(2) + mdl_slc.Coefficients.Estimate(1);
-    hold on;
-    plot(mean_ff_array_nz_new, Y, 'k', 'LineWidth', 1);
-    scatter(mean_ff_array_nz_new_remote, mean_t1_array_nz_new_remote, 64, 'MarkerEdgeColor', color_cell_remote{5}, 'MarkerFaceColor', color_cell_remote{3});
-    text(0.2*xl(2), yl(1)+100, cat(2,'Y = ', num2str(mdl_slc.Coefficients.Estimate(2), 2), 'X + ', num2str(mdl_slc.Coefficients.Estimate(1),2), ', R^2 = ', num2str(mdl_slc.Rsquared.Ordinary,3)), 'FontSize', 10)
-    
-    xlim(xl); ylim(yl);
-    title(cat(2, 'Slice ', num2str(i)));
-    xlabel('FF (%)');
-    ylabel('T1 (ms)');
-    
-    mdl_slc_cell{i} = mdl_slc;
+    if status(i) == 1
+        mean_ff_array_nz = ff_cell{i};
+        mean_t1_array_nz = t1_cell{i};
+        mean_ff_array_nz_new = mean_ff_array_nz;
+        mean_t1_array_nz_new = mean_t1_array_nz;
+        mean_ff_array_nz_new(mean_ff_array_nz<0 | mean_ff_array_nz>100) = [];
+        mean_t1_array_nz_new(mean_ff_array_nz<0 | mean_ff_array_nz>100) = [];
+        
+        mean_ff_array_nz_remote = ff_remote_cell{i};
+        mean_t1_array_nz_remote = t1_remote_cell{i};
+        mean_ff_array_nz_new_remote = mean_ff_array_nz_remote;
+        mean_t1_array_nz_new_remote = mean_t1_array_nz_remote;
+        mean_ff_array_nz_new_remote(mean_ff_array_nz_remote<0 | mean_ff_array_nz_remote>100) = [];
+        mean_t1_array_nz_new_remote(mean_ff_array_nz_remote<0 | mean_ff_array_nz_remote>100) = [];
+        
+        mdl_slc = fitlm(mean_ff_array_nz_new, mean_t1_array_nz_new);
+        
+        subplot(rows,2,i);
+        scatter(mean_ff_array_nz_new, mean_t1_array_nz_new, 64, 'MarkerEdgeColor', color_cell_roi{5}, 'MarkerFaceColor', color_cell_roi{3});
+        Y = mean_ff_array_nz_new .* mdl_slc.Coefficients.Estimate(2) + mdl_slc.Coefficients.Estimate(1);
+        hold on;
+        plot(mean_ff_array_nz_new, Y, 'k', 'LineWidth', 1);
+        scatter(mean_ff_array_nz_new_remote, mean_t1_array_nz_new_remote, 64, 'MarkerEdgeColor', color_cell_remote{5}, 'MarkerFaceColor', color_cell_remote{3});
+        text(0.2*xl(2), yl(1)+100, cat(2,'Y = ', num2str(mdl_slc.Coefficients.Estimate(2), 2), 'X + ', num2str(mdl_slc.Coefficients.Estimate(1),2), ', R^2 = ', num2str(mdl_slc.Rsquared.Ordinary,3)), 'FontSize', 10)
+        
+        xlim(xl); ylim(yl);
+        title(cat(2, 'Slice ', num2str(i)));
+        xlabel('FF (%)');
+        ylabel('T1 (ms)');
+        
+        mdl_slc_cell{i} = mdl_slc;
+    end
 end
 
 saveas(gcf, cat(2, plot_save, 'T1vsFF_1line_demon_pixelwise.png'));

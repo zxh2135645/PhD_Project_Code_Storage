@@ -301,7 +301,7 @@ MT_prep.B1SqrdTau = (d2r(alpha_inv)./(trf_prep.*gam)).^2.*trf_prep;
 %MT_para_remote.Kf = 5.2e-3;
 %MT_para_remote.trf = 0.600; % ms
 
-%ddt = 0.6;
+ddt = 0.2;
 %M0_remote = [0 0 1-MT_para_remote.F MT_para_remote.F]';
 %%% User inputs for adiabatic pulse:
 adiabatic.mu = 5;   % Phase modulation parameter [dimensionless]
@@ -310,9 +310,14 @@ adiabatic.beta1 = 750;   % Frequency modulation parameter [rad/s]
 adiabatic.pulseWidth = trf_prep;  % RF pulse duration [ms] % According to siemens 3T
 adiabatic.A0 = 0.12; 
 
+T1_water = 4000;
+T2_water = 2000;
+
 [t_total, M_total_total_fat3t, t_readout, Mxy_readout_fat3t] = seq_T1MOLLI_noMT_bloch3(TI_array, TD, npulse, T1_fat3t, T2_fat3t, alpha, TR, prep, M0, trigger, trigger2, df_fat3t, adiabatic, RAMP_DOWN, ddt);
 [t_total, M_total_total, t_readout, Mxy_readout] = seq_T1MOLLI_noMT_bloch3(TI_array, TD, npulse, T1, T2, alpha, TR, prep, M0, trigger, trigger2, df, adiabatic, RAMP_DOWN, ddt);
+[~, M_total_total_water, ~, Mxy_readout_water] = seq_T1MOLLI_noMT_bloch3(TI_array, TD, npulse, T1_water, T2_water, alpha, TR, prep, M0, trigger, trigger2, df, adiabatic, RAMP_DOWN, ddt);
 %% Plot
+%Mzmt_total_total = M_total_total(3,:);
 figure();
 plot(t_total/1000, M_total_total(3, :), 'LineWidth', 2);
 hold on;
@@ -337,8 +342,9 @@ Mxy_readout_array_PhaseEnc = Mxy_PhaseEnc(Mxy_readout_array);
 Mxy_readout_array_fat3t = MOLLI_readout_reorder(Mxy_readout_fat3t);
 Mxy_readout_array_PhaseEnc_fat3t = Mxy_PhaseEnc(Mxy_readout_array_fat3t);
 
+f = 1;
 Mxy_readout_mt = squeeze(Mxymt_dict(f,k,readout_array));
-Mxy_readout_array_mt = MOLLI_readout_reorder(Mxy_readout_mt*1i);
+Mxy_readout_array_mt = MOLLI_readout_reorder(Mxy_readout_mt);
 Mxy_readout_array_PhaseEnc_mt = Mxy_PhaseEnc(Mxy_readout_array_mt);
 
 figure();
@@ -350,24 +356,31 @@ legend({'Myocardium', 'Myo MT', 'Fat 3T'}, 'Location', 'SouthEast');
 xlabel('TI (s)'); ylabel('Signal')
 grid on;
 
+%Mxy_readout_array_water = MOLLI_readout_reorder(Mxy_readout_water);
+Mxy_readout_array_PhaseEnc_water = Mxy_PhaseEnc(Mxy_readout_water);
+plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc_water, '*-', 'LineWidth', 1.5)
+
 %% Kellman figure 2 (change between 1.5T and 3T here)
-FF = [0:1:8]/8;
+FF = [0:1:24]/24;
 f = 1;
 k = 8;
 readout_array = round(t_readout_mt/ddt);
 Mxy_readout_mt = Mxymt_dict(f,k,readout_array);
 Mxy_readout_mt_new = squeeze(Mxy_readout_mt)';
+
+%Mxy_readout_array = MOLLI_readout_reorder(Mxy_readout);
+%Mxy_readout_mt_new = squeeze(Mxy_readout_array);
 figure();
-Mxy_readout_array_PhaseEnc = zeros(numel(FF), numel(Mxy_readout_mt_new));
+Mxy_readout_array_PhaseEnc_temp = zeros(numel(F_array), numel(t_readout_mt));
 for i = 1:numel(FF)
     ff = FF(i);
-    Mxy_readout_comp = (1-ff) * Mxy_readout_mt_new + ff * Mxy_readout_fat3t;
+    Mxy_readout_comp = (1-ff) * Mxy_readout + ff * Mxy_readout_fat3t;
     Mxy_readout_array = MOLLI_readout_reorder(Mxy_readout_comp);
-    Mxy_readout_array_PhaseEnc(i, :) = Mxy_PhaseEnc(Mxy_readout_array);
-    subplot(3,3,i);
-    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc(i, :), 'r-', 'LineWidth', 2)
+    Mxy_readout_array_PhaseEnc_temp(i, :) = Mxy_PhaseEnc(Mxy_readout_array);
+    subplot(5,5,i);
+    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc_temp(i, :), 'r-', 'LineWidth', 2)
     hold on;
-    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc(i, :), 'o', 'LineWidth', 2)
+    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc_temp(i, :), 'o', 'LineWidth', 2)
     ylim([-0.4 0.3])
     grid on;
     xlabel('Inversion Time (s)'); ylabel('Mxy');
@@ -380,12 +393,12 @@ x=TI_array_sorted';
 native_t1_noMT_array = zeros(1, numel(FF));
 figure();
 for i = 1:numel(FF)
-y=Mxy_readout_array_PhaseEnc(i, :).';
+y=Mxy_readout_array_PhaseEnc_temp(i, :).';
 g = fittype('a-b*exp(-c*x)');
 f0 = fit(x,y,g,'StartPoint',[.0;.0; 0.001]);
 xx = linspace(1,3500,100);
 
-subplot(3,3,i)
+subplot(5,5,i)
 plot(x,y,'ro',xx,f0(xx),'b-', 'LineWidth', 1.5);
 grid on;
 ylim([-0.4 0.3]);
@@ -405,6 +418,132 @@ else
 end
 text(x_text, y_text, txt,'HorizontalAlignment','right', 'FontSize', 16)
 end
+
+%% Kellman figure 2 (MT)
+F_array = 0:0.002:0.1;
+k = 8;
+readout_array = round(t_readout_mt/ddt);
+
+%Mxy_readout_array = MOLLI_readout_reorder(Mxy_readout);
+%Mxy_readout_mt_new = squeeze(Mxy_readout_array);
+figure();
+Mxy_readout_array_PhaseEnc_temp = zeros(numel(FF), numel(t_readout_mt));
+for i = 1:numel(F_array)
+    f = F_array(i);
+    Mxy_readout_comp = squeeze(Mxymt_dict(i,k,readout_array))';
+    Mxy_readout_array = MOLLI_readout_reorder(Mxy_readout_comp);
+    Mxy_readout_array_PhaseEnc_temp(i, :) = Mxy_PhaseEnc(Mxy_readout_array);
+    Mxy_readout_array_PhaseEnc_temp(i, 7) = -Mxy_readout_array_PhaseEnc_temp(i, 7);
+    Mxy_readout_array_PhaseEnc_temp(i, 8) = -Mxy_readout_array_PhaseEnc_temp(i, 8);
+    subplot(7,8,i);
+    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc_temp(i, :), 'r-', 'LineWidth', 2)
+    hold on;
+    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc_temp(i, :), 'o', 'LineWidth', 2)
+    ylim([-0.4 0.3])
+    grid on;
+    xlabel('Inversion Time (s)'); ylabel('Mxy');
+    title(cat(2, 'F = ', num2str(f)));
+    set(gca,'fontsize', 18) 
+end
+
+%% Exp fitting (MT)
+x=TI_array_sorted';
+native_t1_MT_array = zeros(1, numel(F_array));
+figure();
+for i = 1:numel(F_array)
+y=Mxy_readout_array_PhaseEnc_temp(i, :).';
+g = fittype('a-b*exp(-c*x)');
+f0 = fit(x,y,g,'StartPoint',[.0;.0; 0.001]);
+xx = linspace(1,3500,100);
+
+subplot(7,8,i);
+plot(x,y,'ro',xx,f0(xx),'b-', 'LineWidth', 1.5);
+grid on;
+ylim([-0.4 0.3]);
+xlabel('Inversion Time (s)'); ylabel('Mxy');
+title(cat(2, 'F = ', num2str(F_array(i))));
+set(gca,'fontsize', 18)
+coef = coeffvalues(f0);
+native_t1_MT_array(i) = 1/coef(3) * (coef(2) / coef(1) - 1);
+
+txt = cat(2, 'T1 = ', num2str(round(native_t1_MT_array(i))), ' ms');
+if i == 4 || i == 5
+    x_text = 3000;
+    y_text = 0.1;
+else
+    x_text = 3000;
+    y_text = 0;
+end
+text(x_text, y_text, txt,'HorizontalAlignment','right', 'FontSize', 16)
+end
+
+%% Kellman figure 2 (Edema)
+Mxy_readout_array_water = MOLLI_readout_reorder(Mxy_readout_water);
+Mxy_readout_array_PhaseEnc_water = Mxy_PhaseEnc(Mxy_readout_array_water);
+
+water_array = [0:1:24]/24;
+readout_array = round(t_readout_mt/ddt);
+
+%Mxy_readout_array = MOLLI_readout_reorder(Mxy_readout);
+%Mxy_readout_mt_new = squeeze(Mxy_readout_array);
+figure();
+Mxy_readout_array_PhaseEnc_temp = zeros(numel(water_array), numel(t_readout_mt));
+for i = 1:numel(water_array)
+    wf = water_array(i);
+    Mxy_readout_comp = (1-wf) * MOLLI_readout_reorder(Mxy_readout) + wf * Mxy_readout_water;
+    %Mxy_readout_array = MOLLI_readout_reorder(Mxy_readout_comp);
+    Mxy_readout_array_PhaseEnc_temp(i, :) = Mxy_PhaseEnc(Mxy_readout_comp);
+    subplot(5,5,i);
+    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc_temp(i, :), 'r-', 'LineWidth', 2)
+    hold on;
+    plot(TI_array_sorted/1000, Mxy_readout_array_PhaseEnc_temp(i, :), 'o', 'LineWidth', 2)
+    ylim([-0.4 0.3])
+    grid on;
+    xlabel('Inversion Time (s)'); ylabel('Mxy');
+    title(cat(2, 'WF = ', num2str(wf)));
+    set(gca,'fontsize', 18) 
+end
+
+%% Exp fitting (MT)
+x=TI_array_sorted';
+native_t1_water_array = zeros(1, numel(water_array));
+figure();
+for i = 1:numel(water_array)
+y=Mxy_readout_array_PhaseEnc_temp(i, :).';
+g = fittype('a-b*exp(-c*x)');
+f0 = fit(x,y,g,'StartPoint',[.0;.0; 0.001]);
+xx = linspace(1,3500,100);
+
+subplot(5,5,i);
+plot(x,y,'ro',xx,f0(xx),'b-', 'LineWidth', 1.5);
+grid on;
+ylim([-0.4 0.3]);
+xlabel('Inversion Time (s)'); ylabel('Mxy');
+title(cat(2, 'WF = ', num2str(water_array(i))));
+set(gca,'fontsize', 18)
+coef = coeffvalues(f0);
+native_t1_water_array(i) = 1/coef(3) * (coef(2) / coef(1) - 1);
+
+txt = cat(2, 'T1 = ', num2str(round(native_t1_water_array(i))), ' ms');
+if i == 4 || i == 5
+    x_text = 3000;
+    y_text = 0.1;
+else
+    x_text = 3000;
+    y_text = 0;
+end
+text(x_text, y_text, txt,'HorizontalAlignment','right', 'FontSize', 16)
+end
+%%
+figure('Position', [100, 100, 1200, 200]); 
+subplot(1,3,1);
+plot(FF*100, native_t1_noMT_array, 'LineWidth', 2); ylim([0 2000]); grid on; xlabel('FF (%)'); ylabel('T1 (ms)')
+subplot(1,3,2);
+plot(F_array, native_t1_MT_array, 'LineWidth', 2); ylim([0 2000]); grid on;
+xlabel('F (Macromolacular ratio)'); ylabel('T1 (ms)');
+subplot(1,3,3);
+plot(water_array*100, native_t1_water_array, 'LineWidth', 2); ylim([0 2000]); grid on; xlabel('WF (%)'); ylabel('T1 (ms)')
+
 %% 08/03/2021
 %% Gen Dict
 

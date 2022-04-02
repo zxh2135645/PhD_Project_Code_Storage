@@ -3,10 +3,12 @@
 % For - T1_fat_Project
 
 % The size of 90min does not match the rest
-function ReadCVI_Workflow_Longitudinal_Study_Func(con, dicom_glob, dstFolder, dicom_fields, old_freeROI_label)
+%% This should be deprecated (02/25/2022)
+function ReadCVI_Workflow_Longitudinal_Study_Func_T2star_TE8(con, dicom_glob, dstFolder, dicom_fields, old_freeROI_label)
 
 if nargin == 4
     old_freeROI_label = 0; % What does this mean?
+    % This is hard-coded to solve freeROI coordinate record
 end
 % if ispc
 %     strings = strsplit(dicom_glob{1}, '\');
@@ -70,18 +72,12 @@ end
                     volume_image = reshape(volume_image, sz(1), sz(2), nte, slc);
                     
                     echo_idx = 1;
-                    echo_idx_te8 = size(volume_image,3);
-                    volume_image_te8 = squeeze(volume_image(:,:,echo_idx_te8, :));
+                    % echo_idx_te8 = 8;
                     volume_image = squeeze(volume_image(:,:,echo_idx, :));
-                    slice_data_te8 = slice_data(echo_idx_te8:nte:end);
                     slice_data = slice_data(echo_idx:nte:end);
                     % slice_data = slice_data(echo_idx);
-                    
-                    [~, ~, ~, ~, ~, ~, freeROICell2, ~] = ...
-                        CMR42ContourMatrixGenerator3(con, volume_image_te8, slice_data_te8, dstFolder, old_freeROI_label);
                 end
                 % id_cell{i} = slice_data.MediaStorageSOPInstanceUID; % Didn't do anything to it
-                
                 [mask_heart, mask_myocardium, mask_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count] = ...
                     CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder, old_freeROI_label);
                 
@@ -156,20 +152,6 @@ end
                     end
                 end
                 
-                if any(strcmp(label, t2star_labels))
-                    freeROIMask_3Ds_te8 = zeros(size(volume_image));
-                    if ~isempty(freeROICell2)
-                        if ~isempty(freeROICell2{1})
-                            temp_mat = zeros(size(volume_image));
-                            temp_idx = freeROICell2{2};
-                            for j = 1:size(freeROICell2{1}, 3)
-                                temp_mat(:,:,temp_idx(j)) = freeROICell2{1}(:,:,j);
-                            end
-                            freeROIMask_3Ds_te8 = temp_mat + freeROIMask_3Ds_te8;
-                        end
-                    end
-                end
-                
                 if match_count > 0
                     if size(volume_image, 3) == 1
                     %slc_end = slc_end + size(volume_image, 3) - 1;
@@ -183,11 +165,6 @@ end
                     noReflowMask_3D(:,:,slc_start:slc_end+match_count-1)  = noReflowMask_3Ds;
                     freeROIMask_3D(:,:,slc_start:slc_end+match_count-1)  = freeROIMask_3Ds;
                     
-                    if any(strcmp(label, t2star_labels))
-                        vol_img_3D_te8(:,:,slc_start:slc_end+match_count-1) = volume_image_te8;
-                        freeROIMask_3D_te8(:,:,slc_start:slc_end+match_count-1)  = freeROIMask_3Ds_te8;
-                    end
-                    
                     elseif size(volume_image, 3) > 1 % If read 3D slices, directly apply
                         vol_img_3D = volume_image;
                         mask_heart_3D = mask_heart;
@@ -197,11 +174,6 @@ end
                         myoRefMask_3D  = myoRefMask_3Ds;
                         noReflowMask_3D  = noReflowMask_3Ds;
                         freeROIMask_3D  = freeROIMask_3Ds;
-                        
-                        if any(strcmp(label, t2star_labels))
-                            vol_img_3D_te8 = volume_image_te8;
-                            freeROIMask_3D_te8  = freeROIMask_3Ds_te8;
-                        end
                     end
                     slc_start = slc_start + match_count;
                     slc_end = slc_end + match_count;
@@ -278,14 +250,8 @@ end
                     end
                     dstPath = cat(2, dstFolder, '/', label, '_Index.mat');
                     save(dstPath, 'glob_names');
-                    
-                    dstPath = cat(2, dstFolder, '/', label, '_vol_img_3D_te8.mat');
-                    save(dstPath, 'vol_img_3D_te8');
-                    
-                    dstPath = cat(2, dstFolder, '/', dsts{7});
-                    save(cat(2, dstPath, '/freeROI_te8.mat'), 'freeROIMask_3D_te8');
                 end
-                
+            
                 disp(cat(2, name, ':   ', label));
                 disp('Done!')
             end

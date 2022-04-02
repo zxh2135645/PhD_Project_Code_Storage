@@ -78,10 +78,12 @@ end
 pre_QualControl(7).status(2).Slice1 = 0;
 % Queenie 6MO
 pre_QualControl(8).status(6).Slice1 = 0;
-% Evelyn 6MO slice1 and slice2
+% Evelyn 6MO slice1 and slice2 and slice3
 %        7D  slice2
 pre_QualControl(12).status(6).Slice1 = 0;
 pre_QualControl(12).status(6).Slice2 = 0;
+pre_QualControl(12).status(6).Slice3 = 0;
+
 pre_QualControl(12).status(1).Slice2 = 0;
 
 % Felicity 6MO slice3

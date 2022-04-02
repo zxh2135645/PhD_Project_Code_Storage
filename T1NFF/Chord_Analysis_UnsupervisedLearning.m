@@ -11,9 +11,9 @@ time_points = {'7D', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
 time_points = {'6MO', '9MO', '1YR', '15YR'};
 
 time_points = {'7D'};
-%time_points = {'8WK', '12WK', '14WK'};
-%time_points = {'4MO', '6MO'};
-%time_points = {'9MO', '1YR', '15YR'};
+time_points = {'8WK', '12WK', '14WK'};
+time_points = {'4MO', '6MO'};
+time_points = {'9MO', '1YR', '15YR'};
 
 save_dir = cat(2, base_dir, '/img/');
 data_save_dir = cat(2, base_dir, '/data/');
@@ -86,6 +86,12 @@ end
 % %%
 % figure();
 % plot3(compound(:,1),compound(:,2),compound(:,3),'o');
+compound_t1 = compound(:,1);
+compound_ff = compound(:,2);
+compound_r2star = compound(:,3);
+compound_t1_remote = compound_remote(:,1);
+compound_ff_remote = compound_remote(:,2);
+compound_r2star_remote = compound_remote(:,3);
 %%
 compound_norm = zeros(size(compound));
 compound_norm(:,1) = compound(:,1)/max(compound(:,1));
@@ -148,8 +154,8 @@ data_save_dir = cat(2, base_dir, '/data/');
 %%
 %time_points = {'6MO', '9MO'};
 time_points = {'7D'};
-time_points = {'8WK', '12WK', '14WK'};
-time_points = {'4MO', '6MO'};
+%time_points = {'8WK', '12WK', '14WK'};
+%time_points = {'4MO', '6MO'};
 time_points = {'9MO', '1YR', '15YR'};
 vec = @(x) x(:);
 compound = [];
@@ -280,7 +286,6 @@ for n = 1:length(Names)
     
 end
 
-
 compound_t1 = compound(:,1);
 compound_ff = compound(:,2);
 compound_r2star = compound(:,3);
@@ -307,6 +312,9 @@ plot3(compound_t1(compound_sd_t1_label),compound_ff(compound_sd_t1_label),compou
 ylim([0 70]);
 
 mdl = fitlm(compound_ff(compound_sd_t1_label), compound_r2star(compound_sd_t1_label));
+%% 
+mdl1 = fitlm(compound_ff, compound_r2star);
+mdl2 = fitlm(compound_t1, compound_ff);
 %% 2D plot
 figure();
 subplot(2,2,1);
@@ -326,7 +334,62 @@ subplot(2,2,4);
 histogram(compound(:,1)); hold on;
 histogram(compound_remote(:,1));
 xlabel('T1 (ms)');
-legend({'MI', 'Remote'})
+legend({'MI', 'Remote'});
+%% 
+% T1 and FF needs to be somewhat in-line with simulation
+thresh = mean(compound_t1_remote) - 2*std(compound_t1_remote);
+compound_t1_label = compound_t1 > thresh;
+
+compound_t1_trunc = compound_t1(compound_t1_label);
+compound_ff_trunc = compound_ff(compound_t1_label);
+
+figure(); plot(compound_t1_trunc, compound_ff_trunc, 'o'); ylim([0 70]);
+
+compound_ff_perc10_label = compound_ff_trunc <= 10;
+compound_ff_perc20_label = compound_ff_trunc <= 20 & compound_ff_trunc > 10;
+compound_ff_perc30_label = compound_ff_trunc <= 30 & compound_ff_trunc > 20;
+compound_ff_perc40_label = compound_ff_trunc <= 40 & compound_ff_trunc > 30;
+compound_ff_perc50_label = compound_ff_trunc > 40;
+
+compound_t1_perc10 = compound_t1_trunc(compound_ff_perc10_label);
+compound_t1_perc20 = compound_t1_trunc(compound_ff_perc20_label);
+compound_t1_perc30 = compound_t1_trunc(compound_ff_perc30_label);
+compound_t1_perc40 = compound_t1_trunc(compound_ff_perc40_label);
+compound_t1_perc50 = compound_t1_trunc(compound_ff_perc50_label);
+
+compound_ff_perc10 = compound_ff_trunc(compound_ff_perc10_label);
+compound_ff_perc20 = compound_ff_trunc(compound_ff_perc20_label);
+compound_ff_perc30 = compound_ff_trunc(compound_ff_perc30_label);
+compound_ff_perc40 = compound_ff_trunc(compound_ff_perc40_label);
+compound_ff_perc50 = compound_ff_trunc(compound_ff_perc50_label);
+
+figure(); plot(compound_t1_perc10, compound_ff_perc10, 'o');
+hold on;
+plot(compound_t1_perc20, compound_ff_perc20, 'o');
+plot(compound_t1_perc30, compound_ff_perc30, 'o');
+plot(compound_t1_perc40, compound_ff_perc40, 'o');
+plot(compound_t1_perc50, compound_ff_perc50, 'o');
+ylim([0 70]);
+
+mdl_perc10 = fitlm(compound_t1_perc10, compound_ff_perc10);
+mdl_perc20 = fitlm(compound_t1_perc20, compound_ff_perc20);
+mdl_perc30 = fitlm(compound_t1_perc30, compound_ff_perc30);
+mdl_perc40 = fitlm(compound_t1_perc40, compound_ff_perc40);
+mdl_perc50 = fitlm(compound_t1_perc50, compound_ff_perc50);
+
+Y_10 = compound_t1_perc10 .* mdl_perc10.Coefficients.Estimate(2) + mdl_perc10.Coefficients.Estimate(1);
+Y_20 = compound_t1_perc20 .* mdl_perc20.Coefficients.Estimate(2) + mdl_perc20.Coefficients.Estimate(1);
+Y_30 = compound_t1_perc30 .* mdl_perc30.Coefficients.Estimate(2) + mdl_perc30.Coefficients.Estimate(1);
+Y_40 = compound_t1_perc40 .* mdl_perc40.Coefficients.Estimate(2) + mdl_perc40.Coefficients.Estimate(1);
+Y_50 = compound_t1_perc50 .* mdl_perc50.Coefficients.Estimate(2) + mdl_perc50.Coefficients.Estimate(1);
+
+plot(compound_t1_perc10, Y_10, 'k', 'LineWidth', 1);
+plot(compound_t1_perc20, Y_20, 'k', 'LineWidth', 1);
+plot(compound_t1_perc30, Y_30, 'k', 'LineWidth', 1);
+plot(compound_t1_perc40, Y_40, 'k', 'LineWidth', 1);
+plot(compound_t1_perc50, Y_50, 'k', 'LineWidth', 1);
+
+mdl = fitlm(compound_t1_trunc, compound_ff_trunc);
 %%
 compound_norm = zeros(size(compound));
 compound_norm(:,1) = compound(:,1)/max(compound(:,1));
@@ -393,7 +456,7 @@ clear all; close all;
 addpath('../function/');
 base_dir = uigetdir;
 %Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn', '18D15', '18D16', '11D05', '11D26', '11D33'};
-Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn', '18D15', '18D16'};
+Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Hope', 'Gobi', 'Felicity', 'Evelyn', '18D15', '18D16'}; %should queenie be excluded?
 
 time_points = {'7D', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
 %time_points = {'6MO', '9MO', '1YR', '15YR'};
@@ -406,13 +469,14 @@ data_save_dir = cat(2, base_dir, '/data/');
 time_points = {'7D'};
 %time_points = {'8WK', '12WK', '14WK'};
 %time_points = {'4MO', '6MO'};
-%time_points = {'9MO', '1YR', '15YR'};
+time_points = {'9MO', '1YR', '15YR'};
 vec = @(x) x(:);
 compound = [];
 compound_remote = [];
 compound_sd = [];
 compound_sd_remote = [];
 for n = 1:length(Names)
+%for n = 8:8
     %for n = 4:4
     % for n = starting_point:starting_point
     % Do not need to pull up images for baseline
@@ -424,45 +488,51 @@ for n = 1:length(Names)
     
     name_data_save_dir = cat(2, data_save_dir, name);
     
+    
     for tp = 1:length(time_points)
         %for tp = 3:3
         time_point = time_points{end-tp+1};
-        chord_values_fname = cat(2, name_data_save_dir, '/Chord_values_pixelwise_', name, '_', time_point, '.mat');
         
-        if exist(chord_values_fname, 'file')
-            load(chord_values_fname);
+        if strcmp(name, 'Queenie') && strcmp(time_point, '7D')
+            %skip
+        else
+            chord_values_fname = cat(2, name_data_save_dir, '/Chord_values_pixelwise_', name, '_', time_point, '.mat');
             
-            mean_ff_1d = nonzeros(mean_ff_array);
-            mean_r2star_1d = nonzeros(mean_r2star_array);
-            mean_t1_1d = nonzeros(mean_t1_array);
-            
-            mean_ff_hemo_1d = nonzeros(mean_ff_hemo_array);
-            mean_r2star_hemo_1d = nonzeros(mean_r2star_hemo_array);
-            mean_t1_hemo_1d = nonzeros(mean_t1_hemo_array);
-            
-            mean_t1_remote_1d = nonzeros(mean_t1_array_remote);
-            mean_ff_remote_1d = nonzeros(mean_ff_array_remote);
-            mean_r2star_remote_1d = nonzeros(mean_r2star_array_remote);
-            
-            mean_t1_1d_n_hemo = [mean_t1_1d;mean_t1_hemo_1d];
-            mean_ff_1d_n_hemo = [mean_ff_1d;mean_ff_hemo_1d];
-            mean_r2star_1d_n_hemo = [mean_r2star_1d;mean_r2star_hemo_1d];
-            
-            %             temp = [mean_t1_1d, mean_ff_1d, mean_r2star_1d];
-            %             compound = [compound; temp];
-            mean_ff_1d_n_hemo(mean_r2star_1d_n_hemo > 200 | mean_r2star_1d_n_hemo < 0) = [];
-            mean_t1_1d_n_hemo(mean_r2star_1d_n_hemo > 200 | mean_r2star_1d_n_hemo < 0) = [];
-            
-            mean_t1_remote_1d(mean_r2star_remote_1d>200 | mean_r2star_remote_1d<0) = [];
-            mean_ff_remote_1d(mean_r2star_remote_1d>200 | mean_r2star_remote_1d<0) = [];
-            
-            mean_r2star_1d_n_hemo(mean_r2star_1d_n_hemo > 200 | mean_r2star_1d_n_hemo < 0) = [];
-            mean_r2star_remote_1d(mean_r2star_remote_1d>200 | mean_r2star_remote_1d<0) = [];
-            
-            temp = [mean_t1_1d_n_hemo,mean_ff_1d_n_hemo,mean_r2star_1d_n_hemo];
-            temp_remote = [mean_t1_remote_1d, mean_ff_remote_1d, mean_r2star_remote_1d];
-            compound = [compound; temp];
-            compound_remote = [compound_remote; temp_remote];
+            if exist(chord_values_fname, 'file')
+                load(chord_values_fname);
+                
+                mean_ff_1d = nonzeros(mean_ff_array);
+                mean_r2star_1d = nonzeros(mean_r2star_array);
+                mean_t1_1d = nonzeros(mean_t1_array);
+                
+                mean_ff_hemo_1d = nonzeros(mean_ff_hemo_array);
+                mean_r2star_hemo_1d = nonzeros(mean_r2star_hemo_array);
+                mean_t1_hemo_1d = nonzeros(mean_t1_hemo_array);
+                
+                mean_t1_remote_1d = nonzeros(mean_t1_array_remote);
+                mean_ff_remote_1d = nonzeros(mean_ff_array_remote);
+                mean_r2star_remote_1d = nonzeros(mean_r2star_array_remote);
+                
+                mean_t1_1d_n_hemo = [mean_t1_1d;mean_t1_hemo_1d];
+                mean_ff_1d_n_hemo = [mean_ff_1d;mean_ff_hemo_1d];
+                mean_r2star_1d_n_hemo = [mean_r2star_1d;mean_r2star_hemo_1d];
+                
+                %             temp = [mean_t1_1d, mean_ff_1d, mean_r2star_1d];
+                %             compound = [compound; temp];
+                mean_ff_1d_n_hemo(mean_r2star_1d_n_hemo > 200 | mean_r2star_1d_n_hemo < 0) = [];
+                mean_t1_1d_n_hemo(mean_r2star_1d_n_hemo > 200 | mean_r2star_1d_n_hemo < 0) = [];
+                
+                mean_t1_remote_1d(mean_r2star_remote_1d>200 | mean_r2star_remote_1d<0) = [];
+                mean_ff_remote_1d(mean_r2star_remote_1d>200 | mean_r2star_remote_1d<0) = [];
+                
+                mean_r2star_1d_n_hemo(mean_r2star_1d_n_hemo > 200 | mean_r2star_1d_n_hemo < 0) = [];
+                mean_r2star_remote_1d(mean_r2star_remote_1d>200 | mean_r2star_remote_1d<0) = [];
+                
+                temp = [mean_t1_1d_n_hemo,mean_ff_1d_n_hemo,mean_r2star_1d_n_hemo];
+                temp_remote = [mean_t1_remote_1d, mean_ff_remote_1d, mean_r2star_remote_1d];
+                compound = [compound; temp];
+                compound_remote = [compound_remote; temp_remote];
+            end
         end
     end
     
@@ -495,4 +565,5 @@ subplot(2,2,4);
 histogram(compound(:,1)); hold on;
 histogram(compound_remote(:,1));
 xlabel('T1 (ms)');
-legend({'MI', 'Remote'})
+legend({'MI', 'Remote'});
+
