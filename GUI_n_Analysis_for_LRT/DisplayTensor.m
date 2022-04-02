@@ -4,9 +4,9 @@ close all;
 [fid_file, fid_path] = uigetfile('*.mat');
 load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params');
 %% single slice - slice dimension
-dispim = @(x)fftshift(x(:,:,3,:),1);
+dispim = @(x)fftshift(x(:,:,9,:),1);
 
-temp = Gr\reshape(Phi(:,41,1,1,:), L, []);
+temp = Gr\reshape(Phi(:,161,1,1,:), L, []);
 temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
 cw = max(vec(abs(temp)));
 
@@ -160,6 +160,9 @@ for nsec = 1:Nsect
 end
 
 %% pull-up - T1 weighted - PSIR recon
+[fid_file, fid_path] = uigetfile('*.mat');
+load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params');
+
 Nseg = size(Phi,2);
 Nsect = size(Phi,5);
 img_save = cat(2, fid_path, 'img_psir/');
@@ -204,7 +207,7 @@ for nsec = 1:Nsect
     close all;
 end
 
-%% pull-up - montage of mag vs psir
+% pull-up - montage of mag vs psir
 Nseg = size(Phi,2);
 Nsect = size(Phi,5);
 img_save = cat(2, fid_path, 'img_montage/');

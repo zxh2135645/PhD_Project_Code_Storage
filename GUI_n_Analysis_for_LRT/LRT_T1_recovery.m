@@ -66,8 +66,8 @@ for nt = 1:N_nt
         temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
         cw = 0.5*max(vec(abs(temp)));
         
-        ipt_2d = abs(reshape(temp(:,:,21:end), [], (Nseg-20)));
-        
+        % ipt_2d = abs(reshape(temp(:,:,21:end), [], (Nseg-20)));
+        ipt_2d = abs(reshape(temp(:,:,:), [], Nseg));
         % mask = roipoly(abs(temp(:,:,41)) / cw); axis image;
         mask_1d = vec(mask);
         
@@ -105,6 +105,15 @@ mean(nonzeros(roi .* mapoi))
 %           
 % 535 - 14   548
 % 563 - 15   575
+
+% Sofia_D5
+% t1_dict_fit = [451.2, 544.6, 526.7, 590.6, 591.8, 602.1, 610.5, 618.7,
+% 616.4, 634.8, 662.9, 643.8, 640.0, 674.6, 714.0]; % eliminate first 20
+% time points
+% t1_dict_fit = [426.9, 518.4, 493.2, 554.8, 551.9, 564.9, 574.8, 592.3,
+% 704.1, 594.4, 624.6, 659.6, 608.8, 714.0, 704.4]; % 
+
+%% qMRLab
 %% This fitting doesn't work properly, 
 % How to make contraints on one of a fitting variables?
 

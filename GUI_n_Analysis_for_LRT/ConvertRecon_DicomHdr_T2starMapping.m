@@ -1,5 +1,6 @@
 clear all;
 close all;
+%% Should be deprecated (02/24/2022)
 %% Read DICOM file
 addpath('../function/');
 

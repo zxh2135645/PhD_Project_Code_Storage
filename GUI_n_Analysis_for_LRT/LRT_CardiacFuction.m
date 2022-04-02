@@ -5,7 +5,7 @@ close all;
 [fid_file, fid_path] = uigetfile('*.mat');
 load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params', 'Hidx');
 %% single slice - slice dimension
-dispim = @(x)fftshift(x(:,:,3,:),1);
+dispim = @(x)fftshift(x(:,:,2,:),1);
 
 temp = Gr\reshape(Phi(:,41,:,end,end), L, []);
 temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
@@ -37,7 +37,7 @@ for i = 1:size(Phi, 3)
     
     imagesc(abs(temp_4D(:,:,7,i))); axis image; colormap gray;
     roi = drawpolygon;
-    mask(:,:,i) = createMask(roi);
+    mask(:,:,i) = createMask(roi); % mask of
 end
 
 mask_array = sum(reshape(mask, [], size(Phi, 3)), 1);
@@ -165,7 +165,8 @@ addpath('../function/');
 dicom_dir = uigetdir;
 folder_glob = glob(cat(2, dicom_dir, '\*'));
 
-labels = {'RETRO'};
+%labels = {'RETRO'};
+labels = {'TRUEFISP'};
 label = labels{1};
 
 idx_array = contains(folder_glob, label);
