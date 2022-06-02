@@ -9,7 +9,7 @@ if strcmp(ScanType,'T2prep')
   recon=abs(reshape(recon*Phi_rt_full(:,ceil(ds/2):ds:min(Nread,2000)),N,N,[]));
 elseif iscartesian
 %   recon=(reshape(recon*Phi_rt_full(:,ceil(ds/2):ds:min(Nread,2000)),Ny,Nx,[]));
-  recon=(reshape(recon*Phi_rt_full(:,3:16:4000),Ny,Nx,[]));
+  recon=(reshape(recon*Phi_rt_full(:,3:16:4000),Ny,Nx,[])); % XZ
 else
   recon=abs(reshape(recon*Phi_rt_full(:,ceil(ds/2):ds:min(Nread,2000)),Norig,Norig,[]));
 end

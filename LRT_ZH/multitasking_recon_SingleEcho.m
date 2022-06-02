@@ -22,8 +22,8 @@ addpath(genpath((fullfile(mainpath,'supporting','mapVBVD'))));
 % cd(current_dir);
 addpath(genpath(fullfile(mainpath,'supporting_RY'))); %Supporting utilities
 %% Setting up parameters
-rbins=6; %Set # of respiratory bins here
-cbins=16; %Set # of cardiac bins here
+rbins=4; %Set # of respiratory bins here
+cbins=24; %Set # of cardiac bins here
 
 resp = 1;
 card = 1;
@@ -41,8 +41,8 @@ total_time = inf; %amount of data to use, in seconds. Use "inf" to use all.
 num_eco_total = 6;
 L_input = 64;
 
-for num_eco = 2:num_eco_total
-    
+for num_eco = 1:num_eco_total
+% for num_eco = 1:1  
     load_data_SingleEcho;
     disp('Data loaded');
     
@@ -95,12 +95,22 @@ if num_eco == 1
     do_binning_ica_SingleEcho;
 end
 
+%
 % tensor subspace estimation
 set_tensor_params; %change smoothness/low-rankness parameters in here
 tensor_subspace_SingleEcho;
 
 %VERY approximate preview
 %U=vec(reshape(U_init,[],L_init)*(Phi_rt_full_init*pinv(Phi_rt_full)));
+
+
+%frac_array = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1];
+frac_array = [0.05, 0.5];
+
+for f = 1:length(frac_array)
+%for f = 3:3
+
+frac = frac_array(f);
 U=vec(reshape(U_init,[],L_init)*(bsxfun(@times,Phi_rt_init,lrw)*pinv(Phi_rt)));
 tensor_display;
 
@@ -123,13 +133,15 @@ end
 % tv or wavelet
 % wavelet_recon_aniso3D;
 % tensor_display;
+
+
 tv_recon_aniso3D;
 tensor_display;
 
 TPR = params.dThickness_mm/params.NTruePar;
 USR = size(kspace_data, 1)/SGblock/params.NEco/Ny/Nz/rbins/cbins*100
 % specialNotes = input('Special Notes?:  ', 's');
-specialNotes = cat(2, 'Echo', num2str(num_eco), '_Seg', num2str(seg));
+specialNotes = cat(2, 'Echo', num2str(num_eco), '_Seg', num2str(seg), '_lambda', num2str(frac));
 
 if ~isempty(specialNotes)
     specialNotes = cat(2, '_', specialNotes);
@@ -142,11 +154,25 @@ save_dir = GetFullPath(cat(2, mainpath, '/../../../Data/Results/', Sub_ID, '/'))
 if ~exist(save_dir, 'dir')
    mkdir(save_dir); 
 end
-save(cat(2, save_dir, save_results), 'save_results', 'lambda', 'rbins', 'cbins', 'fid_file', 'Gr', 'L', 'Nx', 'Ny', 'Nz', 'Phi', 'U', 'SGblock',...
+save(cat(2, save_dir, save_results), 'save_results', 'lambda', 'rbins', 'cbins', 'fid_file', 'Gr', 'L', 'Nx', 'Ny', 'Nz', 'Phi', 'U', 'U_init', 'SGblock',...
     'dispim', 'vec', 'sizes', 'ScanType', 'Phi_rt_small_init', 'Phi_rt_full', 'Phi_rt_full_init', 'Phi', 'params', 'Ridx', 'Hidx', 'total_time', 'USR', ...
-    'temp_Phi_rt_small', 'Ridx_init', 'Hidx_init', 'Norig', 'ccL', 'cL', 'RR_int');
-%save('20P48_4wk_3mm_5meas_binningResults_0214.mat', 'Gr','L','Nx', 'Ny', 'Nz','Phi','U','dispim', 'vec','sizes','ScanType','Phi_rt_full','Phi_rt_full_init','params','Ridx','Hidx');
+    'temp_Phi_rt_small', 'Ridx_init', 'Hidx_init', 'Norig', 'ccL', 'cL', 'RR_int', 'Phiresp', 'Phicard', 'L_init');
+
+% Saving binning results
+specialNotes = cat(2, 'BinningResults');
+
+if ~isempty(specialNotes)
+    specialNotes = cat(2, '_', specialNotes);
+end
+save_results2 = [fid_file(15:22), '_', Sub_ID, '_', num2str(round(TPR)), 'mm_USR', num2str(round(USR)), ...
+    '%_L', num2str(L), '_', 'results_', datestr(now, 'yyyy_mm_dd_HH_MM'), specialNotes, '.mat'];
+
+if num_eco == 1 && f == 1
+    save(cat(2, save_dir, save_results2), 'L','Nx', 'Ny', 'Nz','U_init','dispim', 'vec','sizes','ScanType','Phi_rt_full_init','params','Ridx','Hidx',...
+        'Ridx_init', 'Hidx_init', 'Norig', 'ccL', 'cL', 'RR_int', 'Phiresp', 'Phicard', 'L_init');
+end
 % save('20P48_4wk_6mm_2meas_0125_modifiedBinning.mat','-v7.3');
 disp('Results saved.')
+end
 
 end

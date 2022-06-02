@@ -23,8 +23,10 @@ figmake=@(WU)sum(sum(group(WU(:,:,1,:,:)),4),5);
 WU=W(U);
 temp=group(WU);
 %XZ change lambda to 1/2
-lambda=2*msdev^2/mean(abs(temp(:)-median(real(temp(:)))-1i*median(imag(temp(:)))))
+% XZ iteratring between different fraction
+lambda=frac * 2*msdev^2/mean(abs(temp(:)-median(real(temp(:)))-1i*median(imag(temp(:)))))
 % lambda=msdev^2/mean(abs(temp(:)-median(real(temp(:)))-1i*median(imag(temp(:)))))
+
 Y=zeros(size(WU));
 alpha=max(vec(temp))
 figure,hist(vec(temp),1000);
