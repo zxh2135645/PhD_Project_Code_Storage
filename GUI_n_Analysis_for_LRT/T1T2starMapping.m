@@ -10,7 +10,7 @@ qMRinfo('mono_t2'); % set it up first in qMRLab
 % sizes(3) -> Cardiac
 % sizes(4) -> resp
 TE_array = [1.41, 3.38, 5.39, 7.40, 9.41, 11.42]; % 13.43, 15.44 ms
-IR_array = repmat(TE_array, [sizes(2), 1]) + repmat((0:1:(sizes(2)-1)) * params.lEchoSpacing, [sizes(4), 1]).'*1000;
+IR_array = repmat(TE_array, [sizes(2), 1]) + repmat((0:1:(sizes(2)-1)) * params.lEchoSpacing, [length(TE_array), 1]).'*1000;
 
 mask_f = cat(2, fid_path, 'mask_rect.mat');
 mask = zeros(Ny, Nx, Nz);
@@ -154,7 +154,7 @@ for i = 1:size(Phi,3)
     cw = max(vec(abs(temp)));
     
     % figure();
-    subplot(4,4,i);
+    subplot(4,6,i);
     temp = imrotate(temp, 90);
     temp = abs(flip(temp(:,:,1),2)/cw); % First Section
     temp = uint16(temp*4095);
@@ -165,7 +165,8 @@ end
 % T1 map only
 t1_map = zeros(Ny, Nx, Nz, sizes(5));
 %i = input(sprintf('Select Slice of Interest [%d]: ', 3));
-for i = 1:Nz
+%for i = 1:Nz
+for i = 3:3
     dispim = @(x,st)fftshift(x(:,:,i,:),1);
     %for j = 1:1 % Cardiac
     for j = 11:11
@@ -202,7 +203,7 @@ map_to_save = struct;
 map_to_save.mask = mask;
 map_to_save.t1_map = t1_map;
 
-%% Plot
+% Plot
 figure();
 %for i = 1:sizes(5)
 for i = 1:Nz
@@ -249,6 +250,8 @@ metrics.t1_sd = t1_sd;
 metrics.BW = BW;
 save_fname = cat(2, fid_path, fid_file(1:end-4), '_T1mapping_MOLLI_Analysis.mat');
 save(save_fname, '-struct', 'metrics');
+
+
 
 %% T2star mapping
 NEco_old = params.NEco_old; % 6
@@ -313,7 +316,9 @@ for i = 1:Nz
    title(cat(2, 'Section ', num2str(i)));
 end
 
-%% Load mask
+
+
+% Load mask
 %load(cat(2, fid_path, 'FID25768_21D35_D3_6mm_USR14%_L64_results_2021_07_28_23_41_Echo1_T1mapping_Analysis.mat'));
 t2star_masked = BW.*squeeze(t2star_map(:,:,:,1,:));
 t2star_masked(isnan(t2star_masked)) = 0;
@@ -340,7 +345,9 @@ save(save_fname, '-struct', 'metrics');
 % save_f = cat(2, fid_path, fid_file(1:15), 'LRT_Mappings_Seg15.mat');
 % save(save_f, 'map_to_save', '-v7.3');
 
-%% Display image
+
+
+% Display image
 t2star = squeeze(t2star_map(:,:,:,:,end));
 t2star(t2star<0) = 0;
 t2star(t2star>100) = 100;
@@ -428,9 +435,39 @@ if ~exist(save_dir, 'dir')
     mkdir(save_dir);
 end
 
+dicom_dir = uigetdir;
+folder_glob = glob(cat(2, dicom_dir, '\*'));
+label = 'LRT';
+idx_array = contains(folder_glob, label);
+[list_to_read, order_to_read] = NamePicker(folder_glob(idx_array));
+
+dicom_fields = {...
+    'Filename',...
+    'Height', ...
+    'Width', ...
+    'Rows',...
+    'Columns', ...
+    'PixelSpacing',...
+    'SliceThickness',...
+    'SliceLocation',...
+    'ImagePositionPatient',...
+    'ImageOrientationPatient',...
+    'MediaStorageSOPInstanceUID',...
+    'TriggerTime',...
+    'RepetitionTime',...
+    'EchoTime', 
+    };
+
+whatsinit = cell(length(list_to_read), 1);
+for i = 1:length(list_to_read)
+    f = list_to_read{order_to_read(i)};
+    [whatsinit{i} slice_data] = dicom23D(f, dicom_fields);
+end
+
 slc = 3;
 for m = 1:sizes(5)
-    metadata = dicominfo(slice_data{1}(m).Filename);
+    %metadata = dicominfo(slice_data{1}(m).Filename);
+    metadata = dicominfo(slice_data(m).Filename);
     
     t1 = uint16(t1_map(:,:,slc,m));
     metadata.WindowCenter = 500;

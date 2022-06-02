@@ -69,6 +69,17 @@ end
 T = readtable(cat(2, base_dir, '/STEMI_with_IMH-1.xlsx'));
 id_array = T.AnonymizationID;
 hemo_array = T.withOrWithout;
+
+excel_names = {'484060000008', '484060000009', '484060000045', '484060000010', '484060000018', '484060000052',...
+    '484060000054', '484060000056', '484060000029', '484060000060',...
+    '484060000030', '484060000031', '484060000033', '484060000041'};
+good_names = {'484060000003', '484060000012', '484060000015', '484060000016', '484060000020', '484060000021',...
+    '484060000022', '484060000023', '484060000028', '484060000032',...
+    '484060000037', '484060000040', '484060000055', '484060000063','484060000036'};
+ok_names = {'484060000002', '484060000006', '484060000017', '484060000058', '484060000027', '484060000035', ...
+    '484060000039'};
+bad_names = {'484060000001', '484060000011', '484060000013'};
+
 %% May be used for future used
 % Before analysis, parse pre_QualControl
 % load(cat(2, metrics_save_dir, 'pre_QualControl.mat'));
@@ -106,8 +117,7 @@ hemo_array = T.withOrWithout;
 %     end
 % end
 
-%% Main Body
-
+%% Main Body (Need to run twice, one with FU, the other with BL and BL2)
 % Array initialization
 mean_ff_roi_array = [];
 sd_ff_roi_array = [];
@@ -180,7 +190,10 @@ slice_count_hemo_n = 1;
 name_label_hemo_p = {};
 slice_count_hemo_p = 1;
 
-for n = 1:length(Names)
+se = strel('disk', 1);
+nhood = [1 1 1; 1 1 1; 1 1 1];
+
+for n = 1:(length(Names)-1)
 %for n = 7:7
     % for n = starting_point:starting_point
     % Do not need to pull up images for baseline
@@ -195,6 +208,8 @@ for n = 1:length(Names)
     end
     % tp_count = 0;
     
+    if any(contains(excel_names, name))
+    %if any(contains(good_names, name))
     name_for_table_searching = insertAfter(name, 6, '-');
     row = find(contains(id_array,name_for_table_searching));
     
@@ -236,12 +251,146 @@ for n = 1:length(Names)
                 ff(:,:,f) = ff_map{f}.fwmc_ff;
             end
             
+            % R2star Map
+            r2star_map = cell(1, length(glob_names));
+            for f = 1:length(r2star_map)
+                r2star_glob = glob(cat(2,  base_dir, '/FF_Data/',  name, '/', time_point, '/*_', num2str(num_array(f)), '.mat'));
+                r2star_map{f} = load(r2star_glob{1}, 'fwmc_r2star');
+            end
+            
+            % convert ff_map to matrix
+            r2star = zeros(size(r2star_map{1}.fwmc_r2star,1), size(r2star_map{1}.fwmc_r2star, 2), length(r2star_map));
+            for f = 1:length(r2star_map)
+                r2star(:,:,f) = r2star_map{f}.fwmc_r2star;
+            end
+            
+            mask_myocardium_3D = imerode(mask_myocardium_3D, se);
+            
             roi_in_myo_ff = mask_myocardium_3D .* freeROIMask_3D;
             remote_in_myo_ff = mask_myocardium_3D .* myoRefMask_3D;
             roi_ff = roi_in_myo_ff .* ff;
             remote_ff = remote_in_myo_ff .* ff;
             myo_ff = mask_myocardium_3D;
             
+            
+            % TODO add QC for myocardium map here
+            f_exclusion_pts = cat(2, name_data_save_dir, '/ExclusionPts_', name, '_', time_point, '.mat');
+            figure('Position', [100 100 800 600]);
+            
+            if exist(f_exclusion_pts, 'file')
+                load(f_exclusion_pts);
+                
+                
+                for slc = 1:size(roi_in_myo_ff,3)
+                    exclude_mask = zeros(size(mask_myocardium_3D,1),size(mask_myocardium_3D,2));
+                    
+                    x_array = exclusion_points{slc, 1};
+                    y_array = exclusion_points{slc, 2};
+                    
+                    for pts = 1:length(y_array)
+                        exclude_mask(round(x_array(pts)),round(y_array(pts))) = 1;
+                    end
+                    
+                    exclude_mask = imdilate(exclude_mask, nhood);
+                    
+                    freeROIMask_3D(:,:,slc) = freeROIMask_3D(:,:,slc) .* ~exclude_mask;
+                    
+                    roi_in_myo_ff(:,:,slc) = mask_myocardium_3D(:,:,slc) .* freeROIMask_3D(:,:,slc);
+                    roi_ff(:,:,slc) = roi_in_myo_ff(:,:,slc) .* ff(:,:,slc);
+                    % myo_ff(:,:,slc) = mask_myocardium_3D(:,:,slc);
+                end
+                
+            else
+                exclusion_points = cell(size(roi_in_myo_ff,3), 2);
+                
+                
+                for slc = 1:size(roi_in_myo_ff,3)
+                    
+                    if any(any(roi_in_myo_ff(:,:,slc)))
+                        exclude_mask = zeros(size(mask_myocardium_3D,1),size(mask_myocardium_3D,2));
+                        flag = 1;
+                        y_array = [];
+                        x_array = [];
+                        count = 0;
+                        while flag
+                            % crop image
+                            stats = regionprops(mask_myocardium_3D(:,:,slc));
+                            centroid = stats.Centroid;
+                            X = round(centroid(1)-size(roi_in_myo_ff,2)/8);
+                            Y = round(centroid(2)-size(roi_in_myo_ff,1)/8);
+                            w = size(roi_in_myo_ff,2)/4;
+                            h = size(roi_in_myo_ff,1)/4;
+                            
+                            roi_in_myo_ff_crop = imcrop(roi_in_myo_ff(:,:,slc), [X,Y,w,h]);
+                            r2star_crop = imcrop(r2star(:,:,slc), [X,Y,w,h]);
+                            roi_ff_crop = imcrop(roi_ff(:,:,slc), [X,Y,w,h]);
+                            myo_ff_crop = imcrop(myo_ff(:,:,slc), [X,Y,w,h]);
+                            
+                            roi_in_myo_ff_nan = roi_in_myo_ff_crop;
+                            roi_in_myo_ff_nan(roi_in_myo_ff_crop == 0) = nan;
+                            
+                            ax1 = axes;
+                            imagesc(r2star_crop); pbaspect([size(r2star_crop, 2), size(r2star_crop, 1) 1]);
+                            colormap(ax1, 'gray');
+                            set(ax1, 'xticklabel', []); set(ax1, 'yticklabel', []);
+                            ax2 = axes;
+                            
+                            imagesc(ax2, roi_in_myo_ff_nan .* roi_ff_crop, 'AlphaData', myo_ff_crop);
+                            pbaspect([size(r2star_crop, 2), size(r2star_crop, 1) 1]); colormap(ax2, 'cool');
+                            caxis(ax1, [0 100]); caxis(ax2, [-2 10]); linkprop([ax1 ax2], 'Position');
+                            ax2.Visible = 'off';
+                            if count == 0
+                                cb = colorbar; title(cb, 'FF (%)');
+                            end
+                            
+                            [y,x] = getpts;
+                            
+                            if length(y) == 1
+                                txt = 'y';
+                            else
+                                y = y + X - 1;
+                                x = x + Y - 1;
+                                
+                                y_array = [y_array; y];
+                                x_array = [x_array; x];
+                                
+                                for pts = 1:length(y)
+                                    exclude_mask(round(x_array(pts)),round(y_array(pts))) = 1;
+                                end
+                                
+                                exclude_mask = imdilate(exclude_mask, nhood);
+                                
+                                freeROIMask_3D(:,:,slc) = freeROIMask_3D(:,:,slc) .* ~exclude_mask;
+                                
+                                roi_in_myo_ff(:,:,slc) = mask_myocardium_3D(:,:,slc) .* freeROIMask_3D(:,:,slc);
+                                roi_ff(:,:,slc) = roi_in_myo_ff(:,:,slc) .* ff(:,:,slc);
+                                % myo_ff(:,:,slc) = mask_myocardium_3D(:,:,slc);
+                                
+                                r2star_crop = imcrop(r2star(:,:,slc), [X,Y,w,h]);
+                                roi_ff_crop = imcrop(roi_ff(:,:,slc), [X,Y,w,h]);
+                                
+                                imagesc(roi_in_myo_ff_nan .* roi_ff_crop); 
+                                pbaspect([size(r2star_crop, 2), size(r2star_crop, 1) 1]); caxis([-2 10]);
+                                                                
+                                prompt = 'Are you happy??? (y/n): ';
+                                txt = input(prompt,"s");
+                            end
+                            
+                            if strcmp(txt, 'y')
+                                flag = 0;
+                            elseif strcmp(txt, 'n')
+                                flag = 1;
+                                count = count + 1;
+                            end
+                        end
+                        exclusion_points{slc, 1} = x_array;
+                        exclusion_points{slc, 2} = y_array;
+                    end
+                end
+                
+                save(f_exclusion_pts, 'exclusion_points');
+            end
+                
             % No need to reorder for analysis
 %             addpath('../T1NFF/');
 %             idx_reordered = Func_AlignSliceLoc(slc_array_t1, slc_array_ff);
@@ -252,18 +401,7 @@ for n = 1:length(Names)
 %             remote_in_myo_ff = remote_in_myo_ff(:,:,idx_reordered);
 %             roi_in_myo_ff = roi_in_myo_ff(:,:,idx_reordered);
             
-            % R2star Map
-            r2star_map = cell(1, length(glob_names));
-            for f = 1:length(r2star_map)
-                r2star_glob = glob(cat(2,  base_dir, '/FF_Data/',  name, '/', time_point, '/*_', num2str(num_array(f)), '.mat'));
-                r2star_map{f} = load(r2star_glob{1}, 'fwmc_r2star');
-            end
-            
-            % convert ff_map to matrix
-            r2star = zeros(size(r2star_map{1}.fwmc_r2star,1), size(r2star_map{2}.fwmc_r2star, 2), length(r2star_map));
-            for f = 1:length(r2star_map)
-                r2star(:,:,f) = r2star_map{f}.fwmc_r2star;
-            end
+
             
             roi_in_myo_r2star = mask_myocardium_3D .* freeROIMask_3D;
             remote_in_myo_r2star = mask_myocardium_3D .* myoRefMask_3D;
@@ -356,6 +494,8 @@ for n = 1:length(Names)
             r2star_roi_masked_px(ff_roi_masked == 0) = nan;
             r2star_roi_masked_px(ff_roi_masked == 100) = nan;
             
+            
+            figure();
             for slc = 1:size(r2star_roi_masked, 3)
                 mean_r2star_roi_array = [mean_r2star_roi_array, nanmean(vec(r2star_roi_masked_px(:,:,slc)))];
                 sd_r2star_roi_array = [sd_r2star_roi_array, nanstd(vec(r2star_roi_masked_px(:,:,slc)))];
@@ -368,6 +508,9 @@ for n = 1:length(Names)
                 
                 name_label{slice_count} = cat(2, name, '_', time_point, '_Slice', num2str(slc));
                 slice_count = slice_count + 1;
+                
+                subplot(1,2,1); imagesc(ff_roi_masked_px(:,:,slc)); axis image; caxis([0 20]); colorbar;
+                subplot(1,2,2); imagesc(r2star_roi_masked_px(:,:,slc)); axis image; caxis([0 100]); colorbar;
             end
             
             % Pixel-wise            
@@ -494,6 +637,7 @@ for n = 1:length(Names)
         end
         close all;
     end
+    end % find the excellent subjects
 end
 
 %% Plot
@@ -564,6 +708,11 @@ title('100 chords');
 %% hemo-
 color_cell_roi = {[254,240,217]/255, [253,204,138]/255, [252,141,89]/255, [227,74,51]/255, [179,0,0]/255};
 color_cell_remote = {[241, 238, 246]/255, [189, 201, 225]/255, [116, 169, 207]/255, [43, 140, 190]/255, [4, 90, 141]/255};
+mdl_hemo_n = struct;
+mdl_px_hemo_n = struct;
+mdl_50chord_hemo_n = struct;
+mdl_100chord_hemo_n = struct;
+
 
 figure(); 
 subplot(2,2,1);
@@ -689,7 +838,7 @@ xl = xlim;
 text(0.3*xl(2), yl(1)+10, cat(2,'Y = ', num2str(mdl_100chord_hemo_p.Coefficients.Estimate(2), 2), 'X + ', num2str(mdl_100chord_hemo_p.Coefficients.Estimate(1),2), ', R^2 = ', num2str(mdl_100chord_hemo_p.Rsquared.Ordinary,3)), 'FontSize', 12)
 title('100 chords');
 
-%% Save as struct (FU)
+%% Save as struct (FU) (Go back to main body and reiterate BL)
 metrics_to_save = struct;
 metrics_to_save.name_label = name_label;
 metrics_to_save.name_label_hemo_p = name_label_hemo_p;
@@ -866,73 +1015,106 @@ metrics_to_save.Chord100_BL.mdl_50chord_hemo_p = mdl_100chord_hemo_p;
 save(cat(2, metrics_save_dir, 'Metrics_FatNIron_Analysis_BL.mat'), '-struct', 'metrics_to_save');
 
 %% Before run the code below, need to load both Metrics_FatNIron_Analysis_BL.mat and Metrics_FatNIron_Analysis.mat
+BL_excel = load(cat(2, metrics_save_dir, 'Metrics_FatNIron_Analysis_BL_excel.mat'));
+BL_good = load(cat(2, metrics_save_dir, 'Metrics_FatNIron_Analysis_BL_good.mat'));
+FU_excel = load(cat(2, metrics_save_dir, 'Metrics_FatNIron_Analysis_excel.mat'));
+FU_good = load(cat(2, metrics_save_dir, 'Metrics_FatNIron_Analysis_good.mat'));
+
+Chord50 = struct;
+Chord50_BL = struct;
+
+% Chord50.mean_ff_array_50chord = [FU_excel.Chord50.mean_ff_array_50chord, FU_good.Chord50.mean_ff_array_50chord];
+% Chord50.mean_r2star_array_50chord = [FU_excel.Chord50.mean_r2star_array_50chord, FU_good.Chord50.mean_r2star_array_50chord];
+% Chord50_BL.mean_ff_array_50chord = [BL_excel.Chord50_BL.mean_ff_array_50chord, BL_good.Chord50_BL.mean_ff_array_50chord];
+% Chord50_BL.mean_r2star_array_50chord = [BL_excel.Chord50_BL.mean_r2star_array_50chord, BL_good.Chord50_BL.mean_r2star_array_50chord];
+
+Chord50.mean_ff_array_50chord = [FU_excel.Chord50.mean_ff_array_50chord];
+Chord50.mean_r2star_array_50chord = [FU_excel.Chord50.mean_r2star_array_50chord];
+Chord50_BL.mean_ff_array_50chord = [BL_excel.Chord50_BL.mean_ff_array_50chord];
+Chord50_BL.mean_r2star_array_50chord = [BL_excel.Chord50_BL.mean_r2star_array_50chord];
+
+Chord50.mean_ff_array_50chord_hemo_n = [FU_excel.Chord50.mean_ff_array_50chord_hemo_n];
+Chord50.mean_r2star_array_50chord_hemo_n = [FU_excel.Chord50.mean_r2star_array_50chord_hemo_n];
+Chord50_BL.mean_ff_array_50chord_hemo_n = [BL_excel.Chord50_BL.mean_ff_array_50chord_hemo_n];
+Chord50_BL.mean_r2star_array_50chord_hemo_n = [BL_excel.Chord50_BL.mean_r2star_array_50chord_hemo_n];
+
+Chord50.mean_ff_array_50chord_hemo_p = [FU_excel.Chord50.mean_ff_array_50chord_hemo_p];
+Chord50.mean_r2star_array_50chord_hemo_p = [FU_excel.Chord50.mean_r2star_array_50chord_hemo_p];
+Chord50_BL.mean_ff_array_50chord_hemo_p = [BL_excel.Chord50_BL.mean_ff_array_50chord_hemo_p];
+Chord50_BL.mean_r2star_array_50chord_hemo_p = [BL_excel.Chord50_BL.mean_r2star_array_50chord_hemo_p];
 %% BL + FU
 color_cell_roi = {[254,240,217]/255, [253,204,138]/255, [252,141,89]/255, [227,74,51]/255, [179,0,0]/255};
 color_cell_remote = {[241, 238, 246]/255, [189, 201, 225]/255, [116, 169, 207]/255, [43, 140, 190]/255, [4, 90, 141]/255};
-figure();
-mdl_50chord = fitlm(Chord50.mean_ff_array_50chord, Chord50.mean_r2star_array_50chord);
-scatter(Chord50.mean_ff_array_50chord, Chord50.mean_r2star_array_50chord, 64, 'MarkerEdgeColor', color_cell_roi{5}, 'MarkerFaceColor', color_cell_roi{3});
-Y = Chord50.mean_ff_array_50chord .* mdl_50chord.Coefficients.Estimate(2) + mdl_50chord.Coefficients.Estimate(1);
-hold on;
-plot(Chord50.mean_ff_array_50chord, Y, 'r', 'LineWidth', 1);
-xlabel('FF (%)');
-ylabel('R2star (s^{-1})');
+
+mdl_50chord = fitlm(Chord50.mean_r2star_array_50chord, Chord50.mean_ff_array_50chord);
+
+
+figure(); hold on;
+Y = Chord50.mean_r2star_array_50chord .* mdl_50chord.Coefficients.Estimate(2) + mdl_50chord.Coefficients.Estimate(1);
+xlabel('R2star (s^{-1})');
+ylabel('FF (%)');
 %xlim([0 50]); ylim([0 150]);
 
-scatter(Chord50_BL.mean_ff_array_50chord, Chord50_BL.mean_r2star_array_50chord, 64, 'MarkerEdgeColor', color_cell_remote{5}, 'MarkerFaceColor', color_cell_remote{3});
+title('50 chords');
+mdl_50chord_BL = fitlm(Chord50_BL.mean_r2star_array_50chord, Chord50_BL.mean_ff_array_50chord);
+Y_BL = Chord50_BL.mean_r2star_array_50chord .* mdl_50chord_BL.Coefficients.Estimate(2) + mdl_50chord_BL.Coefficients.Estimate(1);
 
+
+scatter(Chord50_BL.mean_r2star_array_50chord, Chord50_BL.mean_ff_array_50chord,  64, 'MarkerEdgeColor', color_cell_remote{5}, 'MarkerFaceColor', color_cell_remote{3});
+plot(Chord50_BL.mean_r2star_array_50chord, Y_BL, 'b', 'LineWidth', 1);
+
+scatter(Chord50.mean_r2star_array_50chord, Chord50.mean_ff_array_50chord,  64, 'MarkerEdgeColor', color_cell_roi{5}, 'MarkerFaceColor', color_cell_roi{3});
+plot(Chord50.mean_r2star_array_50chord, Y, 'r', 'LineWidth', 1);
 yl = ylim;
 xl = xlim;
 text(0.3*xl(2), yl(1)+10, cat(2,'Y = ', num2str(mdl_50chord.Coefficients.Estimate(2), 2), 'X + ', num2str(mdl_50chord.Coefficients.Estimate(1),2), ', R^2 = ', num2str(mdl_50chord.Rsquared.Ordinary,3)), 'FontSize', 12)
-title('50 chords');
-mdl_50chord_BL = fitlm(Chord50_BL.mean_ff_array_50chord, Chord50_BL.mean_r2star_array_50chord);
-Y_BL = Chord50_BL.mean_ff_array_50chord .* mdl_50chord_BL.Coefficients.Estimate(2) + mdl_50chord_BL.Coefficients.Estimate(1);
-plot(Chord50_BL.mean_ff_array_50chord, Y_BL, 'b', 'LineWidth', 1);
 text(0.3*xl(2), yl(1)+5, cat(2,'Y = ', num2str(mdl_50chord_BL.Coefficients.Estimate(2), 2), 'X + ', num2str(mdl_50chord_BL.Coefficients.Estimate(1),2), ', R^2 = ', num2str(mdl_50chord_BL.Rsquared.Ordinary,3)), 'FontSize', 12)
-legend({'FU','', 'BL',''});
+legend({'BL','', 'FU',''});
 
 %% BL + FU (Hemo-)
-figure();
-mdl_50chord_hemo_n = fitlm(Chord50.mean_ff_array_50chord_hemo_n, Chord50.mean_r2star_array_50chord_hemo_n);
-scatter(Chord50.mean_ff_array_50chord_hemo_n, Chord50.mean_r2star_array_50chord_hemo_n, 64, 'MarkerEdgeColor', color_cell_roi{5}, 'MarkerFaceColor', color_cell_roi{3});
-Y = Chord50.mean_ff_array_50chord_hemo_n .* mdl_50chord_hemo_n.Coefficients.Estimate(2) + mdl_50chord_hemo_n.Coefficients.Estimate(1);
-hold on;
-plot(Chord50.mean_ff_array_50chord_hemo_n, Y, 'r', 'LineWidth', 1);
-xlabel('FF (%)');
-ylabel('R2star (s^{-1})');
-%xlim([0 50]); ylim([0 150]);
+figure();hold on;
+scatter(Chord50_BL.mean_r2star_array_50chord_hemo_n, Chord50_BL.mean_ff_array_50chord_hemo_n, 64, 'MarkerEdgeColor', color_cell_remote{5}, 'MarkerFaceColor', color_cell_remote{3});
 
-scatter(Chord50_BL.mean_ff_array_50chord_hemo_n, Chord50_BL.mean_r2star_array_50chord_hemo_n, 64, 'MarkerEdgeColor', color_cell_remote{5}, 'MarkerFaceColor', color_cell_remote{3});
+mdl_50chord_BL_hemo_n = fitlm(Chord50_BL.mean_r2star_array_50chord_hemo_n, Chord50_BL.mean_ff_array_50chord_hemo_n);
+Y_BL = Chord50_BL.mean_r2star_array_50chord_hemo_n .* mdl_50chord_BL_hemo_n.Coefficients.Estimate(2) + mdl_50chord_BL_hemo_n.Coefficients.Estimate(1);
+plot(Chord50_BL.mean_r2star_array_50chord_hemo_n, Y_BL, 'b', 'LineWidth', 1);
+
+
+mdl_50chord_hemo_n = fitlm(Chord50.mean_r2star_array_50chord_hemo_n, Chord50.mean_ff_array_50chord_hemo_n);
+scatter(Chord50.mean_r2star_array_50chord_hemo_n, Chord50.mean_ff_array_50chord_hemo_n, 64, 'MarkerEdgeColor', color_cell_roi{5}, 'MarkerFaceColor', color_cell_roi{3});
+Y = Chord50.mean_r2star_array_50chord_hemo_n .* mdl_50chord_hemo_n.Coefficients.Estimate(2) + mdl_50chord_hemo_n.Coefficients.Estimate(1);
+
+plot(Chord50.mean_r2star_array_50chord_hemo_n, Y, 'r', 'LineWidth', 1);
+xlabel('R2star (s^{-1})');
+ylabel('FF (%)');
+%xlim([0 50]); ylim([0 150]);
 
 yl = ylim;
 xl = xlim;
+text(0.3*xl(2), yl(1)+5, cat(2,'Y = ', num2str(mdl_50chord_BL_hemo_n.Coefficients.Estimate(2), 2), 'X + ', num2str(mdl_50chord_BL_hemo_n.Coefficients.Estimate(1),2), ', R^2 = ', num2str(mdl_50chord_BL_hemo_n.Rsquared.Ordinary,3)), 'FontSize', 12)
 text(0.3*xl(2), yl(1)+10, cat(2,'Y = ', num2str(mdl_50chord_hemo_n.Coefficients.Estimate(2), 2), 'X + ', num2str(mdl_50chord_hemo_n.Coefficients.Estimate(1),2), ', R^2 = ', num2str(mdl_50chord_hemo_n.Rsquared.Ordinary,3)), 'FontSize', 12)
 title('50 chords');
-mdl_50chord_BL_hemo_n = fitlm(Chord50_BL.mean_ff_array_50chord_hemo_n, Chord50_BL.mean_r2star_array_50chord_hemo_n);
-Y_BL = Chord50_BL.mean_ff_array_50chord_hemo_n .* mdl_50chord_BL_hemo_n.Coefficients.Estimate(2) + mdl_50chord_BL_hemo_n.Coefficients.Estimate(1);
-plot(Chord50_BL.mean_ff_array_50chord_hemo_n, Y_BL, 'b', 'LineWidth', 1);
-text(0.3*xl(2), yl(1)+5, cat(2,'Y = ', num2str(mdl_50chord_BL_hemo_n.Coefficients.Estimate(2), 2), 'X + ', num2str(mdl_50chord_BL_hemo_n.Coefficients.Estimate(1),2), ', R^2 = ', num2str(mdl_50chord_BL_hemo_n.Rsquared.Ordinary,3)), 'FontSize', 12)
-legend({'FU','', 'BL',''});
+legend({'BL','', 'FU',''});
 
 %% BL + FU (Hemo+)
-figure();
-mdl_50chord_hemo_p = fitlm(Chord50.mean_ff_array_50chord_hemo_p, Chord50.mean_r2star_array_50chord_hemo_p);
-scatter(Chord50.mean_ff_array_50chord_hemo_p, Chord50.mean_r2star_array_50chord_hemo_p, 64, 'MarkerEdgeColor', color_cell_roi{5}, 'MarkerFaceColor', color_cell_roi{3});
-Y = Chord50.mean_ff_array_50chord_hemo_p .* mdl_50chord_hemo_p.Coefficients.Estimate(2) + mdl_50chord_hemo_p.Coefficients.Estimate(1);
-hold on;
-plot(Chord50.mean_ff_array_50chord_hemo_p, Y, 'r', 'LineWidth', 1);
-xlabel('FF (%)');
-ylabel('R2star (s^{-1})');
-%xlim([0 50]); ylim([0 150]);
+figure();hold on;
+mdl_50chord_BL_hemo_p = fitlm(Chord50_BL.mean_r2star_array_50chord_hemo_p, Chord50_BL.mean_ff_array_50chord_hemo_p);
+Y_BL = Chord50_BL.mean_r2star_array_50chord_hemo_p .* mdl_50chord_BL_hemo_p.Coefficients.Estimate(2) + mdl_50chord_BL_hemo_p.Coefficients.Estimate(1);
+plot(Chord50_BL.mean_r2star_array_50chord_hemo_p, Y_BL, 'b', 'LineWidth', 1);
+scatter(Chord50_BL.mean_r2star_array_50chord_hemo_p, Chord50_BL.mean_ff_array_50chord_hemo_p, 64, 'MarkerEdgeColor', color_cell_remote{5}, 'MarkerFaceColor', color_cell_remote{3});
 
-scatter(Chord50_BL.mean_ff_array_50chord_hemo_p, Chord50_BL.mean_r2star_array_50chord_hemo_p, 64, 'MarkerEdgeColor', color_cell_remote{5}, 'MarkerFaceColor', color_cell_remote{3});
+mdl_50chord_hemo_p = fitlm(Chord50.mean_r2star_array_50chord_hemo_p, Chord50.mean_ff_array_50chord_hemo_p);
+Y = Chord50.mean_r2star_array_50chord_hemo_p .* mdl_50chord_hemo_p.Coefficients.Estimate(2) + mdl_50chord_hemo_p.Coefficients.Estimate(1);
+plot(Chord50.mean_r2star_array_50chord_hemo_p, Y, 'r', 'LineWidth', 1);
+scatter(Chord50.mean_r2star_array_50chord_hemo_p, Chord50.mean_ff_array_50chord_hemo_p, 64, 'MarkerEdgeColor', color_cell_roi{5}, 'MarkerFaceColor', color_cell_roi{3});
+
+xlabel('R2star (s^{-1})');
+ylabel('FF (%)');
+%xlim([0 50]); ylim([0 150]);
 
 yl = ylim;
 xl = xlim;
 text(0.3*xl(2), yl(1)+10, cat(2,'Y = ', num2str(mdl_50chord_hemo_p.Coefficients.Estimate(2), 2), 'X + ', num2str(mdl_50chord_hemo_p.Coefficients.Estimate(1),2), ', R^2 = ', num2str(mdl_50chord_hemo_p.Rsquared.Ordinary,3)), 'FontSize', 12)
 title('50 chords');
-mdl_50chord_BL_hemo_p = fitlm(Chord50_BL.mean_ff_array_50chord_hemo_p, Chord50_BL.mean_r2star_array_50chord_hemo_p);
-Y_BL = Chord50_BL.mean_ff_array_50chord_hemo_p .* mdl_50chord_BL_hemo_p.Coefficients.Estimate(2) + mdl_50chord_BL_hemo_p.Coefficients.Estimate(1);
-plot(Chord50_BL.mean_ff_array_50chord_hemo_p, Y_BL, 'b', 'LineWidth', 1);
 text(0.3*xl(2), yl(1)+5, cat(2,'Y = ', num2str(mdl_50chord_BL_hemo_p.Coefficients.Estimate(2), 2), 'X + ', num2str(mdl_50chord_BL_hemo_p.Coefficients.Estimate(1),2), ', R^2 = ', num2str(mdl_50chord_BL_hemo_p.Rsquared.Ordinary,3)), 'FontSize', 12)
-legend({'FU','', 'BL',''});
+legend({'BL','', 'FU',''});

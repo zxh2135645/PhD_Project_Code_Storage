@@ -20,7 +20,8 @@ names_to_rule_out = {};
 RuleOutLabel = NameRuleOutFunc(Names, names_to_rule_out);
 Names = Names(RuleOutLabel == 0);
 
-name_check = {'484060000001'};
+% What's going on with 27?
+name_check = {'484060000063'};
 %name_check = {'KIM_BONG_KI', 'HAN_BONG_SANG'};
 name_idx_list = linspace(1, length(Names), length(Names)); % initialize with incremental add
 
@@ -70,12 +71,12 @@ OutputPath = GetFullPath(cat(2, base_dir, '/ContourData/'));
 timepoints = {'BL', 'BL2', 'FU'};
 %% Parsing XML file
 % Read DICOM and contours
+for n = 28:28
+% for n = starting_point:length(Names)j
 %for n = starting_point:starting_point
-for n = starting_point:length(Names)
-%for n = 1:length(name_idx_list)
     name = Names{name_idx_list(n)};
 %for tp = 1:length(timepoints)
-for tp = 1:2
+for tp = 1:3
     time_point = timepoints{tp};
     
     % XML file is independent on Labels
@@ -92,8 +93,8 @@ for tp = 1:2
     for con_idx = 1:length(con_cell)
         con = con_cell{con_idx};
         
-    for ll = 1:length(sequence_label)
-    %for ll = 3:3
+    %for ll = 1:length(sequence_label)
+    for ll = 3:3
     % for ll = 1:2
             label = sequence_label{ll};
             

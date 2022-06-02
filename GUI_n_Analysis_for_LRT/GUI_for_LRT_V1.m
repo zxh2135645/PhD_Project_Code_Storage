@@ -102,7 +102,6 @@ classdef GUI_for_LRT_V1 < matlab.apps.AppBase
             app.ax1 = uiaxes(app.UIFigure,'Position', [1 1 441 480]);
             
             update_axes(app);
-            
         end
         
         % Value changed function: SliceSlider

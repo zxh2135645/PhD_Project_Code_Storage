@@ -180,7 +180,6 @@ for n = 3:3
             for i = 1:size(roi_t1, 3)
             %for i = 1:1
                 
-                
                 figure();
                 subplot(2,2,1);
                 roi_edg_t1  = edge(squeeze(roi_in_myo_t1(:,:,i)),'Canny');

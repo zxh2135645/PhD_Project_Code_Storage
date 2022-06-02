@@ -17,7 +17,7 @@ if numel(twix_obj)>1
   twix_obj=twix_obj{end};
 end
 %%
-kspace_data=twix_obj.image.unsorted(); %NCol, NCha, nsamples in acquisition order
+kspace_data = twix_obj.image.unsorted(); %NCol, NCha, nsamples in acquisition order
 kspace_data = permute(kspace_data,[3 1 2]);
 kspace_data = reshape(kspace_data,size(kspace_data,1),size(kspace_data,2),[],size(kspace_data,3));
 

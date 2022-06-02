@@ -3,9 +3,9 @@ close all;
 
 %% Load Data
 [fid_file, fid_path] = uigetfile('*.mat');
-load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params', 'Hidx');
+load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params', 'Hidx', 'RR_int');
 %% single slice - slice dimension
-dispim = @(x)fftshift(x(:,:,2,:),1);
+dispim = @(x)fftshift(x(:,:,3,:),1);
 
 temp = Gr\reshape(Phi(:,41,:,end,end), L, []);
 temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
@@ -35,7 +35,7 @@ mask = zeros(Ny, Nx, size(Phi, 3));
 figure('Position', [100,100,1000,800]);
 for i = 1:size(Phi, 3)
     
-    imagesc(abs(temp_4D(:,:,7,i))); axis image; colormap gray;
+    imagesc(abs(temp_4D(:,:,3,i))); axis image; colormap gray;
     roi = drawpolygon;
     mask(:,:,i) = createMask(roi); % mask of
 end
@@ -45,6 +45,8 @@ mask_array = sum(reshape(mask, [], size(Phi, 3)), 1);
 [~, ES] = min(mask_array);
 
 %% ED & ES
+% ED = 17;
+% ES = 6;
 mask_ed = zeros(Ny, Nx, length(soi));
 mask_es = zeros(Ny, Nx, length(soi));
 
@@ -77,7 +79,7 @@ EF = SV / EDV;
 
 % HR and CO
 %% Display LRT
-HR = 93.7765; % bpm
+HR = 60 / RR_int * 1000; % bpm
 
 phase_weight = zeros(size(Phi, 3), 1);
 for i = 1:size(Phi, 3)

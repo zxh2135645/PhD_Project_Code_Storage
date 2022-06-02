@@ -6,7 +6,8 @@ clc;
 
 % Need to run setup_FattyRiot.m in FattyRiot folder
 %%
-addpath('D:\src\function');
+addpath('./function/');
+addpath('./function/FattyRiot/');
 base_dir = uigetdir;
 folder_glob = glob(cat(2, base_dir, '\*'));
 
@@ -102,8 +103,11 @@ for ll = 1:length(labels)
         for num_te = 1:8
             te_array(num_te) = slice_data(num_te).EchoTime / 1000;
         end
-        te_array(7) = te_array(1) * 7;
-        
+        te_array(4) = te_array(1) * 4; %??
+        te_array(5) = te_array(1) * 5; %??
+        te_array(6) = te_array(1) * 6; %??
+        te_array(7) = te_array(1) * 7; %??
+        te_array(8) = te_array(1) * 8; %??
         
         mask_3d = repmat(mask, [1,1,nz]); 
         ncoils = 1;
@@ -127,8 +131,8 @@ F = FW(:,:,[1:nz]);
 W = FW(:,:,[1:nz]+nz);
 %%
 figure();
-subplot(2,1,1); imagesc(F(:,:,60)); axis image; colormap(gray); title('FAT');
-subplot(2,1,2); imagesc(W(:,:,60)); axis image; colormap(gray); title('WATER');
+subplot(2,1,1); imagesc(F(:,:,53)); axis image; colormap(gray); title('FAT'); %caxis([0 1]);
+subplot(2,1,2); imagesc(W(:,:,53)); axis image; colormap(gray); title('WATER'); %caxis([0 1]);
 
 %% 
 FF1 = F ./ (F + W);

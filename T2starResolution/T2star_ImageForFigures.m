@@ -1119,3 +1119,31 @@ set(gca, 'YTickLabels', []);
 set(gca,'LineWidth', 1.5,'TickLength',[0.02 0.02]);
 set(gca,'TickDir','out', 'YGrid', 'on');
 set(gca,'box','off');
+
+%% Find optimal range for AUC 
+AUC_invivo_array_reorder = AUC_invivo_array(I);
+B_new = B(~isnan(AUC_invivo_array_reorder));
+AUC_invivo_array_reorder_new = AUC_invivo_array_reorder(~isnan(AUC_invivo_array_reorder));
+
+figure();
+plot(B_new, AUC_invivo_array_reorder_new,'o');
+set(plotHandles_auc(:,2), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 10, ...
+    'MarkerEdgeColor', [253,190,133]/255, 'MarkerFaceColor' , [253,190,133]/255);
+
+x = 1:1:20;
+for_K_means = [x', AUC_invivo_array_reorder_new];
+idx = kmeans(for_K_means, 3);
+
+s_array = zeros(9, 1);
+for k = 2:10
+    clust = kmeans(for_K_means, k);
+    %clust(isnan(clust)) = [];
+    s = silhouette(for_K_means,clust);
+    s(isnan(s)) = [];
+    s_array(k-1) = mean(s);
+end
+
+figure();
+bar([2:10], s_array);
+xlabel('Cluster #');
+ylabel('Sihouette Coefficient');

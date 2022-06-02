@@ -1,5 +1,8 @@
+
+%% Not in use at all
 clear all;
 close all;
+
 
 count = 0;
 fname = 'D:\PatientFatAnalysis\Yinyin_Patient_data';
