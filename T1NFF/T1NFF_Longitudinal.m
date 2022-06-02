@@ -1,6 +1,6 @@
 close all;
 clear all;
-
+%% This is proof-of-concept test, is deprecated. 04/09/2021
 % T1 and FF analysis
 % This was initially used for Merry
 % Incorperate T1NFF_LastestTP can to this can be good

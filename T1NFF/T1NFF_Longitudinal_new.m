@@ -56,8 +56,8 @@ label_t2star = sequence_label{2};
 for_analysis = struct;
 
 
-for n = 9:length(Names)
-% for n = 1:1
+%for n = 9:length(Names)
+for n = 17:17
 % for n = starting_point:starting_point
 % Do not need to pull up images for baseline
     name = Names{n};
@@ -626,7 +626,7 @@ for n = 1:length(Names)
     end
     close all;
 end
-%% The following is 
+%% The following needs to be deprecated
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot Longitudinal time evolution
 time_points_lr = fliplr(time_points);
@@ -752,8 +752,7 @@ for_analysis_rim = struct;
 data_storage_rim = struct;
 
 for n = 1:length(Names)
-%for n = 14:length(Names)
-%for n = starting_point:starting_point
+%for n = length(Names):length(Names)
     name = Names{n};
     name_save_dir = cat(2, save_dir, name);
     if ~exist(name_save_dir, 'dir')
@@ -1289,3 +1288,321 @@ saveas(gcf, cat(2, t1fp_save_dir, '/Time_Evolution_rim_new_03012021.png'));
 
 %% Plot the table & statistical analysis
 % Please go to T1FP_Stats_Analysis.m
+
+%% Get the matrics of T1, FF and R2star ( exclude edges of MI region)
+%% Slice-by-Slice
+% for ll = 1:length(sequence_label)
+% T1 Map
+% Images will be stored at img/<name>/overview/
+% To exclude certain slices that has bad image quality
+
+label_t1 = sequence_label{1};
+label_lge = sequence_label{3};
+label_t2star = sequence_label{2};
+for_analysis_rim = struct;
+data_storage_rim = struct;
+get_2d_slice = @(x,s)x(:,:,s); 
+for n = 1:length(Names)
+%for n = length(Names):length(Names)
+    name = Names{n};
+    name_save_dir = cat(2, save_dir, name);
+    if ~exist(name_save_dir, 'dir')
+        mkdir(name_save_dir);
+    end
+    for_analysis_rim(n).Name = name;
+    for_analysis_rim(n).metrics = struct;
+    
+    tp_count = 1;
+    data_storage_rim(n).Name = name;
+    data_storage_rim(n).data = struct;
+    
+    for tp = 1:length(time_points)
+        time_point = time_points{end-tp+1};
+        for_analysis_rim(n).metrics(tp).time_point = time_point;
+        for_analysis_rim(n).metrics(tp).slices = struct;
+        
+        data_storage_rim(n).data(tp).time_point = time_point;
+        data_storage_rim(n).data(tp).slices = struct;
+        
+        tp_dir = cat(2, base_dir, '/ContourData/',  name, '/', name, '_', time_point,  '/');
+        if ~exist(tp_dir, 'dir')
+            disp(cat(2, 'No folder at: ', name, ' ', time_point));
+        else
+            % T1
+            myo_glob = glob(cat(2, tp_dir, label_t1, '/', anatomy_label{5}, '/*'));
+            roi_glob = glob(cat(2, tp_dir, label_t1, '/',anatomy_label{3}, '/*'));
+            remote_glob = glob(cat(2, tp_dir, label_t1, '/',anatomy_label{6}, '/*'));
+            
+            load(cat(2, tp_dir, label_t1, '/', label_t1, '_vol_img_3D.mat'));
+            load(myo_glob{1});
+            load(roi_glob{1});
+            load(remote_glob{1});
+            load(cat(2, tp_dir, label_t1, '/', label_t1, '_SliceLoc.mat'));
+            
+            [slc_array_t1, idx_reordered] = sort(slc_array);
+            
+            roi_in_myo_t1 = mask_myocardium_3D .* freeROIMask_3D;
+            remote_in_myo_t1 = mask_myocardium_3D .* myoRefMask_3D;
+            roi_t1 = roi_in_myo_t1 .* vol_img_3D;
+            remote_t1 = remote_in_myo_t1 .* vol_img_3D;
+            t1 = vol_img_3D;
+            myo_t1 = mask_myocardium_3D;
+            
+            roi_in_myo_t1 = roi_in_myo_t1(:,:,idx_reordered);
+            remote_in_myo_t1 = remote_in_myo_t1(:,:,idx_reordered);
+            roi_t1 = roi_t1(:,:,idx_reordered);
+            remote_t1 = remote_t1(:,:,idx_reordered);
+            t1 = t1(:,:,idx_reordered);
+            myo_t1 = myo_t1(:,:,idx_reordered);
+            
+            % Pre-QC
+            [roi_in_myo_t1_new, remote_in_myo_t1_new, roi_t1_new, remote_t1_new, t1_new, myo_t1_new] = ...
+                Func_status_check(status_check, n, name, tp_count, roi_in_myo_t1, remote_in_myo_t1,...
+                roi_t1, remote_t1, t1, myo_t1);
+            
+            % remove edges of MI region
+            roi_edg_t1_new = zeros(size(roi_in_myo_t1_new));
+            for i = 1:size(roi_in_myo_t1_new, 3)
+                roi_edg_t1_new(:,:,i)  = edge(squeeze(roi_in_myo_t1_new(:,:,i)),'Canny');
+            end
+            roi_rimmed_t1_new = (roi_in_myo_t1_new - roi_edg_t1_new)>0;
+            
+            % FF
+            myo_glob = glob(cat(2, tp_dir, label_t2star, '/', anatomy_label{5}, '/*'));
+            roi_glob = glob(cat(2, tp_dir, label_t2star, '/',anatomy_label{3}, '/*'));
+            remote_glob = glob(cat(2, tp_dir, label_t2star, '/',anatomy_label{6}, '/*'));
+            
+            load(myo_glob{1});
+            load(roi_glob{1});
+            load(remote_glob{1});
+            load(cat(2, tp_dir, label_t2star, '/', label_t2star, '_Index.mat'));
+            load(cat(2, tp_dir, label_t2star, '/', label_t2star, '_SliceLoc.mat'));
+            slc_array_ff = slc_array;
+            
+            ff_map = cell(1, length(glob_names));
+            for f = 1:length(ff_map)
+                ff_map{f} = load(cat(2,  base_dir, '/FF_Data/',  name, '/', name, '_', time_point, '_', glob_names{f}, '.mat'), 'fwmc_ff');
+            end
+            
+            % convert ff_map to matrix
+            ff = zeros(size(ff_map{1}.fwmc_ff,1), size(ff_map{2}.fwmc_ff, 2), length(ff_map));
+            for f = 1:length(ff_map)
+                ff(:,:,f) = ff_map{f}.fwmc_ff;
+            end
+            
+            roi_in_myo_ff = mask_myocardium_3D .* freeROIMask_3D;
+            remote_in_myo_ff = mask_myocardium_3D .* myoRefMask_3D;
+            roi_ff = roi_in_myo_ff .* ff;
+            remote_ff = remote_in_myo_ff .* ff;
+            myo_ff = mask_myocardium_3D;
+            
+            idx_reordered = Func_AlignSliceLoc(slc_array_t1, slc_array_ff);
+            ff = ff(:,:,idx_reordered);
+            myo_ff = myo_ff(:,:,idx_reordered);
+            remote_ff = remote_ff(:,:,idx_reordered);
+            roi_ff = roi_ff(:,:,idx_reordered);
+            remote_in_myo_ff = remote_in_myo_ff(:,:,idx_reordered);
+            roi_in_myo_ff = roi_in_myo_ff(:,:,idx_reordered);
+            
+            % Pre-QC
+            [roi_in_myo_ff_new, remote_in_myo_ff_new, roi_ff_new, remote_ff_new, ff_new, myo_ff_new] = ...
+                Func_status_check(status_check, n, name, tp_count, roi_in_myo_ff, remote_in_myo_ff,...
+                roi_ff, remote_ff, ff, myo_ff);
+            
+            % remove edges of MI region
+            roi_edg_ff_new = zeros(size(roi_in_myo_ff_new));
+            for i = 1:size(roi_in_myo_ff_new, 3)
+                roi_edg_ff_new(:,:,i)  = edge(squeeze(roi_in_myo_ff_new(:,:,i)),'Canny');
+            end
+            roi_rimmed_ff_new = (roi_in_myo_ff_new - roi_edg_ff_new)>0;
+            
+            
+            % R2star Map
+            r2star_map = cell(1, length(glob_names));
+            for f = 1:length(r2star_map)
+                r2star_map{f} = load(cat(2,  base_dir, '/FF_Data/',  name, '/', name, '_', time_point, '_', glob_names{f}, '.mat'), 'fwmc_r2star');
+            end
+            
+            % convert ff_map to matrix
+            r2star = zeros(size(r2star_map{1}.fwmc_r2star,1), size(r2star_map{1}.fwmc_r2star, 2), length(r2star_map));
+            for f = 1:length(r2star_map)
+                r2star(:,:,f) = r2star_map{f}.fwmc_r2star;
+            end
+            
+            roi_in_myo_r2star = mask_myocardium_3D .* freeROIMask_3D;
+            remote_in_myo_r2star = mask_myocardium_3D .* myoRefMask_3D;
+            roi_r2star = roi_in_myo_r2star .* r2star;
+            remote_r2star = remote_in_myo_r2star .* r2star;
+            myo_r2star = mask_myocardium_3D;
+            
+            r2star = r2star(:,:,idx_reordered);
+            myo_r2star = myo_r2star(:,:,idx_reordered);
+            remote_r2star = remote_r2star(:,:,idx_reordered);
+            roi_r2star = roi_r2star(:,:,idx_reordered);
+            remote_in_myo_r2star = remote_in_myo_r2star(:,:,idx_reordered);
+            roi_in_myo_r2star = roi_in_myo_r2star(:,:,idx_reordered);
+            
+            % Pre-QC
+            [roi_in_myo_r2star_new, remote_in_myo_r2star_new, roi_r2star_new, remote_r2star_new, r2star_new, myo_r2star_new] = ...
+                Func_status_check(status_check, n, name, tp_count, roi_in_myo_r2star, remote_in_myo_r2star,...
+                roi_r2star, remote_r2star, r2star, myo_r2star);
+            
+            % remove edges of MI region
+            roi_edg_r2star_new = zeros(size(roi_in_myo_r2star_new));
+            for i = 1:size(roi_in_myo_r2star_new, 3)
+                roi_edg_r2star_new(:,:,i)  = edge(squeeze(roi_in_myo_r2star_new(:,:,i)),'Canny');
+            end
+            roi_rimmed_r2star_new = (roi_in_myo_r2star_new - roi_edg_r2star_new)>0;
+            
+            for slc = 1:size(roi_rimmed_ff_new, 3)
+                [row_roi, col_roi, v_roi] = find(roi_rimmed_ff_new(:,:,slc));
+                [row_remote, col_remote, v_remote] = find(remote_in_myo_ff_new(:,:,slc));
+                
+                [row_roi_t1, col_roi_t1, v_roi_t1] = find(roi_rimmed_t1_new(:,:,slc));
+                [row_remote_t1, col_remote_t1, v_remote_t1] = find(remote_in_myo_t1_new(:,:,slc));
+                
+                [row_roi_r2star, col_roi_r2star, v_roi_r2star] = find(roi_rimmed_r2star_new(:,:,slc));
+                [row_remote_r2star, col_remote_r2star, v_remote_r2star] = find(remote_in_myo_r2star_new(:,:,slc));
+                
+                roi_ff_array = zeros(1, length(row_roi));
+                remote_ff_array = zeros(1, length(row_remote));
+                roi_r2star_array = zeros(1, length(row_roi_r2star));
+                remote_r2star_array = zeros(1, length(row_remote_r2star));
+                roi_t1_array = zeros(1, length(row_roi_t1));
+                remote_t1_array = zeros(1, length(row_remote_t1));
+                
+                roi_ff_new_temp = get_2d_slice(roi_ff_new, slc);
+                remote_ff_new_temp = get_2d_slice(remote_ff_new, slc);
+                roi_r2star_new_temp = get_2d_slice(roi_r2star_new, slc);
+                remote_r2star_new_temp = get_2d_slice(remote_r2star_new, slc);
+                roi_t1_new_temp = get_2d_slice(roi_t1_new, slc);
+                remote_t1_new_temp = get_2d_slice(remote_t1_new, slc);
+                
+                for fff = 1:length(row_roi)
+                    roi_ff_array(fff) = roi_ff_new_temp(row_roi(fff), col_roi(fff));
+                end
+                
+                for fff = 1:length(row_remote)
+                    remote_ff_array(fff) = remote_ff_new_temp(row_remote(fff), col_remote(fff));
+                end
+                
+                for fff = 1:length(row_roi_r2star)
+                    roi_r2star_array(fff) = roi_r2star_new_temp(row_roi_r2star(fff), col_roi_r2star(fff));
+                end
+                
+                for fff = 1:length(row_remote_r2star)
+                    remote_r2star_array(fff) = remote_r2star_new_temp(row_remote_r2star(fff), col_remote_r2star(fff));
+                end
+                
+                for fff = 1:length(row_roi_t1)
+                    roi_t1_array(fff) = roi_t1_new_temp(row_roi_t1(fff), col_roi_t1(fff));
+                end
+                
+                for fff = 1:length(row_remote_t1)
+                    remote_t1_array(fff) = remote_t1_new_temp(row_remote_t1(fff), col_remote_t1(fff));
+                end
+                
+                roi_ff_array(roi_ff_array < 0) = 0;
+                roi_ff_array(roi_ff_array > 100) = 100;
+                remote_ff_array(remote_ff_array < 0) = 0;
+                remote_ff_array(remote_ff_array > 100) = 100;
+                
+                roi_r2star_array(roi_r2star_array > 100) = 100;
+                remote_r2star_array(remote_r2star_array > 100) = 100;
+                
+                
+%                 % Plot Histogram of ROI vs Remote (Gross view)
+%                 figure();
+%                 h_ff = histogram(roi_ff_array, 'Normalization', 'probability');xlabel('Fat Fraction (%)'); ylabel('Frequency');
+%                 NumBins = h_ff.NumBins;
+%                 BinWidth = h_ff.BinWidth;
+%                 BinEdges = h_ff.BinEdges;
+%                 hold on;
+%                 h_remote = histogram(remote_ff_array, 'Normalization', 'probability');
+%                 h_remote.BinEdges = BinEdges;
+%                 set(gca, 'FontSize', 16); title([name, ' ', time_point, ' Slice', num2str(slc)]);
+%                 xlim([0 100]);
+%                 legend({'MI', 'Remote'});
+%                 name_tp_dir = cat(2, name_save_dir, '/', name, '_', time_point);
+%                 if ~exist(name_tp_dir, 'dir')
+%                     mkdir(name_tp_dir);
+%                 end
+%                 %saveas(gcf, cat(2, name_save_dir, '/', name, '_', time_point, '/Histogram_FF_Whole_rim.png'));
+%                 
+%                 % R2star
+%                 figure();
+%                 h_r2star = histogram(roi_r2star_array, 'Normalization', 'probability');xlabel('R2* (Hz)'); ylabel('Frequency');
+%                 NumBins = h_r2star.NumBins;
+%                 BinWidth = h_r2star.BinWidth;
+%                 BinEdges = h_r2star.BinEdges;
+%                 hold on;
+%                 h_r2star_remote = histogram(remote_r2star_array, 'Normalization', 'probability');
+%                 h_r2star_remote.BinEdges = BinEdges;
+%                 set(gca, 'FontSize', 16); title([name, ' ', time_point, ' Slice', num2str(slc)]);
+%                 xlim([0 100]);
+%                 legend({'MI', 'Remote'});
+%                 name_tp_dir = cat(2, name_save_dir, '/', name, '_', time_point);
+%                 if ~exist(name_tp_dir, 'dir')
+%                     mkdir(name_tp_dir);
+%                 end
+%                 %saveas(gcf, cat(2, name_save_dir, '/', name, '_', time_point, '/Histogram_R2star_Whole_rim.png'));
+%                 
+%                 % T1
+%                 figure();
+%                 h_t1 = histogram(roi_t1_array, 'Normalization', 'probability');xlabel('T1 (ms)'); ylabel('Frequency');
+%                 NumBins = h_t1.NumBins;
+%                 BinWidth = h_t1.BinWidth;
+%                 BinEdges = h_t1.BinEdges;
+%                 hold on;
+%                 h_t1_remote = histogram(remote_t1_array, 'Normalization', 'probability');
+%                 h_t1_remote.BinEdges = BinEdges;
+%                 set(gca, 'FontSize', 16); title([name, ' ', time_point, ' Slice', num2str(slc)]);
+%                 %xlim([0 100]);
+%                 legend({'MI', 'Remote'});
+%                 
+%                 name_tp_dir = cat(2, name_save_dir, '/', name, '_', time_point);
+%                 if ~exist(name_tp_dir, 'dir')
+%                     mkdir(name_tp_dir);
+%                 end
+                %saveas(gcf, cat(2, name_save_dir, '/', name, '_', time_point, '/Histogram_T1_Whole_rim.png'));
+                
+                
+                name_tp = cat(2, name, '_', time_point);
+                
+                for_analysis_rim(n).metrics(tp).slices(slc).slice = ['Slice', num2str(slc)];
+                for_analysis_rim(n).metrics(tp).slices(slc).mean_roi_t1 = mean(nonzeros(roi_t1_array));
+                for_analysis_rim(n).metrics(tp).slices(slc).sd_roi_t1 = std(nonzeros(roi_t1_array));
+                for_analysis_rim(n).metrics(tp).slices(slc).mean_remote_t1 = mean(nonzeros(remote_t1_array));
+                for_analysis_rim(n).metrics(tp).slices(slc).sd_remote_t1 = std(nonzeros(remote_t1_array));
+                
+                for_analysis_rim(n).metrics(tp).slices(slc).mean_roi_ff = mean(roi_ff_array);
+                for_analysis_rim(n).metrics(tp).slices(slc).sd_roi_ff = std(roi_ff_array);
+                for_analysis_rim(n).metrics(tp).slices(slc).mean_remote_ff = mean(remote_ff_array);
+                for_analysis_rim(n).metrics(tp).slices(slc).sd_remote_ff = std(remote_ff_array);
+                
+                for_analysis_rim(n).metrics(tp).slices(slc).mean_roi_r2star = mean(nonzeros(roi_r2star_array));
+                for_analysis_rim(n).metrics(tp).slices(slc).sd_roi_r2star = std(nonzeros(roi_r2star_array));
+                for_analysis_rim(n).metrics(tp).slices(slc).mean_remote_r2star = mean(nonzeros(remote_r2star_array));
+                for_analysis_rim(n).metrics(tp).slices(slc).sd_remote_r2star = std(nonzeros(remote_r2star_array));
+                
+                
+                data_storage_rim(n).data(tp).slices(slc).slice = ['Slice', num2str(slc)];
+                data_storage_rim(n).data(tp).slices(slc).roi_ff_array = roi_ff_array;
+                data_storage_rim(n).data(tp).slices(slc).remote_ff_array = remote_ff_array;
+                data_storage_rim(n).data(tp).slices(slc).roi_r2star_array = roi_r2star_array;
+                data_storage_rim(n).data(tp).slices(slc).remote_r2star_array = remote_r2star_array;
+                data_storage_rim(n).data(tp).slices(slc).roi_t1_array = roi_t1_array;
+                data_storage_rim(n).data(tp).slices(slc).remote_t1_array = remote_t1_array;
+            end
+            tp_count = tp_count + 1;
+        end
+    end
+    close all;
+end
+
+metrics_save_dir = cat(2, base_dir, '/Results/');
+if ~exist(metrics_save_dir, 'dir')
+   mkdir(metrics_save_dir); 
+end
+save(cat(2, metrics_save_dir, 'for_analysis_rim_slices.mat'), 'for_analysis_rim');
+save(cat(2, metrics_save_dir, 'data_storage_rim_slices.mat'), 'data_storage_rim');

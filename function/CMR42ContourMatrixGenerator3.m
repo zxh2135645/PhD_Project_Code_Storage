@@ -2,7 +2,7 @@ function [shifted_heart, shifted_myo, shifted_blood, excludeContour, myoRefCell,
     = CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder, old_freeROI_label)
 % Second version, improved performance. Initially used for CNN
 % segmentation.
-% Need to work on this to make it 3D compatible? 02/03/2021
+% Need to work on this to make it 3D compatible? 02/03/2021 - XZ
 % This is hard-coded to solve freeROI coordinate record
 if nargin == 4
     old_freeROI_label = 0;
@@ -162,9 +162,7 @@ if any(contour_idx(:))
             end
         end
         
-        
-        
-        
+                
         % Apply heart to the image and save it to OutputPath
         if ~ exist(dstFolder, 'dir')
             mkdir(dstFolder);

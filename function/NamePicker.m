@@ -1,14 +1,18 @@
-function [list_to_read, order_to_read] = NamePicker(f_glob, label)
+function [list_to_read, order_to_read] = NamePicker(f_glob, label, sel_array)
 if nargin == 1
     label = 0;
     dst_name = ExtractNames(f_glob);
 elseif label == 1
     dst_name = f_glob;
+elseif label == 0
+    dst_name = ExtractNames(f_glob);
 end
 
 disp(dst_name);
 
-sel_array = input('Please add an array here:  ');
+if ~exist('sel_array', 'var')
+    sel_array = input('Please add an array here:  ');
+end
 
 char_array = num2str(sel_array', '%04.f');
 

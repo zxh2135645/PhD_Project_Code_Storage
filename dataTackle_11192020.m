@@ -101,7 +101,6 @@ for n = starting_point:length(Names)
             dicom_dir_glob = glob(cat(2, base_dir, '/', popu, '/', name, '/', label, '/'));
             
             ReadCVI_Workflow_Longitudinal_Study_Func(con, dicom_dir_glob, dstFolder, dicom_fields, old_freeROI_label);
-            
         end
     end
 end

@@ -114,7 +114,6 @@ composite = zeros(dicom_size(1), dicom_size(2));
 if dim == 1
     mean_t1 = zeros(N, 1);
     for i = 1:N
-        
         composite = composite + FitResults.T1 .* roi.vial_mask_cell{i};
         t1_masked = nonzeros(FitResults.T1 .* roi.vial_mask_cell{i});
         t1_real = t1_masked(~isnan(t1_masked));
