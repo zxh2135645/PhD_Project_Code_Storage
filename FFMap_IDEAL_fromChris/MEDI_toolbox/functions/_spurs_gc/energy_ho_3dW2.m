@@ -83,20 +83,15 @@ for zz = 2:size(psi,3)
     diMag_z(:,:,zz) = (iMag(:,:,zz-1) + iMag(:,:,zz))/2;  
     b(:,:,zz) = (2*pi*dkappa(:,:,zz) - dpsi_z(:,:,zz)).*base_disc_bar_z(:,:,zz);
 end
-    %RY add 2019 mask 
-    Mask=autoMask(d_iMag,voxel_size);
+
 for zz = 1:size(psi,3)
     % when computing the energy, add voxel_size
     % assume that the voxel_size of x and y usually same. 
-%RY add 2019 mask 
-    erg0(zz) = sum(sum(sum(Mask(:,:,zz).*d_iMag(:,:,:,zz).*(clique_energy_ho(a(:,:,:,zz)/voxel_size(1),p,th,quant)))));
-    %erg0(zz) = sum(sum(sum(d_iMag(:,:,:,zz).*(clique_energy_ho(a(:,:,:,zz)/voxel_size(1),p,th,quant)))));
+    erg0(zz) = sum(sum(sum(d_iMag(:,:,:,zz).*(clique_energy_ho(a(:,:,:,zz)/voxel_size(1),p,th,quant)))));
 end
 erg = sum(erg0);
 % the energy of z direction
-%erg_b = sum(sum(sum(Mask0.*(diMag_z.*(clique_energy_ho(b/voxel_size(3),p,th,quant))))));
-erg_b = sum(sum(sum((diMag_z.*(clique_energy_ho(b/voxel_size(3),p,th,quant))))));
-%erg_b = sum(sum(sum(diMag_z.*(clique_energy_ho(b/voxel_size(3),p,th,quant)))));
+erg_b = sum(sum(sum(diMag_z.*(clique_energy_ho(b/voxel_size(3),p,th,quant)))));
 erg = erg + erg_b;
 
 

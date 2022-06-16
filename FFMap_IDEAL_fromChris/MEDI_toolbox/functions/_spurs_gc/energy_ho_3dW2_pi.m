@@ -1,6 +1,7 @@
-function erg = energy_ho_3dW2(voxel_size,iMag,kappa,psi,base_xy,base_z,p,cliques,disc_bar,disc_bar_z,th,quant)
+function erg = energy_ho_3dW2_pi(voxel_size,iMag,kappa,psi,base_xy,base_z,p,cliques,disc_bar,disc_bar_z,th,quant)
 
-% compute energy considering the magnitude weighting 
+%% compute energy considering the magnitude weighting 
+% also the prolbem of K = 2K + wm, so repalce 2pi by  pi 
 
 %energy_ho   Energy from kappa labeling and psi phase measurements.
 %   erg = energy_ho(kappa,psi,base,p,cliques,disc_bar,p,th,quant) returns the energy of kappa labeling given the 
@@ -51,8 +52,7 @@ for zz = 1:size(psi,3)
         auxili(:,:,zz) = circshift(base_kappa_xy(:,:,zz),[cliques(t,1),cliques(t,2)]);
         t_dkappa(:,:,t,zz) = (base_kappa_xy(:,:,zz)-auxili(:,:,zz));   % the labels in big row minis one smaller row
         auxili2(:,:,zz) = circshift(psi_base_xy(:,:,zz),[cliques(t,1),cliques(t,2)]);
-        
-        dpsi(:,:,zz) = (auxili2(:,:,zz) - psi_base_xy(:,:,zz));
+        dpsi(:,:,zz) = auxili2(:,:,zz) - psi_base_xy(:,:,zz);
         
         auxili_iMag(:,:,zz) = circshift(iMag_base_xy(:,:,zz),[cliques(t,1),cliques(t,2)]);
         
@@ -64,7 +64,7 @@ for zz = 1:size(psi,3)
         % Beyond base, we must multiply by
         % circshift(base,[cliques(t,1),cliques(t,2)]) in order to
         % account for frontier pixels that can't have links outside ROI
-        a(:,:,t,zz) = (2*pi*t_dkappa(:,:,t,zz)-dpsi(:,:,zz)).*base_xy(:,:,zz).*circshift(base_xy(:,:,zz),[cliques(t,1),cliques(t,2)])...
+        a(:,:,t,zz) = (1*pi*t_dkappa(:,:,t,zz)-dpsi(:,:,zz)).*base_xy(:,:,zz).*circshift(base_xy(:,:,zz),[cliques(t,1),cliques(t,2)])...
                    .*base_disc_bar(:,:,t,zz);
     end
 end
@@ -81,22 +81,15 @@ for zz = 2:size(psi,3)
     dpsi_z(:,:,zz) = psi(:,:,zz-1) - psi(:,:,zz);    
 %     diMag_z(:,:,zz) = iMag(:,:,zz-1) - iMag(:,:,zz);  % wong in writte 
     diMag_z(:,:,zz) = (iMag(:,:,zz-1) + iMag(:,:,zz))/2;  
-    b(:,:,zz) = (2*pi*dkappa(:,:,zz) - dpsi_z(:,:,zz)).*base_disc_bar_z(:,:,zz);
+    b(:,:,zz) = (1*pi*dkappa(:,:,zz) - dpsi_z(:,:,zz)).*base_disc_bar_z(:,:,zz);
 end
-    %RY add 2019 mask 
-    Mask=autoMask(d_iMag,voxel_size);
+
 for zz = 1:size(psi,3)
-    % when computing the energy, add voxel_size
-    % assume that the voxel_size of x and y usually same. 
-%RY add 2019 mask 
-    erg0(zz) = sum(sum(sum(Mask(:,:,zz).*d_iMag(:,:,:,zz).*(clique_energy_ho(a(:,:,:,zz)/voxel_size(1),p,th,quant)))));
-    %erg0(zz) = sum(sum(sum(d_iMag(:,:,:,zz).*(clique_energy_ho(a(:,:,:,zz)/voxel_size(1),p,th,quant)))));
+    erg0(zz) = sum(sum(sum(d_iMag(:,:,:,zz).*(clique_energy_ho(a(:,:,:,zz)/voxel_size(1),p,th,quant)))));
 end
 erg = sum(erg0);
 % the energy of z direction
-%erg_b = sum(sum(sum(Mask0.*(diMag_z.*(clique_energy_ho(b/voxel_size(3),p,th,quant))))));
-erg_b = sum(sum(sum((diMag_z.*(clique_energy_ho(b/voxel_size(3),p,th,quant))))));
-%erg_b = sum(sum(sum(diMag_z.*(clique_energy_ho(b/voxel_size(3),p,th,quant)))));
+erg_b = sum(sum(sum(diMag_z.*(clique_energy_ho(b/voxel_size(3),p,th,quant)))));
 erg = erg + erg_b;
 
 

@@ -24,8 +24,8 @@
 % last modified by Jianwu 2014.9.3
 % last modified by Jianwu, add voxel_size when computing the gradient
 
-function [wwater wfat wfreq wunwph_uf unwphw N_std ] = spurs_gc(iField,TE,CF,voxel_size,Mask,SUBSAMPLE,dfat)
-if nargin<6
+function [wwater wfat wfreq wunwph_uf unwphw N_std ] = spurs_gc(iField,TE,CF,voxel_size,SUBSAMPLE,dfat)
+if nargin<5
     SUBSAMPLE = 1;
 end
 
@@ -33,11 +33,11 @@ energy = [];
 iField0 = iField;
 [sx sy sz necho] = size(iField);
 
-%if abs((TE(2)-TE(1))-(TE(3)-TE(2)))< 0.0002
-%    [iFreq_raw N_std] = Fit_ppm_complex(iField);
-%else
-[iFreq_raw N_std] = Fit_ppm_complex_TE_Chris(iField(:,:,:,1:3),TE(1:3));
-%end
+if abs((TE(2)-TE(1))-(TE(3)-TE(2)))< 0.0002
+    [iFreq_raw N_std] = Fit_ppm_complex(iField);
+else
+    [iFreq_raw N_std] = Fit_ppm_complex_TE(iField,TE);
+end
 
 iFreq_raw(isnan(iFreq_raw))=0;
 iFreq_raw(isinf(iFreq_raw))=0;
@@ -58,7 +58,7 @@ iMag = sqrt(sum(abs(iField).^2,4));
 
 delta_TE = TE(2) - TE(1);
 
-if nargin < 7
+if nargin < 6
     dfat = -3.5e-6*CF;
 end
     dyna_range = 1/delta_TE;
@@ -72,7 +72,7 @@ w1 = effect_fat_rad/pi
 
 if (w1 > 0)
     w = w1;
-    [unwphw,iter,erglist] = phase_unwrap_3d_UNIC(iFreq_raw1,p,iMag,voxel_size,Mask); 
+    [unwphw,iter,erglist] = phase_unwrap_3d(iFreq_raw1,p,iMag,voxel_size); 
     energy = erglist;
     [wkappa,wm_fat,wunwph_uf,iter,erglist,wkiter] = unwrap_unfat_3dP(voxel_size,iMag,w,unwphw,p); % a small mistake found here. 2014.2.21
     energy = [energy erglist];
@@ -81,7 +81,7 @@ end
 
 if (w1 < 0)
     w = -w1;  
-    [unwphw,iter,erglist] = phase_unwrap_3d_UNIC(iFreq_raw1,p,iMag,voxel_size,Mask);  
+    [unwphw,iter,erglist] = phase_unwrap_3d(iFreq_raw1,p,iMag,voxel_size);  
     energy = erglist;
     [wkappa,wm_fat,wunwph_uf,iter,erglist,wkiter] = unwrap_unfat_3dN(voxel_size,iMag,w,unwphw,p);
     energy = [energy erglist];

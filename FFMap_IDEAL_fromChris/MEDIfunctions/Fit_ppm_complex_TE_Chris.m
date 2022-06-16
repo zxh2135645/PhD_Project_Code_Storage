@@ -28,7 +28,7 @@
 %   Last modified by Tian Liu on 2013.07.23
 
 
-function [p1, dp1, relres, p0, iter]=Fit_ppm_complex_TE(M,TE)
+function [p1, dp1, relres, p0, iter]=Fit_ppm_complex_TE_Chris(M,TE)
 TE = TE-TE(1);
 if size(M,5)>1
 % combine multiple coils together, assuming the coil is the fifth dimension
@@ -74,8 +74,8 @@ Y(:,3)=Y(:,3)-cd_plus.*fix((cd+pi)./(2*pi))*2*pi;
 end
 %%
 %RY prepare for iteration resolution
-A = ones([min(3,nechos) 2]);
-A(:,2) = [TE(1:min(3,nechos))];
+A = ones([length(TE) 2]);
+A(:,2) = [TE(1:nechos)];
 % A(:,2) = [0,TE(1:nechos-1)];
 %A = [1  TE(1) ;1 TE(2);1 TE(3) ];
 %ip = A\Y(:,1:3)';%original

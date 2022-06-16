@@ -1,5 +1,3 @@
-
-% Modify RY 2019 July
 % Projection onto Dipole Fields (PDF)
 %   [p1, dp1, relres, p0]=Fit_ppm_complex_TE(M,TE)
 %    
@@ -29,15 +27,14 @@
 
 
 function [p1, dp1, relres, p0, iter]=Fit_ppm_complex_TE(M,TE)
-TE = TE-TE(1);
+
 if size(M,5)>1
 % combine multiple coils together, assuming the coil is the fifth dimension
     M = sum(M.*conj( repmat(M(:,:,:,1,:),[1 1 1 size(M,4) 1])),5);  
     M = sqrt(abs(M)).*exp(1i*angle(M));
 end
 
-M= conj(M);%original
-%M(:,:,:,end/2:end)=conj(M(:,:,:,end/2:end));%phase correction for second half with a sign flip
+M= conj(M);
 s0=size(M);
 L_s0=length(s0);
 nechos=size(M,L_s0);
@@ -46,9 +43,7 @@ M=reshape(M,[prod(s0(1:L_s0-1)),s0(L_s0)]);
 s=size(M);
 
 Y=angle(M(:,1:min(3,nechos)));
-%% estimate the slope
-
-% unwrap the first echo
+% estimate the slope
 c=((Y(:,2)-Y(:,1)));
 [m ind]=min([abs(c-2*pi),abs(c),abs(c+2*pi)],[],2);
 c(ind==1)=c(ind==1)-2*pi;
@@ -58,33 +53,24 @@ c(ind==3)=c(ind==3)+2*pi;
 cd=Y(:,2)-Y(:,1)-c;
 Y(cd<-pi,2)=Y(cd<-pi,2)+2*pi;
 Y(cd>pi,2)=Y(cd>pi,2)-2*pi;
-% for n=1:min(2,nechos-1)
-%     cd=((Y(:,n+1)-Y(:,n)))-c;
-%     Y(cd<-pi,(n+1):end)=Y(cd<-pi,n+1:end)+2*pi;
-%     Y(cd>pi,(n+1):end)=Y(cd>pi,n+1:end)-2*pi;
-% end
 
-if length(TE)>2
 % unwrap the third echo
 cd=(Y(:,3)-Y(:,2))-(TE(3)-TE(2))/(TE(2)-TE(1))*c;
 cd_minus=(cd<-pi);
 Y(:,3)=Y(:,3)+cd_minus.*abs(fix((cd-pi)./(2*pi)))*2*pi;
 cd_plus=(cd>pi);
 Y(:,3)=Y(:,3)-cd_plus.*fix((cd+pi)./(2*pi))*2*pi;
-end
-%%
-%RY prepare for iteration resolution
-A = ones([min(3,nechos) 2]);
-A(:,2) = [TE(1:min(3,nechos))];
-% A(:,2) = [0,TE(1:nechos-1)];
-%A = [1  TE(1) ;1 TE(2);1 TE(3) ];
-%ip = A\Y(:,1:3)';%original
-ip = A\Y';
+
+
+
+
+A = [1  TE(1) ;1 TE(2);1 TE(3) ];
+ip = A\Y(:,1:3)';
 p0 = ip(1,:)';
 p1 = ip(2,:)';
 
 dp1 = p1;
-tol = norm(p1(:))*1e-8;
+tol = norm(p1(:))*1e-4;
 iter = 0;
 max_iter = 30;
 
@@ -132,12 +118,11 @@ relres = sum(abs(res).^2,2)./sum(abs(M).^2,2);
 relres(isnan(relres)) = 0;
 
 
-p0=reshape(p0,s0(1:L_s0-1));
+p0=reshape(p0,s0(1:L_s0-1))*(TE(2)-TE(1));
 p1=reshape(p1,s0(1:L_s0-1))*(TE(2)-TE(1));
 dp1=reshape(dp1,s0(1:L_s0-1))*(TE(2)-TE(1));
 relres = reshape(relres,s0(1:L_s0-1))*(TE(2)-TE(1));
 p1(p1>pi)=mod(p1(p1>pi)+pi,2*pi)-pi;
 p1(p1<-pi)=mod(p1(p1<-pi)+pi,2*pi)-pi;
-end
     
 
