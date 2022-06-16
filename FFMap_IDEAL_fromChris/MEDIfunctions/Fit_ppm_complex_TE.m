@@ -29,7 +29,7 @@
 
 
 function [p1, dp1, relres, p0, iter]=Fit_ppm_complex_TE(M,TE)
-
+TE = TE-TE(1);
 if size(M,5)>1
 % combine multiple coils together, assuming the coil is the fifth dimension
     M = sum(M.*conj( repmat(M(:,:,:,1,:),[1 1 1 size(M,4) 1])),5);  
@@ -58,6 +58,11 @@ c(ind==3)=c(ind==3)+2*pi;
 cd=Y(:,2)-Y(:,1)-c;
 Y(cd<-pi,2)=Y(cd<-pi,2)+2*pi;
 Y(cd>pi,2)=Y(cd>pi,2)-2*pi;
+% for n=1:min(2,nechos-1)
+%     cd=((Y(:,n+1)-Y(:,n)))-c;
+%     Y(cd<-pi,(n+1):end)=Y(cd<-pi,n+1:end)+2*pi;
+%     Y(cd>pi,(n+1):end)=Y(cd>pi,n+1:end)-2*pi;
+% end
 
 if length(TE)>2
 % unwrap the third echo
@@ -69,16 +74,17 @@ Y(:,3)=Y(:,3)-cd_plus.*fix((cd+pi)./(2*pi))*2*pi;
 end
 %%
 %RY prepare for iteration resolution
-A=ones([length(TE) 2]);
-A(:,2)=TE;
+A = ones([min(3,nechos) 2]);
+A(:,2) = [TE(1:min(3,nechos))];
+% A(:,2) = [0,TE(1:nechos-1)];
 %A = [1  TE(1) ;1 TE(2);1 TE(3) ];
-%ip = A\Y(:,1:3)';%original
-ip = A\Y';
+ip = A\Y(:,1:3)';%original
+% ip = A\Y';
 p0 = ip(1,:)';
 p1 = ip(2,:)';
 
 dp1 = p1;
-tol = norm(p1(:))*1e-4;
+tol = norm(p1(:))*1e-8;
 iter = 0;
 max_iter = 30;
 
@@ -126,11 +132,12 @@ relres = sum(abs(res).^2,2)./sum(abs(M).^2,2);
 relres(isnan(relres)) = 0;
 
 
-p0=reshape(p0,s0(1:L_s0-1))*(TE(2)-TE(1));
+p0=reshape(p0,s0(1:L_s0-1));
 p1=reshape(p1,s0(1:L_s0-1))*(TE(2)-TE(1));
 dp1=reshape(dp1,s0(1:L_s0-1))*(TE(2)-TE(1));
 relres = reshape(relres,s0(1:L_s0-1))*(TE(2)-TE(1));
 p1(p1>pi)=mod(p1(p1>pi)+pi,2*pi)-pi;
 p1(p1<-pi)=mod(p1(p1<-pi)+pi,2*pi)-pi;
+end
     
 

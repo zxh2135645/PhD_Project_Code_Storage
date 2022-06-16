@@ -24,20 +24,24 @@
 % last modified by Jianwu 2014.9.3
 % last modified by Jianwu, add voxel_size when computing the gradient
 
-function [wwater wfat wfreq wunwph_uf unwphw N_std ] = spurs_gc(iField,TE,CF,voxel_size,SUBSAMPLE,dfat)
-if nargin<5
+function [wwater wfat wfreq wunwph_uf unwphw N_std ] = spurs_gc(iField,TE,CF,voxel_size,Mask,SUBSAMPLE,dfat)
+if nargin<6
     SUBSAMPLE = 1;
 end
 
+TE = TE - TE(1);
 energy = [];
 iField0 = iField;
 [sx sy sz necho] = size(iField);
 
-if abs((TE(2)-TE(1))-(TE(3)-TE(2)))< 0.0002
-    [iFreq_raw N_std] = Fit_ppm_complex(iField);
-else
-    [iFreq_raw N_std] = Fit_ppm_complex_TE(iField,TE);
-end
+% if abs((TE(2)-TE(1))-(TE(3)-TE(2)))< 0.0002
+%     [iFreq_raw N_std] = Fit_ppm_complex(iField);
+% else
+%     [iFreq_raw N_std] = Fit_ppm_complex_TE(iField,TE);
+% end
+
+%[iFreq_raw N_std] = Fit_ppm_complex_TE(iField(:,:,:,1:3),TE(1:3));
+[iFreq_raw N_std] = Fit_ppm_complex(iField(:,:,:,1:2));
 
 iFreq_raw(isnan(iFreq_raw))=0;
 iFreq_raw(isinf(iFreq_raw))=0;
@@ -58,7 +62,7 @@ iMag = sqrt(sum(abs(iField).^2,4));
 
 delta_TE = TE(2) - TE(1);
 
-if nargin < 6
+if nargin < 7
     dfat = -3.5e-6*CF;
 end
     dyna_range = 1/delta_TE;
@@ -72,7 +76,7 @@ w1 = effect_fat_rad/pi
 
 if (w1 > 0)
     w = w1;
-    [unwphw,iter,erglist] = phase_unwrap_3d(iFreq_raw1,p,iMag,voxel_size); 
+    [unwphw,iter,erglist] = phase_unwrap_3d_UNIC(iFreq_raw1,p,iMag,voxel_size,Mask); 
     energy = erglist;
     [wkappa,wm_fat,wunwph_uf,iter,erglist,wkiter] = unwrap_unfat_3dP(voxel_size,iMag,w,unwphw,p); % a small mistake found here. 2014.2.21
     energy = [energy erglist];
@@ -81,7 +85,7 @@ end
 
 if (w1 < 0)
     w = -w1;  
-    [unwphw,iter,erglist] = phase_unwrap_3d(iFreq_raw1,p,iMag,voxel_size);  
+    [unwphw,iter,erglist] = phase_unwrap_3d_UNIC(iFreq_raw1,p,iMag,voxel_size,Mask);  
     energy = erglist;
     [wkappa,wm_fat,wunwph_uf,iter,erglist,wkiter] = unwrap_unfat_3dN(voxel_size,iMag,w,unwphw,p);
     energy = [energy erglist];
@@ -117,22 +121,24 @@ if SUBSAMPLE == 2
 
 iField = iField0;
 % 
-
+phase_3d = angle(iField(:,:,:,2)./iField(:,:,:,1));
 %% Run IDEAL take wunwph_uf as initial guess 
 %% 
 if 1
-    [wwater wfat wfreq] = fit_IDEAL(single(iField(:,:,:,:)), TE, dfat, (wunwph_uf)/(2*pi*delta_TE),[],5);
+    [xx yy zz] = size(wunwph_uf);
+    R2s = zeros([1 xx*yy*zz]);
+    [wwater wfat wfreq] = fit_IDEAL(iField(:,:,:,:), TE, dfat, -phase_3d./(2*pi*delta_TE),R2s,10);
     if sum(abs(wfat(:)).^2)>sum(abs(wwater(:)).^2)
         disp(['potential water fat swap']);
         wunwph_uf = wunwph_uf+effect_fat_rad;
-        [wwater wfat wfreq] = fit_IDEAL((iField(:,:,:,:)), TE, dfat, (wunwph_uf)/(2*pi*delta_TE),[],5);
+        [wwater wfat wfreq] = fit_IDEAL((iField(:,:,:,:)), TE, dfat, unwphw/(2*pi*delta_TE),[],10);
     end    
 else
     [xx yy zz] = size(wunwph_uf);
     R2s = zeros([1 xx*yy*zz]);
     % note that when include R2s in IDEAL, the result may contain may noisey point
-    [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, (wunwph_uf - 4*pi)/(2*pi*delta_TE),R2s,2);
-    
+    [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, (wunwph_uf - 2*pi)/(2*pi*delta_TE),R2s,30);
+    % [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, unwphw/(2*pi*delta_TE),R2s,30);
     %% maybe try the following: but need choosing the filter parameter of hann_low for different dataset
 %   [wwater wfat wfreq R2s] = fit_IDEAL_R2(conj(iField(:,:,:,:)), TE, dfat, (wunwph_uf)/(2*pi*delta_TE),R2s,5);
 %    R2s(R2s>100)=0;

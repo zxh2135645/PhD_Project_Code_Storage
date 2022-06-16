@@ -19,6 +19,10 @@ function [iFreq] = unwrapPhase(iMag, iFreq_raw, matrix_size)
     matrix_size  = double(matrix_size);
     iMag = double(iMag);
     iFreq_raw = double(iFreq_raw);
-    iFreq = mexUnwrap(iMag(:),iFreq_raw(:),matrix_size(1),matrix_size(2),matrix_size(3));
+    if length(matrix_size) == 3
+        iFreq = mexUnwrap(iMag(:),iFreq_raw(:),matrix_size(1),matrix_size(2),matrix_size(3));
+    elseif length(matrix_size) == 2
+        iFreq = mexUnwrap(iMag(:),iFreq_raw(:),matrix_size(1),matrix_size(2),1);
+    end
     iFreq = reshape(iFreq,matrix_size);
 end
