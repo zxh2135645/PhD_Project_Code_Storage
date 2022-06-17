@@ -29,6 +29,7 @@ if nargin<6
     SUBSAMPLE = 1;
 end
 
+TE = TE - TE(1);
 energy = [];
 iField0 = iField;
 [sx sy sz necho] = size(iField);
@@ -117,22 +118,24 @@ if SUBSAMPLE == 2
 
 iField = iField0;
 % 
-
+phase_3d = angle(iField(:,:,:,2)./iField(:,:,:,1));
 %% Run IDEAL take wunwph_uf as initial guess 
 %% 
 if 1
-    [wwater wfat wfreq] = fit_IDEAL(single(iField(:,:,:,:)), TE, dfat, (wunwph_uf)/(2*pi*delta_TE),[],5);
+    [xx yy zz] = size(wunwph_uf);
+    R2s = zeros([1 xx*yy*zz]);
+    [wwater wfat wfreq] = fit_IDEAL(iField(:,:,:,:), TE, dfat, -phase_3d./(2*pi*delta_TE),R2s,10);
     if sum(abs(wfat(:)).^2)>sum(abs(wwater(:)).^2)
         disp(['potential water fat swap']);
         wunwph_uf = wunwph_uf+effect_fat_rad;
-        [wwater wfat wfreq] = fit_IDEAL((iField(:,:,:,:)), TE, dfat, (wunwph_uf)/(2*pi*delta_TE),[],5);
+        [wwater wfat wfreq] = fit_IDEAL((iField(:,:,:,:)), TE, dfat, unwphw/(2*pi*delta_TE),[],10);
     end    
 else
     [xx yy zz] = size(wunwph_uf);
     R2s = zeros([1 xx*yy*zz]);
     % note that when include R2s in IDEAL, the result may contain may noisey point
-    [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, (wunwph_uf - 4*pi)/(2*pi*delta_TE),R2s,2);
-    
+    [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, (wunwph_uf - 2*pi)/(2*pi*delta_TE),R2s,30);
+    % [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, unwphw/(2*pi*delta_TE),R2s,30);
     %% maybe try the following: but need choosing the filter parameter of hann_low for different dataset
 %   [wwater wfat wfreq R2s] = fit_IDEAL_R2(conj(iField(:,:,:,:)), TE, dfat, (wunwph_uf)/(2*pi*delta_TE),R2s,5);
 %    R2s(R2s>100)=0;

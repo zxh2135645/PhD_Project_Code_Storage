@@ -29,7 +29,7 @@
 
 
 function [p1, dp1, relres, p0, iter]=Fit_ppm_complex_TE(M,TE)
-
+TE = TE-TE(1);
 if size(M,5)>1
 % combine multiple coils together, assuming the coil is the fifth dimension
     M = sum(M.*conj( repmat(M(:,:,:,1,:),[1 1 1 size(M,4) 1])),5);  
@@ -69,11 +69,12 @@ Y(:,3)=Y(:,3)-cd_plus.*fix((cd+pi)./(2*pi))*2*pi;
 end
 %%
 %RY prepare for iteration resolution
-A=ones([length(TE) 2]);
-A(:,2)=TE;
+A=ones([min(3,nechos) 2]);
+A(:,2)=TE(1:min(3,nechos));
 %A = [1  TE(1) ;1 TE(2);1 TE(3) ];
 %ip = A\Y(:,1:3)';%original
-ip = A\Y';
+ip = A\Y'; % XZ 06/07/2022
+
 p0 = ip(1,:)';
 p1 = ip(2,:)';
 

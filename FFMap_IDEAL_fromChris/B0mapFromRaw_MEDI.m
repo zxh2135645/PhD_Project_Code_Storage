@@ -2,6 +2,7 @@
 % Randy Yang 5/10/2018
 % Modified by Chris Huang 6/29/2019
 % Modified by James Zhang 06/10/2022
+% Modified by James Zhang 06/04/2022
 %% Set up data path
 clear all
 clear AllPhasemap
@@ -17,7 +18,7 @@ Scan_Type='ICD';
 %maskpercent=0.1;
 
 SOS = @(x) sqrt(sum(abs(x).^2,3));
-% 
+
 % pathForSearching_B0=pwd;
 % pathForSearching_B0 = getFilePathFor_B0(); %Charles 30Jan2019, speed up finding files
 % [B0file,B0path] = uigetfile('*.dat', 'Select .dat', pathForSearching_B0);% Above, edited
@@ -32,7 +33,8 @@ SOS = @(x) sqrt(sum(abs(x).^2,3));
 %     ls(3).name=B0file;
 % end
 
-%% XZ
+
+%% XZ load invivo data from reconstrcuted pipeline
 [fid_file, fid_path] = uigetfile('*.dat');
 MRdat_path=fid_path;
 case_name = '';
@@ -84,6 +86,7 @@ for n=1:(length(ls)-2)
     clear twix_obj_in
     %% R.Y. setup parameters
     % How to recon with iPAT  = 2 and NSeg ~= 1;
+    % will be an input from reconstruct pipeline
     if length(size(rawdata)) == 6
         Rawdatapermute = permute(rawdata,[1,3,4,2,5,6]); % NumRO, NumPE, NumSlices, NumCh, NumAve, NumEcho
     else
@@ -110,7 +113,7 @@ for n=1:(length(ls)-2)
     AllPhasemap(n).PeFOV=twix_obj.hdr.Config.PeFOV;%usec
     
     %AllPhasemap(n).compleximg=permute(AllPhasemap(n).compleximg,[1 3 2 4 5]);
-    [NumRO, NumPE, NumSlices, NumCh NumEchos] = size(AllPhasemap(n).compleximg);
+    [NumRO, NumPE, NumSlices, NumCh, NumEchos] = size(AllPhasemap(n).compleximg);
     AllPhasemap(n).Voxelsize=[AllPhasemap(n).RoFOV/NumRO AllPhasemap(n).PeFOV/NumPE ];%usec
     %AllPhasemap(n).Phasediff=angle(AllPhasemap(n).compleximg(:,:,:,:,2)./AllPhasemap(n).compleximg(:,:,:,:,1));
     temp=double(sum(abs(AllPhasemap(n).compleximg(:,:,:,:,end)),4));
@@ -154,7 +157,7 @@ for n=1:(length(ls)-2)
     [Dicomfile,Dicompath] = uigetfile('*.dcm', 'Selcet DCM', B0path);
     Dicomhdr=dicominfo([Dicompath,Dicomfile]);
     voxel_size=[Dicomhdr.PixelSpacing;Dicomhdr.SliceThickness];
-    
+
     %% Apply Mask
     switch Scan_Type
         case 'Cardiac'

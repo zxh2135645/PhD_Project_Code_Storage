@@ -42,7 +42,7 @@ dy = zeros([5 numvox]);
 dy(1,:) = 1e4;
 iter = 0;
 
-y(1,:) = f0;
+y(1,:) = -f0;
 s = s0./exp(1i*2*pi*repmat(y(1,:),[numte 1]).*t);
 y(2:5,:) = invA(Acol01, Acol02, Acol03, Acol04, cat(1, real(s), imag(s)));
 

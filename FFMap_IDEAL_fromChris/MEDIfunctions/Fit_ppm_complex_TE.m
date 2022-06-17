@@ -78,8 +78,8 @@ A = ones([min(3,nechos) 2]);
 A(:,2) = [TE(1:min(3,nechos))];
 % A(:,2) = [0,TE(1:nechos-1)];
 %A = [1  TE(1) ;1 TE(2);1 TE(3) ];
-%ip = A\Y(:,1:3)';%original
-ip = A\Y';
+ip = A\Y(:,1:3)';%original
+% ip = A\Y';
 p0 = ip(1,:)';
 p1 = ip(2,:)';
 
