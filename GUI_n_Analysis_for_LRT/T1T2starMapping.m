@@ -143,7 +143,7 @@ save(save_f, 'map_to_save');
 % save_f = cat(2, fid_path, fid_file(1:15), 'LRT_Mappings.mat');
 % save(save_f, 'map_to_save');
 %% visualize slices
-slc = 3;
+slc = 4;
 dispim = @(x)fftshift(x(:,:,slc,:),1);
 
 num_seg = 21;
@@ -166,7 +166,7 @@ end
 t1_map = zeros(Ny, Nx, Nz, sizes(5));
 %i = input(sprintf('Select Slice of Interest [%d]: ', 3));
 %for i = 1:Nz
-for i = 3:3
+for i = 4:4
     dispim = @(x,st)fftshift(x(:,:,i,:),1);
     %for j = 1:1 % Cardiac
     for j = 11:11
@@ -251,14 +251,15 @@ metrics.BW = BW;
 save_fname = cat(2, fid_path, fid_file(1:end-4), '_T1mapping_MOLLI_Analysis.mat');
 save(save_fname, '-struct', 'metrics');
 
-
+save_f = cat(2, fid_path, fid_file(1:19), 'LRT_T1MOLLI_Mappings_Seg15.mat');
+save(save_f, 'map_to_save', '-v7.3');
 
 %% T2star mapping
 NEco_old = params.NEco_old; % 6
 % for i = 1:Nz
 addpath('../function/');
 echo_f_glob = glob(cat(2, fid_path, '*Echo???????.mat'));
-N_seg = 10;
+N_seg = 15;
 t2star_map = zeros(Ny, Nx, Nz, N_seg, sizes(5));
 
 % i = input(sprintf('Select Slice of Interest [%d]: ', 3));

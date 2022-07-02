@@ -24,7 +24,7 @@ end
 [fid_file, fid_path] = uigetfile('*.mat');
 load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params');
 %% Display image
-slc = 3;
+slc = 2;
 dispim = @(x)fftshift(x(:,:,slc,:),1);
 
 num_seg = 21;
@@ -37,7 +37,7 @@ temp = imrotate(temp, 90);
 temp = abs(flip(temp(:,:,1),2)/cw); % First Section
 temp = uint16(temp*4095);
 ax2 = imagesc(temp); axis image; colormap gray;axis off;
-%% 6TEs and then next sliceloc
+%% 6TEs and then next sliceloc (Weighted Image)
 X = dicomread(slice_data{1}(1).Filename);
 NEco_old = params.NEco_old;
 len = length(slice_data{1})/NEco_old;
@@ -49,7 +49,7 @@ if ~exist(save_dir, 'dir')
 end
 
 
-echo_f_glob = glob(cat(2, fid_path, '*Echo?_Seg??.mat'));
+echo_f_glob = glob(cat(2, fid_path, '*Echo?_Seg??*.mat'));
 
 slc_array = [8 7 6 5 4 3 2 1 14 13 12 11 10 9];
 % slc_array = [9 8 7 6 5 4 3 2 1 16 15 14 13 12 11 10];
@@ -82,9 +82,11 @@ slc_array = [8 7 6 5 4 3 2 1 14 13 12 11 10 9];
 slc_array = [2 2 2 2 2 2 2 2 2 2 2 2 2 2];
 num_seg_array = [21, 31, 41, 51];
 n_seg = 15;
-load(cat(2, fid_path, 'FID19652_Sofia_LRT_Mappings_Seg15.mat'));
+%load(cat(2, fid_path, 'FID19652_Sofia_LRT_Mappings_Seg15.mat'));
+%load(cat(2, fid_path, 'FID17210_Lisbon_D6_6mm_USR12__L64_results_2022_04_17_08_15_Echo1_Seg15_lambda0.5_T1mapping_MOLLI_Analysis.mat'));
 NEco_old = params.NEco_old;
-echo_f_glob = glob(cat(2, fid_path, '*Echo?_Seg??.mat'));
+echo_f_glob = glob(cat(2, fid_path, '*Echo?_Seg??*.mat'));
+%echo_f_glob = glob(cat(2, fid_path, 'FID17210_Lisbon_D6_6mm_USR12__L64_results_2022_04_17_08_15_Echo1_Seg15_lambda0.5'));
 
 % |Echo1_Seg21|Echo1_Seg31|Echo1_Seg41|Echo1_Seg51|T1Map|T2*Map|
 % Enhanced DICOM
@@ -93,8 +95,8 @@ if ~exist(save_dir, 'dir')
     mkdir(save_dir);
 end
 
-for te = 1:NEco_old
-    %for te = 1:1
+% for te = 1:NEco_old
+for te = 1:1
     if te < 5
        num_seg = num_seg_array(te); 
     end

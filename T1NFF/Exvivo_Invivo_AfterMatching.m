@@ -5,7 +5,7 @@ clc;
 addpath('../function/');
 base_dir = uigetdir;
 name = '18D16';
-%name = 'Sahara';
+name = 'Sahara';
 time_point = 'EXVIVO';
 
 reg_info_f = cat(2, base_dir, '/data/', name, '/RegInfo.mat');

@@ -66,6 +66,7 @@ if ~exist(metrics_save_dir, 'dir')
 end
 
 % Read excel file
+% T = readtable(cat(2, base_dir, '/STEMI_with_IMH-1.xlsx'), 'VariableNamingRule', 'preserve');
 T = readtable(cat(2, base_dir, '/STEMI_with_IMH-1.xlsx'));
 id_array = T.AnonymizationID;
 hemo_array = T.withOrWithout;
@@ -497,14 +498,14 @@ for n = 1:(length(Names)-1)
             
             figure();
             for slc = 1:size(r2star_roi_masked, 3)
-                mean_r2star_roi_array = [mean_r2star_roi_array, nanmean(vec(r2star_roi_masked_px(:,:,slc)))];
-                sd_r2star_roi_array = [sd_r2star_roi_array, nanstd(vec(r2star_roi_masked_px(:,:,slc)))];
-                mean_ff_roi_array = [mean_ff_roi_array, nanmean(vec(ff_roi_masked_px(:,:,slc)))];
-                sd_ff_roi_array = [sd_ff_roi_array, nanstd(vec(ff_roi_masked_px(:,:,slc)))];
-                mean_r2star_remote_array = [mean_r2star_remote_array, nanmean(vec(r2star_remote_masked(:,:,slc)))];
-                sd_r2star_remote_array = [sd_r2star_remote_array, nanstd(vec(r2star_remote_masked(:,:,slc)))];
-                mean_ff_remote_array = [mean_ff_remote_array, nanmean(vec(ff_remote_masked(:,:,slc)))];
-                sd_ff_remote_array = [sd_ff_remote_array, nanstd(vec(ff_remote_masked(:,:,slc)))];
+                mean_r2star_roi_array = [mean_r2star_roi_array, mean(vec(r2star_roi_masked_px(:,:,slc)), 'omitnan')];
+                sd_r2star_roi_array = [sd_r2star_roi_array, std(vec(r2star_roi_masked_px(:,:,slc)), 'omitnan')];
+                mean_ff_roi_array = [mean_ff_roi_array, mean(vec(ff_roi_masked_px(:,:,slc)), 'omitnan')];
+                sd_ff_roi_array = [sd_ff_roi_array, std(vec(ff_roi_masked_px(:,:,slc)), 'omitnan')];
+                mean_r2star_remote_array = [mean_r2star_remote_array, mean(vec(r2star_remote_masked(:,:,slc)), 'omitnan')];
+                sd_r2star_remote_array = [sd_r2star_remote_array, std(vec(r2star_remote_masked(:,:,slc)), 'omitnan')];
+                mean_ff_remote_array = [mean_ff_remote_array, mean(vec(ff_remote_masked(:,:,slc)), 'omitnan')];
+                sd_ff_remote_array = [sd_ff_remote_array, std(vec(ff_remote_masked(:,:,slc)), 'omitnan')];
                 
                 name_label{slice_count} = cat(2, name, '_', time_point, '_Slice', num2str(slc));
                 slice_count = slice_count + 1;
@@ -543,47 +544,47 @@ for n = 1:(length(Names)-1)
                     seg_mask_ff_endo = Mask_Segn_endo .* roi_in_myo_ff(:,:,slc) == j;
                     
                     if any(seg_mask_ff(:))
-                        mean_ff_array_50chord = [mean_ff_array_50chord, nanmean(nonzeros(vec(ff_single_slc .* seg_mask_ff)))];
-                        mean_r2star_array_50chord = [mean_r2star_array_50chord, nanmean(nonzeros(vec(r2star_single_slc .* seg_mask_ff)))];
+                        mean_ff_array_50chord = [mean_ff_array_50chord, mean(nonzeros(vec(ff_single_slc .* seg_mask_ff)), 'omitnan')];
+                        mean_r2star_array_50chord = [mean_r2star_array_50chord, mean(nonzeros(vec(r2star_single_slc .* seg_mask_ff)), 'omitnan')];
                     end
                     
                     if any(seg_mask_ff_epi(:))
-                        mean_ff_array_100chord = [mean_ff_array_100chord, nanmean(nonzeros(vec(ff_single_slc .* seg_mask_ff_epi)))];
-                        mean_r2star_array_100chord = [mean_r2star_array_100chord, nanmean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_epi)))];
+                        mean_ff_array_100chord = [mean_ff_array_100chord, mean(nonzeros(vec(ff_single_slc .* seg_mask_ff_epi)), 'omitnan')];
+                        mean_r2star_array_100chord = [mean_r2star_array_100chord, mean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_epi)), 'omitnan')];
                     end
                     if any(seg_mask_ff_endo(:))
-                        mean_ff_array_100chord = [mean_ff_array_100chord, nanmean(nonzeros(vec(ff_single_slc .* seg_mask_ff_endo)))];
-                        mean_r2star_array_100chord = [mean_r2star_array_100chord, nanmean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_endo)))];
+                        mean_ff_array_100chord = [mean_ff_array_100chord, mean(nonzeros(vec(ff_single_slc .* seg_mask_ff_endo)), 'omitnan')];
+                        mean_r2star_array_100chord = [mean_r2star_array_100chord, mean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_endo)), 'omitnan')];
                     end
                     
                     if strcmp(IMH, '-')
                         if any(seg_mask_ff(:))
-                            mean_ff_array_50chord_hemo_n = [mean_ff_array_50chord_hemo_n, nanmean(nonzeros(vec(ff_single_slc .* seg_mask_ff)))];
-                            mean_r2star_array_50chord_hemo_n = [mean_r2star_array_50chord_hemo_n, nanmean(nonzeros(vec(r2star_single_slc .* seg_mask_ff)))];
+                            mean_ff_array_50chord_hemo_n = [mean_ff_array_50chord_hemo_n, mean(nonzeros(vec(ff_single_slc .* seg_mask_ff)), 'omitnan')];
+                            mean_r2star_array_50chord_hemo_n = [mean_r2star_array_50chord_hemo_n, mean(nonzeros(vec(r2star_single_slc .* seg_mask_ff)), 'omitnan')];
                         end
                         
                         if any(seg_mask_ff_epi(:))
-                            mean_ff_array_100chord_hemo_n = [mean_ff_array_100chord_hemo_n, nanmean(nonzeros(vec(ff_single_slc .* seg_mask_ff_epi)))];
-                            mean_r2star_array_100chord_hemo_n = [mean_r2star_array_100chord_hemo_n, nanmean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_epi)))];
+                            mean_ff_array_100chord_hemo_n = [mean_ff_array_100chord_hemo_n, mean(nonzeros(vec(ff_single_slc .* seg_mask_ff_epi)), 'omitnan')];
+                            mean_r2star_array_100chord_hemo_n = [mean_r2star_array_100chord_hemo_n, mean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_epi)), 'omitnan')];
                         end
                         if any(seg_mask_ff_endo(:))
-                            mean_ff_array_100chord_hemo_n = [mean_ff_array_100chord_hemo_n, nanmean(nonzeros(vec(ff_single_slc .* seg_mask_ff_endo)))];
-                            mean_r2star_array_100chord_hemo_n = [mean_r2star_array_100chord_hemo_n, nanmean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_endo)))];
+                            mean_ff_array_100chord_hemo_n = [mean_ff_array_100chord_hemo_n, mean(nonzeros(vec(ff_single_slc .* seg_mask_ff_endo)), 'omitnan')];
+                            mean_r2star_array_100chord_hemo_n = [mean_r2star_array_100chord_hemo_n, mean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_endo)), 'omitnan')];
                         end
                         
                     elseif strcmp(IMH, '+')
                         if any(seg_mask_ff(:))
-                            mean_ff_array_50chord_hemo_p = [mean_ff_array_50chord_hemo_p, nanmean(nonzeros(vec(ff_single_slc .* seg_mask_ff)))];
-                            mean_r2star_array_50chord_hemo_p = [mean_r2star_array_50chord_hemo_p, nanmean(nonzeros(vec(r2star_single_slc .* seg_mask_ff)))];
+                            mean_ff_array_50chord_hemo_p = [mean_ff_array_50chord_hemo_p, mean(nonzeros(vec(ff_single_slc .* seg_mask_ff)), 'omitnan')];
+                            mean_r2star_array_50chord_hemo_p = [mean_r2star_array_50chord_hemo_p, mean(nonzeros(vec(r2star_single_slc .* seg_mask_ff)), 'omitnan')];
                         end
                         
                         if any(seg_mask_ff_epi(:))
-                            mean_ff_array_100chord_hemo_p = [mean_ff_array_100chord_hemo_p, nanmean(nonzeros(vec(ff_single_slc .* seg_mask_ff_epi)))];
-                            mean_r2star_array_100chord_hemo_p = [mean_r2star_array_100chord_hemo_p, nanmean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_epi)))];
+                            mean_ff_array_100chord_hemo_p = [mean_ff_array_100chord_hemo_p, mean(nonzeros(vec(ff_single_slc .* seg_mask_ff_epi)), 'omitnan')];
+                            mean_r2star_array_100chord_hemo_p = [mean_r2star_array_100chord_hemo_p, mean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_epi)), 'omitnan')];
                         end
                         if any(seg_mask_ff_endo(:))
-                            mean_ff_array_100chord_hemo_p = [mean_ff_array_100chord_hemo_p, nanmean(nonzeros(vec(ff_single_slc .* seg_mask_ff_endo)))];
-                            mean_r2star_array_100chord_hemo_p = [mean_r2star_array_100chord_hemo_p, nanmean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_endo)))];
+                            mean_ff_array_100chord_hemo_p = [mean_ff_array_100chord_hemo_p, mean(nonzeros(vec(ff_single_slc .* seg_mask_ff_endo)), 'omitnan')];
+                            mean_r2star_array_100chord_hemo_p = [mean_r2star_array_100chord_hemo_p, mean(nonzeros(vec(r2star_single_slc .* seg_mask_ff_endo)), 'omitnan')];
                         end
                     end
                 end
@@ -593,14 +594,14 @@ for n = 1:(length(Names)-1)
             if strcmp(IMH, '-')
                 % ROI
                 for slc = 1:size(r2star_roi_masked, 3)
-                    mean_r2star_roi_array_hemo_n = [mean_r2star_roi_array_hemo_n, nanmean(vec(r2star_roi_masked_px(:,:,slc)))];
-                    sd_r2star_roi_array_hemo_n = [sd_r2star_roi_array_hemo_n, nanstd(vec(r2star_roi_masked_px(:,:,slc)))];
-                    mean_ff_roi_array_hemo_n = [mean_ff_roi_array_hemo_n, nanmean(vec(ff_roi_masked_px(:,:,slc)))];
-                    sd_ff_roi_array_hemo_n = [sd_ff_roi_array_hemo_n, nanstd(vec(ff_roi_masked_px(:,:,slc)))];
-                    mean_r2star_remote_array_hemo_n = [mean_r2star_remote_array_hemo_n, nanmean(vec(r2star_remote_masked(:,:,slc)))];
-                    sd_r2star_remote_array_hemo_n = [sd_r2star_remote_array_hemo_n, nanstd(vec(r2star_remote_masked(:,:,slc)))];
-                    mean_ff_remote_array_hemo_n = [mean_ff_remote_array_hemo_n, nanmean(vec(ff_remote_masked(:,:,slc)))];
-                    sd_ff_remote_array_hemo_n = [sd_ff_remote_array_hemo_n, nanstd(vec(ff_remote_masked(:,:,slc)))];
+                    mean_r2star_roi_array_hemo_n = [mean_r2star_roi_array_hemo_n, mean(vec(r2star_roi_masked_px(:,:,slc)), 'omitnan')];
+                    sd_r2star_roi_array_hemo_n = [sd_r2star_roi_array_hemo_n, std(vec(r2star_roi_masked_px(:,:,slc)), 'omitnan')];
+                    mean_ff_roi_array_hemo_n = [mean_ff_roi_array_hemo_n, mean(vec(ff_roi_masked_px(:,:,slc)), 'omitnan')];
+                    sd_ff_roi_array_hemo_n = [sd_ff_roi_array_hemo_n, std(vec(ff_roi_masked_px(:,:,slc)), 'omitnan')];
+                    mean_r2star_remote_array_hemo_n = [mean_r2star_remote_array_hemo_n, mean(vec(r2star_remote_masked(:,:,slc)), 'omitnan')];
+                    sd_r2star_remote_array_hemo_n = [sd_r2star_remote_array_hemo_n, std(vec(r2star_remote_masked(:,:,slc)), 'omitnan')];
+                    mean_ff_remote_array_hemo_n = [mean_ff_remote_array_hemo_n, mean(vec(ff_remote_masked(:,:,slc)), 'omitnan')];
+                    sd_ff_remote_array_hemo_n = [sd_ff_remote_array_hemo_n, std(vec(ff_remote_masked(:,:,slc)), 'omitnan')];
                     
                     name_label_hemo_n{slice_count_hemo_n} = cat(2, name, '_', time_point, '_Slice', num2str(slc));
                     slice_count_hemo_n = slice_count_hemo_n + 1;
@@ -615,14 +616,14 @@ for n = 1:(length(Names)-1)
             elseif strcmp(IMH, '+')
                 % ROI
                 for slc = 1:size(r2star_roi_masked, 3)
-                    mean_r2star_roi_array_hemo_p = [mean_r2star_roi_array_hemo_p, nanmean(vec(r2star_roi_masked_px(:,:,slc)))];
-                    sd_r2star_roi_array_hemo_p = [sd_r2star_roi_array_hemo_p, nanstd(vec(r2star_roi_masked_px(:,:,slc)))];
-                    mean_ff_roi_array_hemo_p = [mean_ff_roi_array_hemo_p, nanmean(vec(ff_roi_masked_px(:,:,slc)))];
-                    sd_ff_roi_array_hemo_p = [sd_ff_roi_array_hemo_p, nanstd(vec(ff_roi_masked_px(:,:,slc)))];
-                    mean_r2star_remote_array_hemo_p = [mean_r2star_remote_array_hemo_p, nanmean(vec(r2star_remote_masked(:,:,slc)))];
-                    sd_r2star_remote_array_hemo_p = [sd_r2star_remote_array_hemo_p, nanstd(vec(r2star_remote_masked(:,:,slc)))];
-                    mean_ff_remote_array_hemo_p = [mean_ff_remote_array_hemo_p, nanmean(vec(ff_remote_masked(:,:,slc)))];
-                    sd_ff_remote_array_hemo_p = [sd_ff_remote_array_hemo_p, nanstd(vec(ff_remote_masked(:,:,slc)))];
+                    mean_r2star_roi_array_hemo_p = [mean_r2star_roi_array_hemo_p, mean(vec(r2star_roi_masked_px(:,:,slc)), 'omitnan')];
+                    sd_r2star_roi_array_hemo_p = [sd_r2star_roi_array_hemo_p, std(vec(r2star_roi_masked_px(:,:,slc)), 'omitnan')];
+                    mean_ff_roi_array_hemo_p = [mean_ff_roi_array_hemo_p, mean(vec(ff_roi_masked_px(:,:,slc)), 'omitnan')];
+                    sd_ff_roi_array_hemo_p = [sd_ff_roi_array_hemo_p, std(vec(ff_roi_masked_px(:,:,slc)), 'omitnan')];
+                    mean_r2star_remote_array_hemo_p = [mean_r2star_remote_array_hemo_p, mean(vec(r2star_remote_masked(:,:,slc)), 'omitnan')];
+                    sd_r2star_remote_array_hemo_p = [sd_r2star_remote_array_hemo_p, std(vec(r2star_remote_masked(:,:,slc)), 'omitnan')];
+                    mean_ff_remote_array_hemo_p = [mean_ff_remote_array_hemo_p, mean(vec(ff_remote_masked(:,:,slc)), 'omitnan')];
+                    sd_ff_remote_array_hemo_p = [sd_ff_remote_array_hemo_p, std(vec(ff_remote_masked(:,:,slc)), 'omitnan')];
                     
                     name_label_hemo_p{slice_count_hemo_p} = cat(2, name, '_', time_point, '_Slice', num2str(slc));
                     slice_count_hemo_p = slice_count_hemo_p + 1;

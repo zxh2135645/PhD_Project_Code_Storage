@@ -33,6 +33,7 @@ if 0
 end
 
 %% Example 1
+addpath(genpath('../function/'));
 % Baseline data with noise
 data1 = cat(3,  restFlow.*(1+noise*randn(npatients,nterritories)), stressFlow.*(1+noise*randn(npatients,nterritories)));
 % Follow-up data with noise and a bias
