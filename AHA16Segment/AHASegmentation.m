@@ -1,7 +1,10 @@
 function [Segmentpix, stats, Mask_Segn] =AHASegmentation(Imgin,Maskin,Segn,Groove,Endoin)
 % Modified by Xinheng Zhang on 07/30/2020
+%  Mistakes in assigning Mask_Segn, resolved. 06/22/2022
 % Added an alternative way to find center, esp useful for imbalanced
 % myocardium shape
+Mask_Segn = zeros(size(Imgin));
+
 for m=1:size(Imgin,3)
     %find center
     Mask=Maskin(:,:,m);
@@ -22,7 +25,7 @@ for m=1:size(Imgin,3)
     nintv= 2*pi/Segn;
     Img=Imgin(:,:,m);
     
-    Mask_Segn = zeros(size(Imgin));
+    
     for n=1:Segn
         nmax=n*nintv+Groove/180*pi;
         nmin=(n-1)*nintv+Groove/180*pi;
@@ -38,7 +41,7 @@ for m=1:size(Imgin,3)
         Segmentpix{n,m}=Img(nMask==1);
         stats(:,n,m)=[mean(Img(nMask==1)),std(Img(nMask==1)),median(Img(nMask==1)),length(Img(nMask==1))];
         
-        Mask_Segn = Mask_Segn + nMask * n;
+        Mask_Segn(:,:,m) = Mask_Segn(:,:,m) + nMask * n;
         
     end
 end

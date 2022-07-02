@@ -28,6 +28,8 @@ else
 end
 
 stack = dbstack;
+
+
 %% Load data and set up parameters
 clear name;
 B0file = {};
@@ -43,7 +45,6 @@ cd '../reconstructionPipeline/'
 installReconstructionPipeline(MRdat_path);
 startReconstruction;
 cd '../FFMap_IDEAL_fromChris/'
-
 %% IDEAL FF map
 clear phase_unwrapped phase_unwrapped_mn_3d phase_unwrapped_wt_3d B0mapstd;
 
@@ -190,7 +191,7 @@ end
 % iMag = abs(sqrt(sum(iField(:,:,:,end,:).^2,5)));
 % matrix_size=size(iMag);
     %% !!!!! resolution need double check
-    %[Dicomfile,Dicompath] = uigetfile('*.ima', 'Selcet IMA', B0path);  %Charles 30Jan2019, speed up finding files
+    % [Dicomfile,Dicompath] = uigetfile('*.ima', 'Selcet IMA', B0path);  %Charles 30Jan2019, speed up finding files
     [Dicomfile,Dicompath] = uigetfile('*.dcm', 'Selcet DCM', B0path);
     Dicomhdr=dicominfo([Dicompath,Dicomfile]);
     voxel_size=[Dicomhdr.PixelSpacing;Dicomhdr.SliceThickness];
@@ -215,7 +216,10 @@ switch Scan_Type
     otherwise
         Apply_Mask
 end
-Mask = ones(size(iField,1), size(iField, 2), size(iField, 3));
+
+Mask_pre = ones((size(iField,1)-2), (size(iField, 2)-2), size(iField, 3));
+Mask = zeros((size(iField,1)), (size(iField, 2)), size(iField, 3));
+Mask(2:end-1, 2:end-1, :) = Mask_pre;
 
 % iMag = iMag .* Mask;
 % iMag = iMag/max(iMag(:));% Notmalization
@@ -277,12 +281,12 @@ imagesc(abs(unwph_uf(:,:,1)));colorbar;colormap jet;
 %----------------------------------------------------------------------
 
 AllOtherMaps = struct;
-AllOtherMaps.inputphase = inputphase;
+%AllOtherMaps.inputphase = inputphase;
 dTE_2echo=diff(AllPhasemap(n).TE)/1e6;
 fmap_2echo = unwph/(2*pi*dTE_2echo(1)); % Hertz %using trimmed weighted mean
 B0map = fmap_2echo/f_central; %ppm Central frequency
 
-AllOtherMaps.inputphase = inputphase;
+% AllOtherMaps.inputphase = inputphase;
 AllOtherMaps.B0map = B0map;
 AllOtherMaps.fmap_2echo = fmap_2echo;
 AllOtherMaps.Voxelsize = voxel_size;

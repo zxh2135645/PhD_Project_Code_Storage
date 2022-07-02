@@ -72,21 +72,23 @@ end
 
 p = 2;
 w1 = effect_fat_rad/pi
-
+% qualityCutoff = 3.5;
 
 if (w1 > 0)
     w = w1;
-    [unwphw,iter,erglist] = phase_unwrap_3d_UNIC(iFreq_raw1,p,iMag,voxel_size,Mask); 
-    energy = erglist;
-    [wkappa,wm_fat,wunwph_uf,iter,erglist,wkiter] = unwrap_unfat_3dP(voxel_size,iMag,w,unwphw,p); % a small mistake found here. 2014.2.21
-    energy = [energy erglist];
+    % [unwphw,iter,erglist] = phase_unwrap_3d_UNIC(iFreq_raw1,p,iMag,voxel_size,Mask); 
+    [unwphw] = qualityGuidedUnwrapping_CenF_Correction(iFreq_raw1, Mask);
+    %energy = erglist;
+    %[wkappa,wm_fat,wunwph_uf,iter,erglist,wkiter] = unwrap_unfat_3dP(voxel_size,iMag,w,unwphw,p); % a small mistake found here. 2014.2.21
+    %energy = [energy erglist];
 end
 
 
 if (w1 < 0)
     w = -w1;  
-    [unwphw,iter,erglist] = phase_unwrap_3d_UNIC(iFreq_raw1,p,iMag,voxel_size,Mask);  
-    energy = erglist;
+    % [unwphw,iter,erglist] = phase_unwrap_3d_UNIC(iFreq_raw1,p,iMag,voxel_size,Mask); 
+    [unwphw] = qualityGuidedUnwrapping_CenF_Correction(iFreq_raw1, Mask);
+    %energy = erglist;
     [wkappa,wm_fat,wunwph_uf,iter,erglist,wkiter] = unwrap_unfat_3dN(voxel_size,iMag,w,unwphw,p);
     energy = [energy erglist];
 end
@@ -122,16 +124,21 @@ if SUBSAMPLE == 2
 iField = iField0;
 % 
 phase_3d = angle(iField(:,:,:,2)./iField(:,:,:,1));
+wunwph_uf = unwphw;
 %% Run IDEAL take wunwph_uf as initial guess 
 %% 
 if 1
-    [xx yy zz] = size(wunwph_uf);
+    [xx yy zz] = size(phase_3d);
     R2s = zeros([1 xx*yy*zz]);
-    [wwater wfat wfreq] = fit_IDEAL(iField(:,:,:,:), TE, dfat, -phase_3d./(2*pi*delta_TE),R2s,10);
+    %[wwater wfat wfreq] = fit_IDEAL(iField(:,:,:,:), TE, dfat, -phase_3d./(2*pi*delta_TE),R2s,10);
+    %[wwater wfat wfreq] = fit_IDEAL(iField(:,:,:,:), TE, dfat, wunwph_uf./(2*pi*delta_TE),R2s,10);
+    %[wwater wfat wfreq] = fit_IDEAL(iField(:,:,:,:), TE, dfat, -phase_3d./(2*pi*delta_TE),R2s,10);
+     [wwater wfat wfreq] = fit_IDEAL(iField(:,:,:,:), TE, dfat, unwphw./(2*pi*delta_TE),R2s,10);
+
     if sum(abs(wfat(:)).^2)>sum(abs(wwater(:)).^2)
         disp(['potential water fat swap']);
         wunwph_uf = wunwph_uf+effect_fat_rad;
-        [wwater wfat wfreq] = fit_IDEAL((iField(:,:,:,:)), TE, dfat, unwphw/(2*pi*delta_TE),[],10);
+        [wwater wfat wfreq] = fit_IDEAL((iField(:,:,:,:)), TE, dfat, wunwph_uf/(2*pi*delta_TE),[],10);
     end    
 else
     [xx yy zz] = size(wunwph_uf);
