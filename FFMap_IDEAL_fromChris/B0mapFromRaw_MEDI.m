@@ -157,7 +157,28 @@ for n=1:(length(ls)-2)
     [Dicomfile,Dicompath] = uigetfile('*.dcm', 'Selcet DCM', B0path);
     Dicomhdr=dicominfo([Dicompath,Dicomfile]);
     voxel_size=[Dicomhdr.PixelSpacing;Dicomhdr.SliceThickness];
+    
+    dicom_fields = {...
+    'Filename',...
+    'Height', ...
+    'Width', ...
+    'Rows',...
+    'Columns', ...
+    'PixelSpacing',...
+    'SliceThickness',...
+    'SliceLocation',...
+    'ImagePositionPatient',...
+    'ImageOrientationPatient',...
+    'MediaStorageSOPInstanceUID',...
+    'EchoTime',...
+    };
 
+    addpath('../function/')
+    [whatsinit, slice_data] = dicom23D(Dicompath, dicom_fields);
+    
+    for i = 1:size(RawdataFT, 5)
+        TE(i) = slice_data(i).EchoTime;
+    end
     %% Apply Mask
     switch Scan_Type
         case 'Cardiac'
@@ -184,9 +205,22 @@ for n=1:(length(ls)-2)
     if size(iField,5)>1
         % combine multiple coils together, assuming the coil is the fifth dimension
         iField = sum(iField.*conj( repmat(iField(:,:,:,1,:),[1 1 1 size(iField,4) 1])),5);  %
-        iField = sqrt(abs(iField)).*exp(1i*angle(iField));
+        mag_iField = abs(iField);
+        mag_iField_norm = mag_iField ./ max(mag_iField(:));
+
+        Fieldmap_eddy  = sqrt(sqrt((iField(:,:,:,2)./iField(:,:,:,1))./(iField(:,:,:,3)./iField(:,:,:,2))));
+        iField_uneddy = zeros(size(iField));
+        iField_uneddy(:,:,:,1:2:end) = iField(:,:,:,1:2:end).*Fieldmap_eddy;
+        iField_uneddy(:,:,:,2:2:end) = iField(:,:,:,2:2:end)./Fieldmap_eddy;
+        iField = mag_iField_norm.*exp(1i*angle(iField_uneddy));
     end
     
+    figure(); imagesc(angle(iField(:,:,1,2)./iField(:,:,1,1))); caxis([-1 1]);
+    figure(); imagesc(angle(iField(:,:,1,3)./iField(:,:,1,2))); caxis([-1 1]);
+    figure(); imagesc(angle((iField(:,:,1,2)./iField(:,:,1,1))./(iField(:,:,1,3)./iField(:,:,1,2)))); caxis([-1 1]);
+    figure(); imagesc(angle(iField(:,:,1,4)./iField(:,:,1,3))); caxis([-1 1]);
+    figure(); imagesc(angle(iField(:,:,1,5)./iField(:,:,1,4))); caxis([-1 1]);
+
     SUBSAMPLE = 1;
     % voxel_size = AllPhasemap(n).Voxelsize;
     % iFreq = unwrapPhase(iMag, iFreq_raw, matrix_size);
@@ -263,7 +297,7 @@ end
 if FlagSaveB0
     resdir=[MRdat_path,AllPhasemap(n).Name,'/Result/',];
     mkdir(resdir);
-    save([resdir,'AllPhasemap_b0.mat'],'AllPhasemap','-v7.3');
+    save([resdir,'AllPhasemap.mat'],'AllPhasemap','-v7.3');
     
     %save([resdir,'UNIC_FreqMap',B0file(end-12:end-4),'.mat'],'UNIC_FreqMap');
     %save([resdir,'UNIC_B0Map',B0file(end-12:end-4),'.mat'],'UNIC_B0Map');
