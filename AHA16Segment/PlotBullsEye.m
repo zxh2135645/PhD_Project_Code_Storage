@@ -1,5 +1,9 @@
 function PlotBullsEye(SegPixPerc)
-
+% XZ 07/28/2022
+% SegPixPerc is an array in size of 1x16
+% SegPixPerc(1:6) is 6 segments of basal slices
+% SegPixPerc(7:12) is 6 segments of mid ventricle
+% SegPixPerc(13:16) is 4 segments of apex
 
 c = createBullseye([0 1 1 0; 1 2 4 45; 2 3 6 0; 3 4 6 0]);
 set(c,'Color','w','LineWidth',1)

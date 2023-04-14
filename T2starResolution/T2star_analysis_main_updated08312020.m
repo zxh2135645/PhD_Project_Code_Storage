@@ -56,9 +56,11 @@ avg_name = cat(2, 'Avg', num2str(avg_num, '%04.f'));
 
 %% Read T2* DICOM files
 whatsinit = cell(length(list_to_read), 1);
+slice_data = cell(length(list_to_read), 1);
+
 for i = 1:length(list_to_read)
     f = list_to_read{order_to_read(i)};
-    whatsinit{i} = dicom23D(f);
+    [whatsinit{i}, slice_data{i}] = dicom23D(f);
 end
 
 % Display images
@@ -232,6 +234,9 @@ for i = 1:length(whatsinit)
 end
 
 close all;
+%% Hemo Volume (optional)
+voxel_size = slice_data{1}.PixelSpacing(1) * slice_data{1}.PixelSpacing(2) * slice_data{1}.SliceThickness;
+sum(sum(hemo_mask .* mask_struct(1).mi_mask)) .* voxel_size
 %% Otsu segmentation
 num_cluster = 3;
 
@@ -438,7 +443,6 @@ for i = 1:length(whatsinit)
     end
 end
 
-
 res_mi2 = perc_array_mi2 > 0.1;
 
 %%
@@ -447,12 +451,14 @@ figure(); imagesc(aha50(1).Mask_Segn.* mask_struct(1).mi_mask);
 figure('Position', [100 0 1600 1600]);
 sens_mi2 = zeros(length(whatsinit),1);
 spec_mi2 = zeros(length(whatsinit),1);
+% accu_mi2 = zeros(length(whatsinit),1);
 for i = 1:length(whatsinit)
     [cm, order] = confusionmat(res_mi2(1,:),res_mi2(i,:));
     subplot(4,7,i);confusionchart(cm, order); 
     set(gca, 'FontSize', 18);
     sens_mi2(i) = cm(2,2) / (cm(2,2) + cm(2,1));
     spec_mi2(i) = cm(1,1) / (cm(1,1) + cm(1,2));
+    % accu_mi2(i) = (cm(1,1)+cm(2,2)) ./ (cm(1,1)+cm(1,2)+cm(2,1)+cm(2,2));
 end
 
 % Plot sensitivity and specificity
@@ -471,6 +477,7 @@ set(gca, 'FontSize', 18); colorbar;
 aha_analysis.perc_array_mi = perc_array_mi2;
 aha_analysis.sens_mi = sens_mi2;
 aha_analysis.spec_mi = spec_mi2;
+% aha_analysis.accu_mi = accu_mi2;
 aha_analysis.aha_mi = aha_mi2;
 
 % ROC analysis %%
@@ -1091,12 +1098,14 @@ res_mi_avg16 = aha_analysis.perc_array_mi > 0.1;
 figure('Position', [100 0 1600 1600]);
 sens_mi2 = zeros(length(whatsinit),1);
 spec_mi2 = zeros(length(whatsinit),1);
+accu_mi2 = zeros(length(whatsinit),1);
 for i = 1:length(whatsinit)
     [cm, order] = confusionmat(res_mi_avg16(1,:),res_mi2(i,:));
     subplot(4,5,i);confusionchart(cm, order); 
     set(gca, 'FontSize', 18);
     sens_mi2(i) = cm(2,2) / (cm(2,2) + cm(2,1));
     spec_mi2(i) = cm(1,1) / (cm(1,1) + cm(1,2));
+    accu_mi2(i) = (cm(1,1) + cm(2,2))/ (cm(1,1) + cm(1,2) + cm(2,1) + cm(2,2));
 end
 
 %% Plot sensitivity and specificity
@@ -1115,6 +1124,7 @@ set(gca, 'FontSize', 18); colorbar;
 aha_analysis2.perc_array_mi = perc_array_mi2;
 aha_analysis2.sens_mi = sens_mi2;
 aha_analysis2.spec_mi = spec_mi2;
+aha_analysis2.accu_mi = accu_mi2;
 aha_analysis2.aha_mi = aha_mi2;
 
 % ROC analysis %%

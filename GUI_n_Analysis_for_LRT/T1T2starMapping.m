@@ -143,10 +143,10 @@ save(save_f, 'map_to_save');
 % save_f = cat(2, fid_path, fid_file(1:15), 'LRT_Mappings.mat');
 % save(save_f, 'map_to_save');
 %% visualize slices
-slc = 4;
+slc = 3;
 dispim = @(x)fftshift(x(:,:,slc,:),1);
 
-num_seg = 21;
+num_seg = 61;
 figure();
 for i = 1:size(Phi,3)
     temp = Gr\reshape(Phi(:,num_seg,i,1,:), L, []);
@@ -163,10 +163,15 @@ for i = 1:size(Phi,3)
 end
 %% For single-echo mapping
 % T1 map only
+if length(sizes) < 5
+    sizes(5) = 1;
+end
+
 t1_map = zeros(Ny, Nx, Nz, sizes(5));
 %i = input(sprintf('Select Slice of Interest [%d]: ', 3));
 %for i = 1:Nz
-for i = 4:4
+tp = [21, 41, 61, 81, 101, 121, 141, 161, 181];
+for i = 3:3
     dispim = @(x,st)fftshift(x(:,:,i,:),1);
     %for j = 1:1 % Cardiac
     for j = 11:11
@@ -181,10 +186,10 @@ for i = 4:4
                 ipt = abs(reshape(temp(:,:,:), Ny, Nx, 1, []));
                 
                 data = struct;
-                data.IRData= double(ipt);
+                data.IRData= double(ipt(:,:,:,tp));
                 data.Mask= double(mask(:,:,i));
                 
-                Model.Prot.IRData.Mat = IR_array(:,1);
+                Model.Prot.IRData.Mat = IR_array(tp,1);
                 Model.voxelwise = 1;
                 
                 % b- fit dataset
@@ -192,6 +197,7 @@ for i = 4:4
                 
                 mask_temp = double(mask(:,:,i));
                 if any(mask_temp(:))
+                    % t1_map(:,:,i,m) = FitResults.T1 .* (-FitResults.rb ./ FitResults.ra - 1);
                     t1_map(:,:,i,m) = FitResults.T1 .* (-FitResults.rb ./ FitResults.ra - 1);
                 end
             end
@@ -206,9 +212,13 @@ map_to_save.t1_map = t1_map;
 % Plot
 figure();
 %for i = 1:sizes(5)
-for i = 1:Nz
+%for i = 1:Nz
+for i = 3:3
    subplot(3,5,i);
-   imagesc(squeeze(t1_map(:,:,i,15))); axis image; axis off; caxis([200 900]);
+   imagesc(squeeze(FitResults.T1(:,:)));
+   %imagesc(squeeze(t1_map(:,:,i,1))); 
+   axis image; axis off; caxis([200 900]);
+
    % title(cat(2, 'Section ', num2str(i)));
    title(cat(2, 'Slice ', num2str(i)));
 end
@@ -230,6 +240,9 @@ end
 
 t1_masked = BW.* t1_map;
 t1_masked(isnan(t1_masked)) = 0;
+% t1_masked = BW .* FitResults.T1;
+% t1_masked(isnan(t1_masked)) = 0;
+% mean(nonzeros(t1_masked(:,:,3)))
 
 N_nt = sizes(5);
 % T1 values of ROI
@@ -422,8 +435,8 @@ map_to_save.t1_map = t1_map;
 
 %% ImageJ
 % Convert mat to dicom (T1 map)
-load(strcat(fid_path, fid_file(1:15), 'LRT_Mappings_Seg15_CardiacPhase11.mat'), 'map_to_save');
-t1_map = map_to_save.t1_map;
+% load(strcat(fid_path, fid_file(1:15), 'LRT_Mappings_Seg15_CardiacPhase11.mat'), 'map_to_save');
+% t1_map = map_to_save.t1_map;
 
 figure();
 for i = 1:size(t1_map, 3)
@@ -456,7 +469,8 @@ dicom_fields = {...
     'MediaStorageSOPInstanceUID',...
     'TriggerTime',...
     'RepetitionTime',...
-    'EchoTime', 
+    'EchoTime',...
+    'EchoTrainLength',
     };
 
 whatsinit = cell(length(list_to_read), 1);
@@ -465,10 +479,18 @@ for i = 1:length(list_to_read)
     [whatsinit{i} slice_data] = dicom23D(f, dicom_fields);
 end
 
+NumEcho = slice_data(1).EchoTrainLength;
+NumSlc = length(slice_data) / NumEcho;
 slc = 3;
+
 for m = 1:sizes(5)
     %metadata = dicominfo(slice_data{1}(m).Filename);
-    metadata = dicominfo(slice_data(m).Filename);
+    
+    i = ceil(m/NumSlc);
+    slc_virtual = m - (i-1) * NumSlc;
+    
+    idx = (slc_virtual - 1)*NumEcho + i;
+    metadata = dicominfo(slice_data(idx).Filename);
     
     t1 = uint16(t1_map(:,:,slc,m));
     metadata.WindowCenter = 500;
@@ -476,7 +498,7 @@ for m = 1:sizes(5)
     metadata.SmallestImagePixelValue = min(t1(:));
     metadata.LargestImagePixelValue = max(t1(:));
     
-    fname = cat(2, save_dir, fid_file(1:18), 'Echo', num2str(1), '_Section', num2str(m), '_ForImageJ', '.dcm');
+    fname = cat(2, save_dir, fid_file(1:19), 'Echo', num2str(1), '_Section', num2str(m), '_Slice', num2str(slc), '_ForImageJ', '.dcm');
     dicomwrite(t1, fname, metadata, 'CreateMode', 'copy');
 end
 

@@ -176,7 +176,7 @@ end
 % TODO need to iterate tissue width: [0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 3.0]
 % This has become the main body
 
-res_array = [0.4, 0.6, 0.8, 1.2, 1.6, 2];
+res_array = [0.4, 0.6, 0.8, 1.0, 1.2, 1.6, 2];
 
 dx = 0.1; % mm
 dy = 0.1; % mm
@@ -195,72 +195,78 @@ TE_array = [2.55, 5.80, 9.90, 15.56, 21.22]';
 t2star_hemo = 15;
 t2star_remote = 38;
 tissue_canvas = struct;
+tissue_canvas_cell = cell(10, 1);
 
-for w = 1:length(width_max)
-    t_width = width_max(w);
-    disp(['width is: ', num2str(t_width)])
-    tic;
-    tissue_canvas(w).t_width = t_width;
-    hemo_w = round(t_width / dx);
-    hemo_ww = fix(hemo_w/2);
-    t_hemo = zeros(Ny, Nx);
-    t_remote = zeros(Ny, Nx);
-    
-    if mod(hemo_w, 2) == 0
-        t_hemo(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww-1)) = 1;
-        t_remote = ~t_hemo;
-    else
-        t_hemo(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww)) = 1;
-        t_remote = ~t_hemo;
-    end
-    
-    %gre(1, d2r(60), 790, 1200, 40, 15)
-    signal_gre = zeros(Ny, Nx, length(TE_array));
-    remote_gre = zeros(Ny, Nx, length(TE_array),1);
-    hemo_t2star = ones(Ny, Nx) * t2star_hemo;
-    remote_t2star = ones(Ny, Nx) * t2star_remote;
-    % sigma = 0.02;
-    
-    sigma_array = 0.01:0.01:0.1;
-    C_t2star_fit_reshape = zeros(Ny, Nx, length(res_array), length(sigma_array));
-    
-    for s = 1:length(sigma_array)
-        sigma = sigma_array(s);
-        for i = 1:length(TE_array)
-            TE = TE_array(i);
-            noise = randn(Ny, Nx) * sigma;
-            signal_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, hemo_t2star) + noise;
-            remote_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, remote_t2star) + noise;
+
+for cc = 1:length(tissue_canvas_cell)
+    for w = 1:length(width_max)
+        t_width = width_max(w);
+        disp(['width is: ', num2str(t_width)])
+        tic;
+        tissue_canvas(w).t_width = t_width;
+        hemo_w = round(t_width / dx);
+        hemo_ww = fix(hemo_w/2);
+        t_hemo = zeros(Ny, Nx);
+        t_remote = zeros(Ny, Nx);
+
+        if mod(hemo_w, 2) == 0
+            t_hemo(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww-1)) = 1;
+            t_remote = ~t_hemo;
+        else
+            t_hemo(:, (Nx/2-hemo_ww):(Nx/2+hemo_ww)) = 1;
+            t_remote = ~t_hemo;
         end
-        
-        t = signal_gre .* t_hemo + remote_gre .* t_remote;
-        res_array = [0.4, 0.6, 0.8, 1.2, 1.6, 2];
-        C = zeros([Ny, Nx, length(res_array), size(t,3)]);
-        
-        for i = 1:length(res_array)
-            res = res_array(i);
-            for te = 1:length(TE_array)
-                C(:,:,i,te) = Func_map_to_bloc(dx, Nx, res, t(:,:,te));
+
+        %gre(1, d2r(60), 790, 1200, 40, 15)
+        signal_gre = zeros(Ny, Nx, length(TE_array));
+        remote_gre = zeros(Ny, Nx, length(TE_array),1);
+        hemo_t2star = ones(Ny, Nx) * t2star_hemo;
+        remote_t2star = ones(Ny, Nx) * t2star_remote;
+        % sigma = 0.02;
+
+        sigma_array = 0.01:0.01:0.1;
+        C_t2star_fit_reshape = zeros(Ny, Nx, length(res_array), length(sigma_array));
+
+        for s = 1:length(sigma_array)
+            sigma = sigma_array(s);
+            for i = 1:length(TE_array)
+                TE = TE_array(i);
+                noise = randn(Ny, Nx) * sigma;
+                signal_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, hemo_t2star) + noise;
+                remote_gre(:,:,i) = gre(1, d2r(18), 121, 1200, TE, remote_t2star) + noise;
             end
+
+            t = signal_gre .* t_hemo + remote_gre .* t_remote;
+            res_array = [0.4, 0.6, 0.8, 1.2, 1.6, 2];
+            C = zeros([Ny, Nx, length(res_array), size(t,3)]);
+
+            for i = 1:length(res_array)
+                res = res_array(i);
+                for te = 1:length(TE_array)
+                    C(:,:,i,te) = Func_map_to_bloc(dx, Nx, res, t(:,:,te));
+                end
+            end
+            %
+
+            C_gre = reshape(C, [], length(TE_array));
+            C_t2star_fit = zeros(size(C_gre, 1), 1);
+            %options = fitoptions('Method', 'NonlinearLeastSquares');
+            %options.Lower = [0 -10];
+            %options.Upper = [1, -0.01];
+            for i = 1:Nx*Ny*length(res_array)
+                f_t = fit(TE_array, C_gre(i,:)', 'exp1', 'Lower', [0 -10], 'Upper', [1 -0.01]);
+                C_t2star_fit(i) = -1/f_t.b;
+                %f_remote = fit(TE_array, remote_gre, 'exp1');
+            end
+
+            C_t2star_fit_reshape(:,:,:,s) = reshape(C_t2star_fit, Ny, Nx, length(res_array));
         end
-        %
-        
-        C_gre = reshape(C, [], length(TE_array));
-        C_t2star_fit = zeros(size(C_gre, 1), 1);
-        %options = fitoptions('Method', 'NonlinearLeastSquares');
-        %options.Lower = [0 -10];
-        %options.Upper = [1, -0.01];
-        for i = 1:Nx*Ny*length(res_array)
-            f_t = fit(TE_array, C_gre(i,:)', 'exp1', 'Lower', [0 -10], 'Upper', [1 -0.01]);
-            C_t2star_fit(i) = -1/f_t.b;
-            %f_remote = fit(TE_array, remote_gre, 'exp1');
-        end
-        
-        C_t2star_fit_reshape(:,:,:,s) = reshape(C_t2star_fit, Ny, Nx, length(res_array));
+        toc;
+        tissue_canvas(w).C_t2star_fit_reshape = C_t2star_fit_reshape;
     end
-    toc;
-    tissue_canvas(w).C_t2star_fit_reshape = C_t2star_fit_reshape;
+    tissue_canvas_cell{cc} = tissue_canvas;
 end
+
 %% Plot
 C_t2star_fit_reshape = tissue_canvas(1).C_t2star_fit_reshape;
 for s = 1:length(sigma_array)
@@ -294,7 +300,6 @@ SimPhantom_10132021.tissue_canvas = tissue_canvas;
 save_dir = uigetdir;
 fname = 'SimPhantom_10132021';
 save(cat(2, save_dir, '/', fname), 'SimPhantom_10132021');
-
 %% Load SimPhantom_04202021.mat
 clear all;
 close all;
@@ -308,7 +313,11 @@ load(f_to_read);
 res_array = SimPhantom_04202021.res_array;
 sigma_array = SimPhantom_04202021.sigma_array;
 width_max = SimPhantom_04202021.width_max;
-save_dir = cat(2, base_dir, '/img/Simulation_Phantom/');
+save_dir = cat(2, base_dir, '/img/');
+if ~exist(save_dir)
+    mkdir(save_dir);
+end
+
 for v = 1:length(width_max)
     w = width_max(v);
     C_t2star_fit_reshape = SimPhantom_04202021.tissue_canvas(v).C_t2star_fit_reshape;
@@ -384,7 +393,7 @@ save(cat(2, save_dir, fname), 'SimPhantom_analysis');
 
 %% Heatmap of CNR (04/20/2021)
 
-save_dir = cat(2, base_dir, '/img/Simulation_Phantom/');
+save_dir = cat(2, base_dir, '/img/');
 for i = 1:length(SimPhantom_analysis)
     CNR_array = SimPhantom_analysis(i).CNR_array;
     SNR_array = SimPhantom_analysis(i).SNR_array;
@@ -403,22 +412,22 @@ for i = 1:length(SimPhantom_analysis)
     saveas(gcf, cat(2, save_dir, fname));
 end
 %% Save images
-res_array = SimPhantom_04042021.res_array;
-sigma_array = SimPhantom_04042021.sigma_array;
-save_dir = cat(2, base_dir, '/img/Simulation_Phantom/');
-for s = 1:length(sigma_array)
-    figure();
-    for i = 1:length(res_array)
-        subplot(3,2,i);
-        imagesc(SimPhantom_04042021.C_t2star_fit_reshape(:,:,i,s));
-        caxis([0 50]); axis image; axis off;
-        colormap(brewermap([],'RdBu'));
-    end
-    sigma = sigma_array(s);
-    sigma_str = num2str(sigma,'%0.2f');
-    fname = cat(2, 'SimPhantom_04222021_Sigma_', sigma_str([1 3 4]) ,'.tif');
-    %saveas(gcf, cat(2, save_dir, fname));
-end
+% res_array = SimPhantom_04202021.res_array;
+% sigma_array = SimPhantom_04202021.sigma_array;
+% save_dir = cat(2, base_dir, '/img/');
+% for s = 1:length(sigma_array)
+%     figure();
+%     for i = 1:length(res_array)
+%         subplot(3,2,i);
+%         imagesc(C_t2star_fit_reshape(:,:,i,s));
+%         caxis([0 50]); axis image; axis off;
+%         colormap(brewermap([],'RdBu'));
+%     end
+%     sigma = sigma_array(s);
+%     sigma_str = num2str(sigma,'%0.2f');
+%     fname = cat(2, 'SimPhantom_04202021_Sigma_', sigma_str([1 3 4]) ,'.tif');
+%     %saveas(gcf, cat(2, save_dir, fname));
+% end
 %% Load SimPhantom_04042021.mat
 clear all;
 close all;
@@ -443,6 +452,34 @@ for s = 1:length(sigma_array)
     sigma_str = num2str(sigma,'%0.2f');
     fname = cat(2, 'SimPhantom_04222021_Sigma_', sigma_str([1 3 4]) ,'.tif');
     %saveas(gcf, cat(2, save_dir, fname));
+end
+
+%% Save images 2023
+clear all;
+close all;
+addpath('../function/');
+
+base_dir = uigetdir;
+f_to_read = cat(2, base_dir, '/Simulation_Results/Phantom/SimPhantom_03162023.mat');
+load(f_to_read);
+res_array = SimPhantom_03162023.res_array;
+sigma_array = SimPhantom_03162023.sigma_array;
+width_max = SimPhantom_03162023.width_max;
+save_dir = cat(2, base_dir, '/img/Simulation_Phantom/');
+%%
+for s = 1:length(sigma_array)
+    figure();
+    for i = 1:4
+        img = SimPhantom_03162023.tissue_canvas{1}(1).C_cell{1,s};
+        subplot(2,2,i);
+        imagesc(img(:,:,i));
+        caxis([0 50]);; axis image; axis off;
+        colormap(brewermap([],'RdBu'));
+    end
+    sigma = sigma_array(s);
+    sigma_str = num2str(sigma,'%0.2f');
+    fname = cat(2, 'SimPhantom_03162023_w6_Sigma_', sigma_str([1 3 4]) ,'.tif');
+    saveas(gcf, cat(2, save_dir, fname));
 end
 %% SimPhantom_04042021 analysis
 dx = 0.1;
@@ -616,12 +653,10 @@ t_t2star_fit_reshape = reshape(t_t2star_fit, Ny, Nx);
 % Matrices
 figure();
 for i = 1:length(res_array)
-    
-res = res_array(i);
-C = Func_map_to_bloc(dx, Nx, res, t_t2star_fit_reshape);
-subplot(3,2,i); imagesc(C); caxis([0 50]);
-colormap(brewermap([],'RdYlBu')); axis image; axis off;
-
+    res = res_array(i);
+    C = Func_map_to_bloc(dx, Nx, res, t_t2star_fit_reshape);
+    subplot(3,2,i); imagesc(C); caxis([0 50]);
+    colormap(brewermap([],'RdYlBu')); axis image; axis off;
 end
 
 

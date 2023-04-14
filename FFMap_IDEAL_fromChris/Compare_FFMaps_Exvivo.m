@@ -4,21 +4,24 @@ close all;
 addpath('../function/');
 Scan_Type='Cardiac';
 
-[HBfile, HBpath] = uigetfile('*.mat');
-load(cat(2, HBpath, HBfile));
+% [HBfile, HBpath] = uigetfile('*.mat');
+% load(cat(2, HBpath, HBfile));
 
 
 base_dir = uigetdir;
-ff_hb = load(cat(2, base_dir, '/Result/AllPhasemap_7777-00170_SAHARA_EXVIVO_06222022.mat'));
-ff_phase = abs(ff_hb.fat) ./ (abs(ff_hb.fat) + abs(ff_hb.water));
-ff_phase = real(ff_hb.fat) ./ (real(ff_hb.fat) + real(ff_hb.water));
+ff_hb = load(cat(2, base_dir, '/Result_FromWorkstation_07052022/AllPhasemap_SAHARA.mat'));
+ff_hb = load(cat(2, base_dir, '/Result_FromWorkstation_07052022/AllPhasemap_RYN.mat'));
+%ff_phase = real(ff_hb.fat) ./ (real(ff_hb.fat) + real(ff_hb.water));
+ff_diego = load(cat(2, base_dir, '/FF_Data_06232022/7777-00170_SAHARA_EXVIVO_06222022/3D_IDEAL_Avg4_Bipolar.mat'));
+ff_diego = load(cat(2, base_dir, '/FF_Data_06232022/RYN_EXVIVO3_06092022/3D_IDEAL_Avg4_Bipolar_0051.mat'));
 
-ff_diego = load(cat(2, base_dir, '/Result/ResultsMatlab_06232022/7777-00170_SAHARA_EXVIVO_06222022/3D_IDEAL_Avg4_Bipolar.mat'));
-ff_hd = ff_diego.fwmc_ff;
 
 %% Show Image
-ff_hd_trunc = ff_hd(:,:,49:52);
+ff_phase = abs(ff_hb.fat_r2s) ./ (abs(ff_hb.fat_r2s) + abs(ff_hb.water_r2s));
+ff_hd = ff_diego.fwmc_ff;
 
+ff_hd_trunc = ff_hd(:,:,49:52);
+ff_phase = ff_phase(:,:,49:52);
 figure();
 for i = 1:size(ff_phase, 3)
     subplot(2,2,i);
@@ -33,12 +36,13 @@ end
 
 %% Save image
 name = 'Sahara';
+name = 'Ryn';
 time_point = '1YR'
 
-filename = cat(2, base_dir, '/../MATLAB/T1_Fat_Project/img/', name,  '/', name, '_', time_point, '/', 'FFMap_Comparison_QualGuided_Exvivo_real.gif');
+filename = cat(2, base_dir, '/../MATLAB/T1_Fat_Project/img/', name,  '/', name, '_', time_point, '/', 'FFMap_Comparison_QualGuided_Exvivo_r2s.gif');
 
 h = figure();
-for slc = 1:size(fat, 3)
+for slc = 1:size(ff_phase, 3)
     drawnow;
     subplot(1,2,1);
     imagesc(ff_hd_trunc(:,:,slc)); caxis([0 20]); colormap jet; colorbar; axis image;
@@ -135,18 +139,18 @@ nstates = length(states);
 
 
 
-data1 = reshape(LocPixCount, [], 1, 1);
-data2 = reshape(LocPixCount_hb, [], 1, 1);
+% data1 = reshape(LocPixCount, [], 1, 1);
+% data2 = reshape(LocPixCount_hb, [], 1, 1);
 
-idx = find(myo_ff_eroded ~= 0);
-data1 = reshape(ff_hd_trunc(idx), [], 1, 1);
-data2 = reshape(ff_phase_trans(idx)*100, [], 1, 1);
+% idx = find(myo_ff_eroded ~= 0);
+% data1 = reshape(ff_hd_trunc(idx), [], 1, 1);
+% data2 = reshape(ff_phase_trans(idx)*100, [], 1, 1);
 
 data1 = reshape(mean_hd(:), [], 1, 1);
 data2 = reshape(mean_hb(:), [], 1, 1);
 
-data1 = reshape(std_hd(:), [], 1, 1);
-data2 = reshape(std_hb(:), [], 1, 1);
+% data1 = reshape(std_hd(:), [], 1, 1);
+% data2 = reshape(std_hb(:), [], 1, 1);
 
 % BA plot paramters
 tit = 'FF Comparison'; % figure title

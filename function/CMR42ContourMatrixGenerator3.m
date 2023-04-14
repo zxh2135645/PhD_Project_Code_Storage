@@ -201,18 +201,17 @@ if any(contour_idx(:))
         shifted_myo = zeros(size(volume_image));
         shifted_blood = zeros(size(volume_image));
         % index_array
-        
+
         for i = 1:num
             shifted_heart(:,:,index_array(i)) = flipud(rot90(heart(:,:,i),1));
             shifted_myo(:,:,index_array(i)) = flipud(rot90(myocardium(:,:,i),1));
             shifted_heart(:,:,index_array(i)) = imfill(shifted_heart(:,:,i), 'holes');
             mask_heart = shifted_heart(:,:,index_array(i)) .* volume_image(:,:,index_array(i));
             mask_myocardium = shifted_myo(:,:,index_array(i)) .* volume_image(:,:,index_array(i));
-            
+
             shifted_blood(:,:,index_array(i)) = flipud(rot90(blood_pool(:,:,i),1));
             shifted_blood(:,:,index_array(i)) = imfill(shifted_blood(:,:,index_array(i)), 'holes');
             mask_blood = shifted_blood(:,:,index_array(i)) .* volume_image(:,:,index_array(i));
-            
         end
         
         % Export Exclude Contour

@@ -29,7 +29,6 @@ end
 
 stack = dbstack;
 
-
 %% Load data and set up parameters
 clear name;
 B0file = {};
@@ -47,11 +46,11 @@ startReconstruction;
 cd '../FFMap_IDEAL_fromChris/'
 %% IDEAL FF map
 clear phase_unwrapped phase_unwrapped_mn_3d phase_unwrapped_wt_3d B0mapstd;
-
-N = (length(ls)-3);
+gap = 3;
+N = (length(ls)-gap);
 
 for n = 1:N
-    filename = [MRdat_path, case_name, directory_name, ls(n+3).name];
+    filename = [MRdat_path, case_name, directory_name, ls(n+gap).name];
     twix_obj_in = mapVBVD(filename, 'removeOS'); % return all image-data:
     if (length(twix_obj_in)>1)% R.Y. avoid adj coil sensitivity
         for  k=1:length(twix_obj_in)
@@ -84,10 +83,14 @@ for n = 1:N
     old_path = GetFullPath(cat(2, B0path, '../../FF_Data_FromIDEAL/', PatientName, '/'));
     new_path = GetFullPath(cat(2, B0path, '../../FF_Data_FromIDEAL/', PatientName_new, '/'));
     [status,message,messageId] = movefile( old_path, new_path);
-
-    xspace_glob = glob(cat(2, new_path, 'xspace', nameSession, '/*'));
+    
+    if exist(cat(2, new_path, 'xspace', nameSession), 'dir')
+        xspace_glob = glob(cat(2, new_path, 'xspace', nameSession, '/*'));
+    else
+        xspace_glob = glob(GetFullPath(cat(2, B0path, '../xdata/xspace', nameSession, '/*')));
+    end
+    
     xspace_cell = cell(length(xspace_glob), 1);
-
     for eco = 1:length(xspace_glob)
         xspace_cell{eco} = load(xspace_glob{eco});
     end
@@ -191,31 +194,31 @@ end
 % iMag = abs(sqrt(sum(iField(:,:,:,end,:).^2,5)));
 % matrix_size=size(iMag);
     %% !!!!! resolution need double check
-    % [Dicomfile,Dicompath] = uigetfile('*.ima', 'Selcet IMA', B0path);  %Charles 30Jan2019, speed up finding files
-    [Dicomfile,Dicompath] = uigetfile('*.dcm', 'Selcet DCM', B0path);
+    [Dicomfile,Dicompath] = uigetfile('*.ima', 'Selcet IMA', B0path);  %Charles 30Jan2019, speed up finding files
+    %[Dicomfile,Dicompath] = uigetfile('*.dcm', 'Selcet DCM', B0path);
     Dicomhdr=dicominfo([Dicompath,Dicomfile]);
     voxel_size=[Dicomhdr.PixelSpacing;Dicomhdr.SliceThickness];
 %% Apply Mask
 clear iField
-
 n = 1;
+
+% switch Scan_Type
+%     case 'Cardiac'
+%         Mask=AllPhasemap(n).Mask;
+%     case 'ICD'
+%         %do nothing
+%         Mask=AllPhasemap(n).Mask;
+%     case 'Brain'
+%         Apply_Mask_Brain
+%     case 'fMRI'
+%         Apply_Mask_Brain
+%         Apply_Mask_Transverse
+%     otherwise
+%         Apply_Mask
+% end
+
 % XZ 06/08/2022
 iField = permute(RawdataFT_5D,[2 3 5 4 1])*100; % NumCh, NumRO, NumPE, NumEcho, NumSlices =>  NumRO, NumPE, NumSlices, NumEcho, NumCh
-
-switch Scan_Type
-    case 'Cardiac'
-        Mask=AllPhasemap(n).Mask;
-    case 'ICD'
-        %do nothing
-        Mask=AllPhasemap(n).Mask;
-    case 'Brain'
-        Apply_Mask_Brain
-    case 'fMRI'
-        Apply_Mask_Brain
-        Apply_Mask_Transverse
-    otherwise
-        Apply_Mask
-end
 
 Mask_pre = ones((size(iField,1)-2), (size(iField, 2)-2), size(iField, 3));
 Mask = zeros((size(iField,1)), (size(iField, 2)), size(iField, 3));
@@ -252,8 +255,12 @@ end
 
 % odd_idx = [1,3,5,7];
 % iFreq = unwrapPhase(iMag, iFreq_raw, matrix_size);
-[water,fat,iFreq,unwph_uf,unwph,N_std] = ...
-    spurs_gc(iField(:,:,:,:),AllPhasemap(n).TE*1e-6,f_central,voxel_size, Mask>0); %iFreq in rad
+SUBSAMPLE = 1;
+dfat = -3.5e-6*f_central;
+LABEL = 2;
+
+[water,fat,iFreq,unwph_uf,unwph,N_std,R2s] = ...
+    spurs_gc(iField(:,:,:,:),AllPhasemap(n).TE*1e-6,f_central,voxel_size, Mask>0,SUBSAMPLE,dfat,LABEL); %iFreq in rad
 % TODO (06/16/2022)
 % Phase unwrapping is not working properly
 % figure(); imagesc(angle(iField(:,:,1,2)./iField(:,:,1,1))); caxis([-1 1]);
@@ -268,7 +275,7 @@ imagesc(abs(water(:,:,1)));colorbar;colormap jet;caxis([0,0.5]);
 subplot(2,2,3);
 imagesc(abs(iFreq(:,:,1)));colorbar;colormap jet;caxis([-pi pi])
 subplot(2,2,4);
-imagesc(abs(unwph_uf(:,:,1)));colorbar;colormap jet;
+imagesc(unwph_uf(:,:,1));colorbar;colormap jet;
 
 
 % normalization
@@ -293,6 +300,7 @@ AllOtherMaps.Voxelsize = voxel_size;
 AllOtherMaps.water = water;
 AllOtherMaps.fat = fat;
 AllOtherMaps.unwph = unwph;
+AllOtherMaps.R2s = R2s;
 AllOtherMaps.AllPhasemap = AllPhasemap;
 
 %% save file

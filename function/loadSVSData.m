@@ -1,5 +1,5 @@
 function ss = loadSVSData(dst_dir, SeriesNum, InstanceNum)
-    addpath('../../OXSA/');
+    addpath('../OXSA/');
 
     dt = Spectro.dicomTree('dir',dst_dir);
 

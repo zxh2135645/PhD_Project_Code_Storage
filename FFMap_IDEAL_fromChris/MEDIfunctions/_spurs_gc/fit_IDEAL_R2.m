@@ -1,4 +1,4 @@
-function [water fat freq R2s iter model]= fit_IDEAL_R2(s0, t, f_fat, f0, R2s, max_iter)
+function [water fat freq R2s iter model fitting_error]= fit_IDEAL_R2(s0, t, f_fat, f0, R2s, max_iter)
 matrix_size = size(s0);
 numvox = prod(matrix_size(1:end-1));
 numte = matrix_size(end);
@@ -33,9 +33,16 @@ t = repmat(t,[1 numvox]);
 % O = ones([numte numvox]).*exp(repmat(-R2s,[numte 1]).*t);
 % C = real(exp(-1i*2*pi*f_fat*t)).*exp(repmat(-R2s, [numte 1]).*t);
 
+% rp = 0.01*[9.45*exp(-1i*pi*0.181), 64.66, 9.67*exp(-1i*pi*0.046), ...
+%    2.26*exp(-1i*pi*0.567), 2.22*exp(-1i*pi*0.244), 8.83*exp(-1i*pi*0.089)];
 O = ones([numte numvox]);
-C = exp(-1i*2*pi*f_fat*t);
 
+% C = zeros(size(t));
+% for f = 1:length(f_fat)
+%     C = C + rp(f) .* exp(1i*2*pi*f_fat(f)*t);
+% end
+
+C = exp(-1i*2*pi*f_fat*t);
 
 y = zeros([3 numvox]);
 dy = zeros([3 numvox]);
@@ -77,10 +84,16 @@ R2s = -reshape(imag(y(1,:))*2*pi,matrix_size(1:end-1));
 water = reshape(y(2,:),matrix_size(1:end-1));
 fat = reshape(y(3,:),matrix_size(1:end-1));
 model = P.*(O.*repmat(y(2,:),[numte 1]) + C.*repmat(y(3,:),[numte 1]));
-model = reshape(model,matrix_size);
+model = permute(model, [2,1]);
+% model = reshape(model,matrix_size);
 % s_model = [s0;model];
 % figure; plot(s0,'ro'); hold on; plot(model,'bx');hold off;
 % axis([-max(abs(real(s_model))) max(abs(real(s_model))) -max(abs(imag(s_model))) max(abs(imag(s_model)))]*1.2)
+
+fitting_error_vector = sqrt(sum((abs(model) - abs(s0')).^2, 2))./sum(abs(s0'),2);
+fitting_error = reshape(fitting_error_vector, matrix_size(1:end-1));
+%figure();
+%imagesc(fitting_error(:,:,1));
 
 freq(isinf(freq)) = 0;
 freq(isnan(freq)) = 0;

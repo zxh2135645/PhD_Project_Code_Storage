@@ -12,7 +12,6 @@ addpath('../function/');
 % aha_anlysis
 % T2star_meanSD_table
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 %% 1. representitative subjects (20P10_Exvivo7, 18P93 -> 18P95)
 labels = {'T1', 'T1MAP', 'T2', 'T2MAP', 'T2STAR', '_T2STAR', 'MGRE', 'T1_TSE', 'FATSAT', 'MT'};
 
@@ -1000,6 +999,7 @@ set(gca,'LineWidth', 1.5,'TickLength',[0.025 0.025]);
 set(gca,'TickDir','out', 'YGrid', 'on');
 set(gca,'box','off')
 %% T2* values in the hemorrhage (no clear correlation)
+% subject_name_cell = {'18P90', '18P93', '20P40', '20P10_Exvivo7', '20P11_Exvivo6', '18P92', '18P94_Exvivo3', '18P95', '17P73', '20P48'};
 mean_t2star_array = [26.2308, 30.7600, 23.0624, 26.6097, 23.1755, 26.4926, 25.2607, 25.2070, 22.1008, 27.3151];
 sd_t2star_array = [4.2677, 2.4475, 6.1379, 3.1481, 4.3568, 4.3842, 2.2723, 4.0519, 3.2397, 5.1619];
 figure(); plot(mean_t2star_array, iron_ratio, 'o');
