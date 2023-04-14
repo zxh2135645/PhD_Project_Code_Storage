@@ -24,9 +24,12 @@
 % last modified by Jianwu 2014.9.3
 % last modified by Jianwu, add voxel_size when computing the gradient
 
-function [wwater wfat wfreq wunwph_uf unwphw N_std ] = spurs_gc(iField,TE,CF,voxel_size,Mask,SUBSAMPLE,dfat)
+function [wwater wfat wfreq wunwph_uf unwphw N_std R2s fitting_error] = spurs_gc(iField,TE,CF,voxel_size,Mask,SUBSAMPLE,dfat,LABEL)
 if nargin<6
     SUBSAMPLE = 1;
+end
+if nargin<8
+    LABEL = 1;
 end
 
 TE = TE - TE(1);
@@ -59,19 +62,28 @@ end
 iMag = sqrt(sum(abs(iField).^2,4));
 
 
-
 delta_TE = TE(2) - TE(1);
 
 if nargin < 7
     dfat = -3.5e-6*CF;
+    % dfat = [-244.3, -221.7, -175.4, -119.3, -32.1, 34] / (42.58*1.5) * 10^(-6) * CF;
+end
+
+if length(dfat) > 1
+    rp = 0.01*[9.45*exp(-1i*pi*0.181), 64.66, 9.67*exp(-1i*pi*0.046), ...
+        2.26*exp(-1i*pi*0.567), 2.22*exp(-1i*pi*0.244), 8.83*exp(-1i*pi*0.089)];
+    dfat = sum(rp .* dfat);
 end
     dyna_range = 1/delta_TE;
     effect_fat_Hz = dfat + floor( (0.5*dyna_range-dfat)/dyna_range)*dyna_range;
     effect_fat_rad = effect_fat_Hz/dyna_range*2*pi;
 
 
+
 p = 2;
-w1 = effect_fat_rad/pi
+% w1 = effect_fat_rad(2)/pi
+w1 = real(effect_fat_rad)/pi % TODO: Is real correct?
+
 % qualityCutoff = 3.5;
 
 if (w1 > 0)
@@ -89,8 +101,8 @@ if (w1 < 0)
     % [unwphw,iter,erglist] = phase_unwrap_3d_UNIC(iFreq_raw1,p,iMag,voxel_size,Mask); 
     [unwphw] = qualityGuidedUnwrapping_CenF_Correction(iFreq_raw1, Mask);
     %energy = erglist;
-    [wkappa,wm_fat,wunwph_uf,iter,erglist,wkiter] = unwrap_unfat_3dN(voxel_size,iMag,w,unwphw,p);
-    energy = [energy erglist];
+    %[wkappa,wm_fat,wunwph_uf,iter,erglist,wkiter] = unwrap_unfat_3dN(voxel_size,iMag,w,unwphw,p);
+    %energy = [energy erglist];
 end
 
 % interpolation to get the field map
@@ -127,24 +139,25 @@ phase_3d = angle(iField(:,:,:,2)./iField(:,:,:,1));
 wunwph_uf = unwphw;
 %% Run IDEAL take wunwph_uf as initial guess 
 %% 
-if 1
+if LABEL == 1
     [xx yy zz] = size(phase_3d);
     R2s = zeros([1 xx*yy*zz]);
     %[wwater wfat wfreq] = fit_IDEAL(iField(:,:,:,:), TE, dfat, -phase_3d./(2*pi*delta_TE),R2s,10);
     %[wwater wfat wfreq] = fit_IDEAL(iField(:,:,:,:), TE, dfat, wunwph_uf./(2*pi*delta_TE),R2s,10);
     %[wwater wfat wfreq] = fit_IDEAL(iField(:,:,:,:), TE, dfat, -phase_3d./(2*pi*delta_TE),R2s,10);
-     [wwater wfat wfreq] = fit_IDEAL(iField(:,:,:,:), TE, dfat, unwphw./(2*pi*delta_TE),R2s,10);
-
-    if sum(abs(wfat(:)).^2)>sum(abs(wwater(:)).^2)
-        disp(['potential water fat swap']);
-        wunwph_uf = wunwph_uf+effect_fat_rad;
-        [wwater wfat wfreq] = fit_IDEAL((iField(:,:,:,:)), TE, dfat, wunwph_uf/(2*pi*delta_TE),[],10);
-    end    
-else
+    %[wwater wfat wfreq R2s iter model fitting_error] = fit_IDEAL_R2(iField(:,:,:,:), TE, dfat, unwphw./(2*pi*delta_TE),R2s,10);
+    %[wwater wfat wfreq R2s iter model fitting_error] = fit_IDEAL_R2_MultiPeak(iField(:,:,:,:), TE, dfat, unwphw./(2*pi*delta_TE),R2s,10);
+    [wwater wfat wfreq R2s iter model fitting_error] = fit_IDEAL_R2(iField(:,:,:,:), TE, dfat, unwphw./(2*pi*delta_TE), R2s, 30);
+%     if sum(abs(wfat(:)).^2)>sum(abs(wwater(:)).^2)
+%         disp(['potential water fat swap']);
+%         wunwph_uf = wunwph_uf+effect_fat_rad;
+%         [wwater wfat wfreq] = fit_IDEAL((iField(:,:,:,:)), TE, dfat, wunwph_uf/(2*pi*delta_TE),[],10);
+%     end    
+elseif LABEL == 2
     [xx yy zz] = size(wunwph_uf);
     R2s = zeros([1 xx*yy*zz]);
     % note that when include R2s in IDEAL, the result may contain may noisey point
-    [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, (wunwph_uf - 2*pi)/(2*pi*delta_TE),R2s,30);
+    [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, wunwph_uf/(2*pi*delta_TE),R2s,30);
     % [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, unwphw/(2*pi*delta_TE),R2s,30);
     %% maybe try the following: but need choosing the filter parameter of hann_low for different dataset
 %   [wwater wfat wfreq R2s] = fit_IDEAL_R2(conj(iField(:,:,:,:)), TE, dfat, (wunwph_uf)/(2*pi*delta_TE),R2s,5);

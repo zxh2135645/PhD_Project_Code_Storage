@@ -4,16 +4,16 @@ close all;
 [fid_file, fid_path] = uigetfile('*.mat');
 load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params');
 %% single slice - slice dimension
-dispim = @(x)fftshift(x(:,:,9,:),1);
+dispim = @(x)fftshift(x(:,:,3,:),1);
 
-temp = Gr\reshape(Phi(:,161,1,1,:), L, []);
+temp = Gr\reshape(Phi(:,191,:,1,end), L, []);
 temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
 cw = max(vec(abs(temp)));
 
 
-% ax1 = implay(abs(temp/cw));
-figure();
-ax2 = imagesc(abs(temp(:,:,1)/cw)); axis image; colormap gray;axis off;
+ax1 = implay(abs(temp/cw));
+%figure();
+%ax2 = imagesc(abs(temp(:,:,3)/cw)); axis image; colormap gray;axis off;
 % for i = 1:size(temp,3)
 %     subplot(1,3,i) 
 %     ax2 = imagesc(abs(temp(:,:,i)/cw)); axis image; colormap gray;

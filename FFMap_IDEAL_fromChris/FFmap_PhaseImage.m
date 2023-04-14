@@ -13,11 +13,11 @@ Scan_Type='Cardiac';
 %maskpercent=0.1;
 
 
-
 SOS = @(x) sqrt(sum(abs(x).^2,3));
 
 dicom_dir = uigetdir();
 dicom_folder = '3D_IDEAL_Avg4_Bipolar';
+dicom_folder = '3D_IDEAL_AVG4';
 dicom_fields = {...
     'Filename',...
     'Height', ...
@@ -37,8 +37,11 @@ dicom_fields = {...
     'EchoNumber',...
     };
 
-[img_mag slice_data_mag] = dicom23D(cat(2, dicom_dir, '/', dicom_folder, '/'), dicom_fields);
-[img_phase slice_data_phase] = dicom23D(cat(2, dicom_dir, '/', dicom_folder, '_PHASE/'), dicom_fields);
+% [img_mag slice_data_mag] = dicom23D(cat(2, dicom_dir, '/', dicom_folder, '/'), dicom_fields);
+% [img_phase slice_data_phase] = dicom23D(cat(2, dicom_dir, '/', dicom_folder, '_PHASE/'), dicom_fields);
+
+[img_mag slice_data_mag] = dicom23D(cat(2, dicom_dir, '/', dicom_folder, '_0008/'), dicom_fields);
+[img_phase slice_data_phase] = dicom23D(cat(2, dicom_dir, '/', dicom_folder, '_0009/'), dicom_fields);
 
 matrix_size(1) = single(slice_data_mag(1).Width);
 matrix_size(2) = single(slice_data_mag(1).Height);
@@ -141,7 +144,7 @@ else
 end
 
 %%
-iField_trunc = iField(:,:,49:52,:);
+iField_trunc = iField(:,:,45:50,:);
 % figure(); imagesc(angle(iField_trunc(:,:,1,2)./iField_trunc(:,:,1,1))); caxis([-1 1]);
 % figure(); imagesc(angle(iField_trunc(:,:,1,3)./iField_trunc(:,:,1,2))); caxis([-1 1]);
 % figure(); imagesc(angle(iField_trunc(:,:,1,4)./iField_trunc(:,:,1,3))); caxis([-1 1]);
@@ -168,21 +171,69 @@ figure(); imagesc(angle(iField_trunc(:,:,1,3)./iField_trunc(:,:,1,2))); caxis([-
 figure(); imagesc(angle(iField_trunc(:,:,1,4)./iField_trunc(:,:,1,3))); caxis([-1 1]);
 figure(); imagesc(angle(iField_trunc(:,:,1,5)./iField_trunc(:,:,1,4))); caxis([-1 1]);
 figure(); imagesc(angle((iField_trunc(:,:,1,2)./iField_trunc(:,:,1,1))./(iField_trunc(:,:,1,3)./iField_trunc(:,:,1,2)))); caxis([-1 1]);
-
 %%
-[water,fat,iFreq,unwph_uf,unwph,N_std] = ...
-    spurs_gc(iField_trunc(:,:,:,:),TE*1e-3,f_central,voxel_size, Mask>0);
+mask_f = GetFullPath(cat(2, dicom_dir, '/../mask_roi.mat'));
+mask_roi = zeros(size(iField_trunc,1), size(iField_trunc,2), size(iField_trunc,3));
+if ~exist(mask_f)
+    for slc = 1:size(iField_trunc,3)
+        figure();
+        imagesc(abs(iField_trunc(:,:,slc,2)));axis image;
+        roi = drawpolygon;
+        mask_roi(:,:,slc) = createMask(roi);
+    end
+    save(mask_f, 'mask_roi');
+else
+    load(mask_f);
+end
+%%
+SUBSAMPLE = 1;
+%dfat = [-244.3, -221.7, -175.4, -119.3, -32.1, 34] / (42.58*1.5) * 10^(-6) * f_central;
+dfat = -221.7 / (42.58*1.5) * 10^(-6) * f_central;
+LABEL = 1;
+
+[water,fat,iFreq,unwph_uf,unwph,N_std, R2s, fitting_error] = ...
+    spurs_gc(iField_trunc(:,:,:,:),TE*1e-3,f_central,voxel_size, Mask>0, SUBSAMPLE, dfat, LABEL);
+
+%[water,fat,fib,iFreq,unwph_uf,unwph,N_std, R2s, fitting_error] = ...
+%    spurs_gc_MP(iField_trunc(:,:,:,:),TE*1e-3,f_central,voxel_size, Mask>0, SUBSAMPLE, dfat, LABEL, mask_roi);
 
 %% Save data
+slc = 3;
 figure;
 subplot(2,2,1);
-imagesc(abs(fat(:,:,1)));colorbar;colormap jet;caxis([0,0.2]);
+imagesc(abs(fat(:,:,slc)));colorbar;colormap jet; caxis([0,0.2]);
 subplot(2,2,2);
-imagesc(abs(water(:,:,1)));colorbar;colormap jet;caxis([0,0.5]);
+imagesc(abs(water(:,:,slc)));colorbar;colormap jet;caxis([0,0.5]);
 subplot(2,2,3);
-imagesc(abs(iFreq(:,:,1)));colorbar;colormap jet;caxis([-pi pi])
+%imagesc(abs(fib(:,:,slc)));colorbar;colormap jet;caxis([0 1])
+imagesc(abs(iFreq(:,:,slc)));colorbar;colormap jet;caxis([-pi pi])
 subplot(2,2,4);
-imagesc(abs(unwph_uf(:,:,1)));colorbar;colormap jet;
+imagesc(abs(fitting_error(:,:,slc)));colorbar;colormap jet;
+
+ff = zeros(size(fat));
+fat_flag = fat > water;
+ff(fat_flag) = abs(fat(fat_flag)) ./ abs(fat(fat_flag) + water(fat_flag));
+ff(~fat_flag) = 1 - (abs(water(~fat_flag))) ./ abs(fat(~fat_flag) + water(~fat_flag));
+
+figure(); subplot(2,2,1); imagesc(ff(:,:,1));caxis([0 0.2]);
+subplot(2,2,2); imagesc(ff(:,:,2));caxis([0 0.2]);
+subplot(2,2,3); imagesc(ff(:,:,3));caxis([0 0.2]);
+subplot(2,2,4); imagesc(ff(:,:,4));caxis([0 0.2]);
+
+figure(); subplot(2,2,1); imagesc(fitting_error(:,:,1));caxis([0 0.2]);
+subplot(2,2,2); imagesc(fitting_error(:,:,2));caxis([0 0.2]);
+subplot(2,2,3); imagesc(fitting_error(:,:,3));caxis([0 0.2]);
+subplot(2,2,4); imagesc(fitting_error(:,:,4));caxis([0 0.2]);
+
+% fibf = zeros(size(fib));
+% fib_flag = fib > (water+fat);
+% fibf(fib_flag) = abs(fib(fib_flag)) ./ abs(fat(fib_flag) + water(fib_flag) + fib(fib_flag));
+% fibf(~fib_flag) = 1 - (abs(water(~fib_flag)+ fib(~fib_flag))) ./ abs(fat(~fib_flag) + water(~fib_flag) + fib(~fib_flag));
+% 
+% figure(); subplot(2,2,1); imagesc(fibf(:,:,1));caxis([0 0.2]);
+% subplot(2,2,2); imagesc(fibf(:,:,2));caxis([0 0.2]);
+% subplot(2,2,3); imagesc(fibf(:,:,3));caxis([0 0.2]);
+% subplot(2,2,4); imagesc(fibf(:,:,4));caxis([0 0.2]);
 
 AllOtherMaps = struct;
 %AllOtherMaps.inputphase = inputphase;
@@ -196,7 +247,10 @@ AllOtherMaps.fmap_2echo = fmap_2echo;
 AllOtherMaps.Voxelsize = voxel_size;
 AllOtherMaps.water = water;
 AllOtherMaps.fat = fat;
+% AllOtherMaps.fib = fib;
 AllOtherMaps.unwph = unwph;
+AllOtherMaps.fitting_error = fitting_error;
+AllOtherMaps.R2s = R2s;
 
 if FlagSaveB0
     resdir=GetFullPath([dicom_dir, '/..','/Result/']);
@@ -205,14 +259,14 @@ if FlagSaveB0
     end
     strings = strsplit(dicom_dir, '/');
     subject_name = strings{end};
-    save([resdir,'AllPhasemap_', subject_name, '.mat'], '-struct', 'AllOtherMaps','-v7.3');
+    save([resdir,'AllPhasemap_', subject_name, '_SinglePeak.mat'], '-struct', 'AllOtherMaps','-v7.3');
 end
 
 %%
-img_mag = reshape(img_mag, size(img_mag, 1), size(img_mag, 2), num_eco, []);
-img_phase = reshape(img_phase, size(img_mag, 1), size(img_mag, 2), num_eco, []);
-
-img_mag_permute = permute(img_mag, [1,2,4,3]);
-img_phase_permute = permute(img_phase, [1,2,4,3]);
-
-iPhase = (img_phase_permute * slice_data_mag.RescaleSlope + slice_data_mag.RescaleIntercept)/single(max(img_phase_permute(:)))
+% img_mag = reshape(img_mag, size(img_mag, 1), size(img_mag, 2), num_eco, []);
+% img_phase = reshape(img_phase, size(img_mag, 1), size(img_mag, 2), num_eco, []);
+% 
+% img_mag_permute = permute(img_mag, [1,2,4,3]);
+% img_phase_permute = permute(img_phase, [1,2,4,3]);
+% 
+% iPhase = (img_phase_permute * slice_data_mag.RescaleSlope + slice_data_mag.RescaleIntercept)/single(max(img_phase_permute(:)))

@@ -5,12 +5,13 @@ clear all;
 base_dir = uigetdir;
 %base_dir = 'D:\Data\Cedars_2020_pig\DHARMAKUMAR_5257_20P10_05222020_WEEK4\';
 % addpath(cat(2, base_dir, 'src'));
-addpath('D:\Data\Exvivo_Phantom'); % To add glob function...
-addpath('D:\src\function\');
+% addpath('D:\Data\Exvivo_Phantom'); % To add glob function...
+% addpath('D:\src\function\');
+addpath('function/');
 
 dir_glob = glob(cat(2, base_dir, '\SVS_*'));
 
-water_ppm = 4.6;
+water_ppm = 4.7;
 ppm_ref = water_ppm;
 
 
@@ -20,13 +21,14 @@ idx_array = input('Please refer to dir_glob for the index you want to import \n 
 InstanceNum = 1;
 ss = cell(length(idx_array), 1);
 
+%%
 for i = 1:length(idx_array)
     dst_dir = dir_glob{idx_array(i)};
     f_parts = strsplit(fileparts(dst_dir), '_');
     SeriesNum = str2num(f_parts{end});
     concent = f_parts{end-1};
     
-    ss{i} = loadSVSData(dst_dir, SeriesNum, InstanceNum);
+    ss{i} = loadSVSData(dst_dir, SeriesNum, InstanceNum); % Doesn't work for current version
     
     if i == 1
         s = ss{i};
@@ -38,8 +40,13 @@ for i = 1:length(idx_array)
     end
     
     spectrum = ss{i}.spectra{1};
-    
 end
+
+figure();
+plot(abs(ss{1}.spectra{1}));
+hold on;
+plot(abs(ss{2}.spectra{1}));
+legend({'MI', 'Remote'});
 %% Get the signal percentage
 N = linspace(1,n,n);
 perc = zeros(size(ss,1), 1);
@@ -68,7 +75,7 @@ for i = 1:size(ss, 1)
     cellToSave{i, 2} = perc(i);
 end
 
-save(GetFullPath(cat(2, base_dir, '\..\perc_DiffParameters.mat')), 'cellToSave');
+% save(GetFullPath(cat(2, base_dir, '\..\perc_DiffParameters.mat')), 'cellToSave');
 %% Plot spectrum
 % No water suppression on the left
 % Water suppression on the right
@@ -80,6 +87,7 @@ for i = 1:size(ss, 1)
 end
 
 [mmax, mx] = max(max(lim_mat, [], 2));
+[mmin, mm] = min(max(lim_mat, [], 2));
 fixed_yl = ceil((mmax - 0) * 1.05);
 
 % Original YLim

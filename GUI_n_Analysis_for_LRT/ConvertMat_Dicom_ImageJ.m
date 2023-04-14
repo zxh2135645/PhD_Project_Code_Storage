@@ -44,14 +44,14 @@ for i = 1:length(list_to_read)
     [whatsinit{i} slice_data] = dicom23D(f, dicom_fields);
 end
 
-save_dir = cat(2, fid_path, 'DICOM_T1/');
+save_dir = cat(2, fid_path, 'DICOM_T1_Seg14/');
 if ~exist(save_dir, 'dir')
     mkdir(save_dir);
 end
 
 NumEcho = slice_data(1).EchoTrainLength;
 NumSlc = length(slice_data) / NumEcho;
-slc = 4;
+slc = 3;
 
 for m = 1:sizes(5)
     %metadata = dicominfo(slice_data{1}(m).Filename);

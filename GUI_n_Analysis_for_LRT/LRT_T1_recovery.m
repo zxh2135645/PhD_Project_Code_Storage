@@ -2,6 +2,9 @@ clear all;
 close all;
 
 %% T1 recovery of the current LRT parameters settings
+% Updated in July 11, 2022
+% Dictionary fitting looks more promising to me
+
 Nseg = 192;
 TR = 0.0131;
 alpha_deg = 5;
@@ -55,19 +58,44 @@ Mz_dict_norm_abs_truc = Mz_dict_norm_abs(:,21:end);
 [fid_file, fid_path] = uigetfile('*.mat');
 load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params', 'Hidx');
 
+% Load mask
+mask_f = cat(2, fid_path, 'mask_rect.mat');
+mask = zeros(Ny, Nx, Nz);
+if ~exist(mask_f)
+    for i = 1:Nz
+        dispim = @(x,st)fftshift(x(:,:,i,:),1);
+        for j = 1:1
+            for k = 1:1
+                temp = Gr\reshape(Phi(:,:,j,k,:), L, []);
+                temp = reshape(reshape(dispim(reshape(U, Ny, Nx, Nz, [])),[],L) * temp, Ny, Nx, [], params.NEco);
+                cw = 0.5*max(vec(abs(temp)));
+                figure();
+                imagesc(abs(temp(:,:,end,1))/cw); axis image;
+                roi = drawpolygon;
+                mask(:,:,i) = createMask(roi);
+            end
+        end
+    end
+    save(mask_f, 'mask');
+else
+    load(mask_f);
+end
 %%
-N_nt = 15;
+N_nt = 14;
+slc = 4;
 t1_map_3d_nt = zeros(Ny, Nx, Nz, N_nt);
 for nt = 1:N_nt
-    for i = 1:Nz
+%for nt = 1:2
+    % for i = 1:Nz
+    for i = slc:slc
         dispim = @(x,st) fftshift(x(:,:,i,:), 1);
         
-        temp = Gr\reshape(Phi(:,:,1,end,nt), L, []);
+        temp = Gr\reshape(Phi(:,:,1,1,nt), L, []);
         temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
         cw = 0.5*max(vec(abs(temp)));
         
-        % ipt_2d = abs(reshape(temp(:,:,21:end), [], (Nseg-20)));
-        ipt_2d = abs(reshape(temp(:,:,:), [], Nseg));
+        ipt_2d = abs(reshape(temp(:,:,21:end), [], (Nseg-20)));
+        % ipt_2d = abs(reshape(temp(:,:,:), [], Nseg));
         % mask = roipoly(abs(temp(:,:,41)) / cw); axis image;
         mask_1d = vec(mask);
         
@@ -79,11 +107,62 @@ for nt = 1:N_nt
     end
     
 end
+%% Check images
+figure();
+for i = 1:size(t1_map_3d_nt, 4)
+    subplot(3,5,i);
+    imagesc(t1_map_3d_nt(:,:,slc,i)); axis image;
+end
+
+% why!
+figure('Position', [100 100 900 900]);
+% imagesc(t1_map_3d_nt(:,:,3,1));
+mapoi = t1_map_3d_nt(:,:,slc,1);
+imagesc(mapoi); axis image;
+roi_coord = drawpolygon;
+roi = createMask(roi_coord);
+
+mean_t1_array = zeros(size(t1_map_3d_nt, 4), 1);
+for i = 1:size(t1_map_3d_nt, 4)
+    mean_t1_array(i) = mean(nonzeros(t1_map_3d_nt(:,:,slc,i) .* roi));
+end
+
+% N_nt = 15;
+% rep_array = [1:5:192];
+% 
+% for nt = 1:N_nt
+%     for i = slc:slc
+%         dispim = @(x,st) fftshift(x(:,:,i,:), 1);
+%         
+%         temp = Gr\reshape(Phi(:,:,1,1,nt), L, []);
+%         temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
+%         cw = 0.5*max(vec(abs(temp)));
+%         
+%         implay(abs(temp(:,:,rep_array)) ./ cw);
+%     end
+% end
+
+%% ImageJ
+% Convert mat to dicom (T1 map)
+figure();
+for i = 1:size(t1_map_3d_nt, 4)
+    subplot(4,4,i);
+    imagesc(t1_map_3d_nt(:,:,slc,i).*mask(:,:,slc)); caxis([100 1000]); axis image;
+end
+
+save_dir = cat(2, fid_path, 'DICOM_T1_Dict_Seg14/');
+if ~exist(save_dir, 'dir')
+    mkdir(save_dir);
+end
+
+dicom_dir = uigetdir;
+
+Func_ConvertMat_Dicom_ImageJ(t1_map_3d_nt, fid_file, dicom_dir, save_dir, slc, sizes);
 
 %% T1 map values
 figure('Position', [100 100 900 900]);
 % imagesc(t1_map_3d_nt(:,:,3,1));
-mapoi = t1_map_3d_nt(:,:,1,15);
+mapoi = t1_map_3d_nt(:,:,3,1);
 imagesc(mapoi); axis image;
 roi_coord = drawpolygon;
 roi = createMask(roi_coord);

@@ -5,9 +5,10 @@ close all;
 [fid_file, fid_path] = uigetfile('*.mat');
 load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params', 'Hidx', 'RR_int');
 %% single slice - slice dimension
-dispim = @(x)fftshift(x(:,:,3,:),1);
+dispim = @(x)fftshift(x(:,:,1,:),1);
+resp_phase = 4;
 
-temp = Gr\reshape(Phi(:,41,:,end,end), L, []);
+temp = Gr\reshape(Phi(:,36,:,resp_phase,end), L, []);
 temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
 cw = max(vec(abs(temp)));
 
@@ -15,6 +16,10 @@ cw = max(vec(abs(temp)));
 ax1 = implay(abs(temp/cw));
 % figure();
 % ax2 = imagesc(abs(temp(:,:,1)/cw)); axis image; colormap gray;axis off;
+%% Heart rate
+[fid_file, fid_path] = uigetfile('*.mat');
+load(strcat(fid_path, fid_file), 'RR_int');
+hr = 60/(RR_int/1000)
 %% Cardiac Function
 soi = [6, 5, 4, 3, 2, 1, 14, 13, 12];
 temtemp_4D = zeros(Ny, Nx, size(Phi, 3), length(soi));
@@ -22,7 +27,7 @@ for i = 1:length(soi)
     slc = soi(i);
     dispim = @(x)fftshift(x(:,:,slc,:),1);
     
-    temp = Gr\reshape(Phi(:,41,:,end,end), L, []);
+    temp = Gr\reshape(Phi(:,41,:,resp_phase,end), L, []);
     temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
     
     temtemp_4D(:,:,:,i) = temp;
@@ -44,9 +49,13 @@ mask_array = sum(reshape(mask, [], size(Phi, 3)), 1);
 [~, ED] = max(mask_array);
 [~, ES] = min(mask_array);
 
+
 %% ED & ES
 % ED = 17;
 % ES = 6;
+
+ED = 24;
+ES = 12;
 mask_ed = zeros(Ny, Nx, length(soi));
 mask_es = zeros(Ny, Nx, length(soi));
 
@@ -64,6 +73,7 @@ for i = 1:length(soi)
     mask_es(:,:,i) = createMask(roi);
 end
 
+
 %% Calculate
 dx = params.dReadoutFOV_mm ./ params.lBaseResolution;
 dy = params.dPhaseFOV_mm ./ params.lBaseResolution;
@@ -77,6 +87,24 @@ ESV = sum(mask_es_array) * voxel / 1000; % mL
 SV = EDV - ESV;
 EF = SV / EDV;
 
+save_path = cat(2, fid_path, 'cardiac_function/');
+if ~exist(save_path, 'dir')
+   mkdir(save_path); 
+end
+
+card_func = struct;
+card_func.EDV = EDV;
+card_func.ESV = ESV;
+card_func.SV = SV;
+card_func.EF = EF;
+card_func.mask = mask;
+card_func.mask_ed = mask_ed;
+card_func.mask_es = mask_es;
+card_func.ED = ED;
+card_func.ES = ES;
+
+filename = cat(2, fid_file(1:53), '_LRT_CardiacFunction', '.mat');
+save(cat(2, save_path, filename), '-struct', 'card_func');
 % HR and CO
 %% Display LRT
 HR = 60 / RR_int * 1000; % bpm
@@ -92,6 +120,7 @@ save_path = cat(2, fid_path, 'cine/');
 if ~exist(save_path, 'dir')
    mkdir(save_path); 
 end
+
 wx = 80;
 wy = 80;
 strn = [2,3,4,5,6,7,8,9,10];

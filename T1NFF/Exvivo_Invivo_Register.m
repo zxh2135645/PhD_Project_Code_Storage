@@ -7,7 +7,7 @@ addpath('../function/');
 dicom_dir = uigetdir;
 folder_glob = glob(cat(2, dicom_dir, '\*'));
 
-labels = {'T2STAR'};
+labels = {'T2Star'};
 label = labels{1};
 
 idx_array = contains(folder_glob, label);
@@ -38,6 +38,7 @@ end
 img = whatsinit{1};
 name = '18D16';
 name = 'Sahara';
+name = 'Mojave';
 base_dir = uigetdir;
 strings = strsplit(list_to_read{1}, '/');
 strings = strsplit(strings{end-1}, '_');
@@ -454,7 +455,8 @@ idx_array = contains(folder_glob, label);
 % [list_to_read, order_to_read] = NamePicker(folder_glob(idx_array));
 % [243,1,13,24,35,46,57,68,79,90,101] % 18D16
 % [7, 9, 11, 13, 15, 17, 19, 21, 23] % Sahara
-list_to_read = folder_glob([7, 9, 11, 13, 15, 17, 19, 21, 23]);
+% [1, 2, 4, 5, 6] % Mojave
+list_to_read = folder_glob([1, 2, 4, 5, 6]);
 order_to_read = 1:length(list_to_read);
 
 dicom_fields = {...
@@ -622,7 +624,7 @@ alpha(.3);
 % slice_loc_cine_new_new(thera_s_array_cine == 0) = [];
 % thera_s_array_cine(thera_s_array_cine == 0) = [];
 % thera_i_array_cine(thera_i_array_cine == 0) = [];
-% centroids_cine_new = centroids_cine(~cellfun(@isempty, centroids_cine));
+centroids_cine_new = centroids_cine(~cellfun(@isempty, centroids_cine));
 
 slice_loc_cine_new_new = slice_loc_cine_new;
 slice_loc_cine_new_new(thera_s_array_cine == 0) = [];

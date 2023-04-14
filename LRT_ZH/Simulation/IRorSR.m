@@ -213,7 +213,9 @@ end
 
 %% Main Body 2 (6 echo)
 figure('Position', [100 100 1600 1000]);
-T1_array = [400, 500, 600, 700];
+%T1_array = [400, 500, 600, 700];
+T1_array = [1000, 1100, 1200, 1300];
+
 for ttt = 1:length(T1_array)
     T1 = T1_array(ttt);
     TI_array = 10.5 + TR * lSegment * ((1:5) - 1);
@@ -543,12 +545,13 @@ figure();, plot(Mz_recov_TE_dict(:,:,r,c,v,l));ylim([-1 1]);
 %figure(); plot(t(Nstep_TE_indices),Mxy_recov_array(Nstep_TE_indices), 'LineWidth', 1.5);
 %one_rep_Mz(1:N) = Mz_recov_array;
 
-%% After Discuss with Randy
+%% After Discuss with Randy  (This is the true main 08/23/2022)
 % No need to iterate TI, but change the N (#ofSegment)
 df = 0;
 N_ti = 5;
 N_array = [64:2:256];
-T1_array = 300:2:800;
+% T1_array = 300:2:800;
+T1_array = 1000:2:1400;
 
 flip_prep_array = [pi/2, pi];
 Nshot = 1;
@@ -644,7 +647,8 @@ end
 % figure(); plot(Mz_recov_TE_dict{1, 1, 1});
 iters = 100;
 Mz_recov_TE_dict_noise = cell(length(T1_array), length(N_array), length(flip_prep_array), iters);
-T1_array2 = [400, 500, 600, 700];
+% T1_array2 = [400, 500, 600, 700];
+T1_array2 = [1000, 1100, 1200, 1300];
 for its = 1:iters
     for n = 1:length(N_array)
         N = N_array(n);

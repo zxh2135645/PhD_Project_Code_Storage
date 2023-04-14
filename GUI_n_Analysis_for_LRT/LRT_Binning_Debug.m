@@ -4,13 +4,14 @@ close all;
 [fid_file, fid_path] = uigetfile('*.mat');
 load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi_rt_full_init', 'L', 'U_init', 'Ny', 'Nx', 'Nz', 'vec','params', 'Phicard', 'Phiresp', 'ccL', 'Norig');
 %% 1) Before binning - realtime play
+slc = 3;
 dispim = @(x,st)fftshift(x(:,:,3,:),1);
 L_init = 32;
 recon = reshape(U_init, Ny, Nx, Nz, L_init);
 recon = dispim(recon);
 recon = reshape(recon, [], L_init);
 
-recon = reshape(recon*Phi_rt_full_init(:, 3:1:400), Ny, Nx, []);
+recon = reshape(recon*Phi_rt_full_init(:, 4275+1:10:4275*2), Ny, Nx, []);
 
 cw = max(recon(:));
 implay(abs(recon)/abs(cw));
