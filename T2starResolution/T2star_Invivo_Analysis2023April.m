@@ -4,9 +4,10 @@ close all;
 % 20P10_Exvivo7, 20P11_Exvivo6, 18P90, 18P93, 20P40, 18P92, 18P94_Exvivo3, 18P95, 17P73, 20P48
 width_array = [2.40,      0.91,  1.21,  0.53,  0.56,  0.59,          0.92,  0.59,  1.10,  0.69];
 SNR_array =   [9.48,	  5.20,	 5.63,	4.69,  7.05,  6.31,	         8.52,	7.80,  9.54,  11.04];
-bias_array = [0.25	0.547619048	0.145038168	-1	-1	-0.888888889	-0.090909091	3.482758621	-0.568788501	1.155688623];
 
-invivo_array = [2.80	1.3	4.5	0	0	0.1	0.7	3.9	2.1	3.6];
+bias_array = [0.160714286, 0.404761905, 0.094147583, -1, -1, -1, -0.090909091, 3.252873563, -0.568788501, 0.916167665];
+
+invivo_array = [2.60, 1.18, 4.3, 0, 0, 0, 0.7, 3.7, 2.1, 3.2];
 gt_array = [2.24	0.84	3.93	1.23	0.56	0.9	0.77	0.87	4.87	1.67];
 figure();
 p1 = plot3(width_array, bias_array, SNR_array, 'o');
@@ -89,21 +90,24 @@ Rsq2 = 1 - sum((y - yfit(B,x)).^2)/sum((y - mean(y)).^2) % R^2 0.3290
 
 %% Version 3
 sz = 192;
-y = abs(bias_array_v3);
+
+y = abs(bias_array);
 x = width_array;
 yfit = @(b,x) b(1)./(x + b(2)) + b(3);  % Objective Function
 CF = @(b) sum((y-yfit(b,x)).^2);        % Cost Function
 b0 = [1, 0, 0];                      % Initial Parameter Estimates
 [B, fv] = fminsearch(CF, b0); 
 
-X = 0.5:0.1:2.5;
+
+
+X = 0.4:0.1:2.5;
 figure('Position', [0 100 400 400]);
-p1 = scatter(width_array, abs(bias_array_v3), sz, 'filled');
+p1 = scatter(width_array, abs(bias_array), sz, 'filled');
 caxis([5 15]);
 hold on;
 plot(X,yfit(B,X), '--k', 'LineWidth', 3);
 set(gca, 'YDir','reverse', 'XAxisLocation','top');
-ylim([-0.2 5.2]);
+ylim([-0.2 4]);
 Rsq2 = 1 - sum((y - yfit(B,x)).^2)/sum((y - mean(y)).^2) % R^2 0.3290
 
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength', [.02 .02], ...
@@ -131,8 +135,8 @@ res_mat =    [0.9       1.2     1.6     1.9
               0.9       1.2     1.6     1.9
               0.9       1.2     1.6     1.9];
 
-res_mat_voxel = [0.9; 1.2; 1.6; 1.9] * [2 4 6 8]
 
+res_mat_voxel = [0.9; 1.2; 1.6; 1.9] * [2 4 6 8];
 
 bias_mat = [-1              -1              -1              -1    
             -1              -0.107142857    -0.642857143    -1
@@ -147,32 +151,36 @@ SNR_mat = [0.45503212  0.718887262  1.646226415  3.035294118
 
 figure();
 % p1 = plot3(res_mat, bias_mat, SNR_mat, 'o');
-p1 = plot(res_mat, bias_mat, 'o');
+p1 = plot(res_mat_voxel, bias_mat);
+hold on;
+yline(0);
+
+figure();
+% p1 = plot3(res_mat, bias_mat, SNR_mat, 'o');
+p1 = plot(res_mat_voxel, abs(bias_mat));
+hold on;
+yline(0);
+
+figure();
+p1 = plot(res_mat(1,:), abs(bias_mat(1,:)));
+hold on;
+p2 = plot(res_mat(2,:), abs(bias_mat(2,:)));
+p3 = plot(res_mat(3,:), abs(bias_mat(3,:)));
+p4 = plot(res_mat(4,:), abs(bias_mat(4,:)));
 
 
+figure();
+imagesc(abs(bias_mat)); colormap(brewermap([],'*RdYlBu'));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+sz = 144;
+figure();
+p1 = scatter(res_mat(1,:), abs(bias_mat(1,:)), sz, SNR_mat(1,:), 'filled');
+hold on;
+p2 = scatter(res_mat(2,:), abs(bias_mat(2,:)), sz, SNR_mat(2,:), 'filled');
+p3 = scatter(res_mat(3,:), abs(bias_mat(3,:)), sz, SNR_mat(3,:), 'filled');
+p4 = scatter(res_mat(4,:), abs(bias_mat(4,:)), sz, SNR_mat(4,:), 'filled');
+colormap(brewermap([],'*RdYlBu'));
+caxis([2 6])
 
 %% Bland-Altman (width vs bias)
 addpath('../function/BlandAltman/');
