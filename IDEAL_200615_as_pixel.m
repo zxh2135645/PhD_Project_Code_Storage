@@ -25,12 +25,17 @@
 % Import_data = temp(Y_lower:Y_upper,X_lower:X_upper,1:8)/cw;
 Import_data = squeeze(temp(:,:,i,1:4)/cw);
 TE = xvector(1:4);
+%Import_data = temp(Y_lower:Y_upper,X_lower:X_upper,1:8)/cw;
+%TE = xvector;
 
 M = 2;% water + 1 fat peak
 delta_frequencies = [0, 420]; %Hz
 sz = size(Import_data);
+
 resolution = [sz(1),sz(2)];
 echoes = sz(3);
+%resolution = [size_of_import_data(1),size_of_import_data(2)];
+%echoes = size_of_import_data(3);
 
 % psi0 = repmat((42.58e6)*2.89,resolution);%Hz B0 = 2.89T.
 % psi0t = repmat((42.58e6)*2.89, [resolution echoes]);
@@ -68,6 +73,9 @@ PDFF = [];
 rho_hat = repmat(double(00),[resolution 2*M]);
 delta_rho_hat = repmat([0],[resolution 2*M+1]);
 signal_hat = [];
+%rho_hat = repmat(double(0),[resolution 2*M]);
+%delta_rho_hat = repmat([0],[resolution 2*M+1]);
+
 %% Calculate psi
 
 for i = 1 : sz(1)
@@ -106,6 +114,7 @@ for i = 1 : sz(1)
             end
            
             if abs(delta_rho_hat(i,j,1))<0.001
+            % if abs(delta_rho_hat(i,j,1))<0.05
                 break;
             end
         end
@@ -123,6 +132,8 @@ end
 %%
 
 figure,imshow(psi0t(:,:,4));
+%imshow(PDFF)
+
 
 
 
