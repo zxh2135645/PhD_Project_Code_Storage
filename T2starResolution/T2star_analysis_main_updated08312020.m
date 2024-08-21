@@ -234,6 +234,14 @@ for i = 1:length(whatsinit)
 end
 
 close all;
+
+%% See remote
+save_array = 1:1:length(whatsinit);
+for i = 1:length(whatsinit)
+    save_idx = save_array(i);
+    img2 = whatsinit{save_idx};
+    snr = mean(nonzeros(img2 .* mask_struct(save_idx).remote_mask)) ./ std(nonzeros(img2 .* mask_struct(save_idx).remote_mask))
+end
 %% Hemo Volume (optional)
 voxel_size = slice_data{1}.PixelSpacing(1) * slice_data{1}.PixelSpacing(2) * slice_data{1}.SliceThickness;
 sum(sum(hemo_mask .* mask_struct(1).mi_mask)) .* voxel_size
@@ -383,7 +391,7 @@ t2star_table = struct;
 t2star_table.mean_table = mean_table;
 t2star_table.sd_table = sd_table;
 save_table_f = cat(2, subject_data_dir, 'T2star_meanSD_table_', avg_name, '.mat');
-save(save_table_f, 'save_table_f');
+save(save_table_f, 't2star_table');
 
 %% AHA
 addpath('../AHA16Segment/');
@@ -484,7 +492,7 @@ aha_analysis.aha_mi = aha_mi2;
 auc_array_mi2 = zeros(length(whatsinit),1);
 figure('Position', [100 0 1600 1600]);
 for i = 1:length(whatsinit)
-    [X,Y,T,AUC,OPTROCPT] = perfcurve(res_mi2(1,:),perc_array_mi2(i,:), 1);
+    [X,Y,T,AUC,OPTROCPT] = perfcurve(res_mi2(1,:),perc_array_mi2(i,:), 1); % This determines the threshold for what per
     subplot(4,7,i);
     plot(X,Y, 'LineWidth', 2);
     xlabel('FPR');

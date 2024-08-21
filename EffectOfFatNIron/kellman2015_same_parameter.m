@@ -19,8 +19,10 @@ addpath('../BlochSimDemo/');
 alpha = 35;
 T1 = 1000;
 T2 = 45;
-T1_fat = 260;
-T2_fat = 60;
+T1_fat_15t = 260;
+T2_fat_15t = 60;
+T1_fat_3t = 400;
+T2_fat_3t = 100;
 df = 0; %Hz
 f_vec = [-600:10:600];
 
@@ -56,10 +58,10 @@ xlabel('ms'); ylabel('Normalized Magnetization');
 % end
 
 f_vec_3t = [-600:10:600] + 420;
-[MxyTE_fat3t, BSIM_fat3t, plotTEidx_fat3t, bSSFPcat_fat3t, Msimf_fat3t, bSSFPend_fat3t] = bSSFP_engine(M0, T1_fat, T2_fat, df, TR, FA, NTR, dt, f_vec_3t, PLOT_EACHSPIN, PLOT_SS);
+[MxyTE_fat3t, BSIM_fat3t, plotTEidx_fat3t, bSSFPcat_fat3t, Msimf_fat3t, bSSFPend_fat3t] = bSSFP_engine(M0, T1_fat_3t, T2_fat_3t, df, TR, FA, NTR, dt, f_vec_3t, PLOT_EACHSPIN, PLOT_SS);
 
 f_vec_15t = [-600:10:600] + 210;
-[MxyTE_fat15t, BSIM_fat15t, plotTEidx_fat15t, bSSFPcat_fat15t, Msimf_fat15t, bSSFPend_fat15t] = bSSFP_engine(M0, T1_fat, T2_fat, df, TR, FA, NTR, dt, f_vec_15t, PLOT_EACHSPIN, PLOT_SS);
+[MxyTE_fat15t, BSIM_fat15t, plotTEidx_fat15t, bSSFPcat_fat15t, Msimf_fat15t, bSSFPend_fat15t] = bSSFP_engine(M0, T1_fat_15t, T2_fat_15t, df, TR, FA, NTR, dt, f_vec_15t, PLOT_EACHSPIN, PLOT_SS);
 fig = figure();
 
 %pos_idx = real(MxyTElast) >= 0;

@@ -18,8 +18,11 @@ folder_glob = glob(cat(2, base_dir, '/T1FP_Data_02242022/Data/*'));
 Names = ExtractNames(folder_glob);
 
 % labels = {'T1', 'T1MAP', 'T2', 'T2MAP', 'T2STAR', '_T2STAR', 'MGRE', 'T1_TSE', 'FATSAT', 'MT'};
-%time_points = {'0D_baseline', '0D_occl', '0D', '1D', '3D', '7D', '21D', '28D', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR', 'Exvivo'};
-time_points = {'6MO', '9MO', '1YR', '15YR', 'Exvivo'};
+time_points = {'0D_baseline', '0D_occl', '0D', '1D', '3D', '7D', '21D', '28D', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR', 'Exvivo'};
+% time_points = {'6MO', '9MO', '1YR', '15YR', 'Exvivo'};
+
+%time_points = {'3D', '7D', '21D', '28D', '8WK', '12WK', '14WK', 'Exvivo'};
+%time_points = {'3D', 'Exvivo'};
 
 OutputPath = GetFullPath(cat(2, base_dir, '/ContourData/'));
 if ~exist(OutputPath, 'dir')
@@ -40,20 +43,20 @@ dicom_fields = {...
     'MediaStorageSOPInstanceUID',...
     };
 
-
 sequence_label = {'LGE', 'T1', 'T2star', 'T2'};
+sequence_label = {'T1_PostCon'};
 sequence_label_exvivo = {'mGRE_3D', 'T1_SIEMENS', 'T2_SIEMENS', 'T2star_SIEMENS', 'T2_CMR', 'T1_CMR', 'T2star_CMR'};
 %% Name check
-name_check = 'Queenie';
+name_check = 'Gobi';
 starting_point = find(strcmp(name_check, Names),1);
 
 %
 % Make it not always overwrite
-%for n = starting_point:length(Names)
-for n = starting_point:starting_point
+for n = starting_point:length(Names)
+%for n = starting_point:starting_point
     name = Names{n};
     for tp = 1:length(time_points)
-    %for tp = 3:3 
+    %for tp = 7:7
     
         time_point = time_points{end-tp+1};
         % XML file is independent on Labels
@@ -94,7 +97,9 @@ for n = starting_point:starting_point
                         
                     end
                 else
+                    %for ll = 2:length(sequence_label)
                     for ll = 1:length(sequence_label)
+                    %for ll = 4:4
                         label = sequence_label{ll};
                         % Check if the dstFolder
                         dstFolder = cat(2, OutputPath, name, '/',  name, '_', time_point, '/', label, '/');

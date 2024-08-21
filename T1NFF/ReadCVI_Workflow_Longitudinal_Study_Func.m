@@ -90,7 +90,7 @@ end
                 if ~isempty(excludeContour)
                     keys = fieldnames(excludeContour);
                     % The code below assumes 2D slice of image; can be
-                    % improved for more      []'
+                    % improved for more      []
                     % Should be
                     
                     % generic use.

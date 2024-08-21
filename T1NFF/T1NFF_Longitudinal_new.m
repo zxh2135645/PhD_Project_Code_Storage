@@ -57,7 +57,7 @@ for_analysis = struct;
 
 
 %for n = 9:length(Names)
-for n = 17:17
+for n = 1:1
 % for n = starting_point:starting_point
 % Do not need to pull up images for baseline
     name = Names{n};
@@ -318,10 +318,10 @@ for n = 1:length(Names)
     status_check(n).status_final = [];
     tp_count = 1;
     for tp = 1:length(time_points)
-        
+
         time_point = time_points{end-tp+1};
         tp_dir = cat(2, base_dir, '/ContourData/',  name, '/', name, '_', time_point,  '/');
-        
+
         if ~exist(tp_dir, 'dir')
             disp(cat(2, 'No folder at: ', name, ' ', time_point));
         else
@@ -333,13 +333,16 @@ for n = 1:length(Names)
                     status_check(n).status(tp_count, i) = 0;
                 end
             end
-            
+
             tp_count = tp_count + 1;
         end
     end
+
     for i = 1:(length(fieldnames(pre_QualControl(n).status))-1)
-        status_check(n).status_final(1,i) = all(status_check(n).status(:,i));
-        % The timepoints of status_check goes from end to beginning
+        if i <= size(status_check(n).status,2)
+            status_check(n).status_final(1,i) = all(status_check(n).status(:,i));
+            % The timepoints of status_check goes from end to beginning
+        end
     end
 end
 
@@ -609,7 +612,7 @@ for n = 1:length(Names)
             for_analysis(n).metrics(tp).mean_remote_r2star = mean(nonzeros(remote_r2star_array));
             for_analysis(n).metrics(tp).sd_remote_r2star = std(nonzeros(remote_r2star_array));
             
-            %close all;
+            close all;
             %break;
             tp_count = tp_count + 1;
         end
@@ -751,8 +754,10 @@ label_t2star = sequence_label{2};
 for_analysis_rim = struct;
 data_storage_rim = struct;
 
+%time_points = {'6MO', '9MO', '1YR', '15YR'};
+
 for n = 1:length(Names)
-%for n = length(Names):length(Names)
+%for n = 2:2
     name = Names{n};
     name_save_dir = cat(2, save_dir, name);
     if ~exist(name_save_dir, 'dir')
@@ -765,7 +770,7 @@ for n = 1:length(Names)
     data_storage_rim(n).data = struct;
         
     for tp = 1:length(time_points)
-    %for tp = 9:9
+    %for tp = 2:2
         time_point = time_points{end-tp+1};
         tp_dir = cat(2, base_dir, '/ContourData/',  name, '/', name, '_', time_point,  '/');
         if ~exist(tp_dir, 'dir')
@@ -860,6 +865,9 @@ for n = 1:length(Names)
                 roi_edg_ff_new(:,:,i)  = edge(squeeze(roi_in_myo_ff_new(:,:,i)),'Canny');
             end
             roi_rimmed_ff_new = (roi_in_myo_ff_new - roi_edg_ff_new)>0;
+            roi_ff_new = roi_ff_new .* roi_rimmed_ff_new;
+
+
             
             [row_roi, col_roi, v_roi] = find(roi_rimmed_ff_new);
             [row_remote, col_remote, v_remote] = find(remote_in_myo_ff_new);
@@ -900,9 +908,12 @@ for n = 1:length(Names)
                 roi_edg_r2star_new(:,:,i)  = edge(squeeze(roi_in_myo_r2star_new(:,:,i)),'Canny');
             end
             roi_rimmed_r2star_new = (roi_in_myo_r2star_new - roi_edg_r2star_new)>0;
+            roi_r2star_new = roi_rimmed_r2star_new .* roi_r2star_new;
+
             [row_roi_r2star, col_roi_r2star, v_roi_r2star] = find(roi_rimmed_r2star_new);
             [row_remote_r2star, col_remote_r2star, v_remote_r2star] = find(remote_in_myo_r2star_new);
-            
+
+           
             
             roi_ff_array = zeros(1, length(row_roi));
             remote_ff_array = zeros(1, length(row_remote));
@@ -944,6 +955,41 @@ for n = 1:length(Names)
             remote_r2star_array(remote_r2star_array > 100) = 100;
 
             
+             % XZ 09/20/2023
+            roi_ff_new(roi_ff_new < 0) = 0;
+            roi_ff_new(roi_ff_new > 100) = 100;
+            roi_r2star_new(roi_r2star_new > 100) = 100;
+
+            thresh = mean(remote_r2star_array) + 2*std(remote_r2star_array);
+            fib_perc = zeros(1, size(roi_ff_new, 3));
+            mi_perc = zeros(1, size(roi_ff_new, 3));
+            mi_pix = zeros(1, size(roi_ff_new, 3));
+            ff_pix = zeros(1, size(roi_ff_new, 3));
+            r2star_pix = zeros(1, size(roi_ff_new, 3));
+            union_pix = zeros(1, size(roi_ff_new, 3));
+            intercept_pix = zeros(1, size(roi_ff_new, 3));
+
+            for xx = 1:size(roi_ff_new, 3)
+                roi_ff_thresh = roi_ff_new(:,:,xx) > 6;
+                ff_pix(xx) = sum(sum(roi_ff_thresh));
+
+                roi_r2star_thresh = roi_r2star_new(:,:,xx) > thresh;
+                r2star_pix(xx) = sum(sum(roi_r2star_thresh));
+
+                roi_union = roi_ff_thresh | roi_r2star_thresh;
+                union_pix(xx) = sum(sum(roi_union));
+
+                roi_intercept = roi_ff_thresh & roi_r2star_thresh;
+                intercept_pix(xx) = sum(sum(roi_intercept));
+
+                fib_perc(xx) = (1 - sum(roi_union(:)) / sum(sum(roi_rimmed_ff_new(:,:,xx))))*100;
+
+                mi_perc(xx) = sum(sum(roi_in_myo_ff(:,:,xx))) / sum(sum(myo_ff_new(:,:,xx)));
+
+                mi_pix(xx) = sum(sum(roi_in_myo_ff(:,:,xx)));
+            end
+
+
             % Plot Histogram of ROI vs Remote (Gross view)
             figure();
             h_ff = histogram(roi_ff_array, 'Normalization', 'probability');xlabel('Fat Fraction (%)'); ylabel('Frequency');
@@ -1026,18 +1072,256 @@ for n = 1:length(Names)
             data_storage_rim(n).data(tp).remote_r2star_array = remote_r2star_array;
             data_storage_rim(n).data(tp).roi_t1_array = roi_t1_array;
             data_storage_rim(n).data(tp).remote_t1_array = remote_t1_array;
+
+            data_storage_rim(n).data(tp).fib_perc = fib_perc;
+            data_storage_rim(n).data(tp).mi_perc = mi_perc;
+            data_storage_rim(n).data(tp).mi_pix = mi_pix;
             
+            data_storage_rim(n).data(tp).ff_pix = ff_pix;
+            data_storage_rim(n).data(tp).r2star_pix = r2star_pix;
+            data_storage_rim(n).data(tp).union_pix = union_pix;
+            data_storage_rim(n).data(tp).intercept_pix = intercept_pix;
+
             tp_count = tp_count + 1;
         end
     end
     close all;
 end
 
+%%
 metrics_save_dir = cat(2, base_dir, '/Results/');
 if ~exist(metrics_save_dir, 'dir')
    mkdir(metrics_save_dir); 
 end
 save(cat(2, metrics_save_dir, 'data_storage_rim.mat'), 'data_storage_rim');
+
+
+%%
+
+%% T2
+output_label = {'LGE', 'T2star'};
+save_dir = GetFullPath(cat(2, base_dir, '/Analysis/'));
+data_save_dir = cat(2, base_dir, '/data/');
+
+% Names = {'Merry', 'Ryn', 'Mojave', 'Sahara', 'ZZ', 'Tina', 'Sunny', 'Queenie', 'Hope', 'Gobi', 'Felicity', 'Evelyn', '18D15', '18D16', '11D05', '11D26', '11D33'};
+%time_points = {'0D_baseline','1D', '7D', '28D', '8WK', '6MO', '9MO', '1YR', '15YR'};
+time_points = {'7D', '8WK', '12WK', '14WK', '4MO', '6MO', '9MO', '1YR', '15YR'};
+
+label_lge = sequence_label{1};
+label_t1 = sequence_label{2};
+label_t2 = 'T2';
+label_mag = 'MAG';
+label_psir = 'PSIR';
+label_t1molli = 'T1MOLLI';
+
+metrics_save_dir = cat(2, base_dir, '/Results/');
+if ~exist(metrics_save_dir, 'dir')
+   mkdir(metrics_save_dir); 
+end
+
+se = strel('disk', 1);
+metrics_t2 = struct;
+L_cell = {};
+count = 1;
+
+min_roi_value = 50;
+max_roi_value = 50;
+
+for n = 3:3
+%for n = 1:1
+    % for n = starting_point:starting_point
+    % Do not need to pull up images for baseline
+    name = Names{n};
+    name_save_dir = cat(2, save_dir, name);
+    if ~exist(name_save_dir, 'dir')
+        mkdir(name_save_dir);
+    end
+    name_data_save_dir = cat(2, data_save_dir, name);
+    if ~exist(name_data_save_dir, 'dir')
+        mkdir(name_data_save_dir);
+    end
+    tp_count = 0;
+
+    metrics_t2(n).name = name;
+    metrics_t2(n).TimePoints = struct;
+
+    %for tp = 1:length(time_points)
+    for tp = 9:9
+        time_point = time_points{end-tp+1};
+        tp_dir = cat(2, base_dir, '/ContourData/', name, '/',  name, '_', time_point,  '/');
+        if ~exist(cat(2, tp_dir, label_t1, '/'), 'dir')
+            disp(cat(2, 'No folder at: ', name, ' ', time_point));
+        elseif (strcmp(name, '18D16') && strcmp(time_point, '9MO'))
+            % skip
+        else
+
+            tp_dir2 = cat(2, name_save_dir, '/', name, '/', time_point, '/');
+            if ~exist(tp_dir2, 'dir')
+                mkdir(tp_dir2);
+            end
+
+            tp_count = tp_count+1;
+
+                % T2
+                myo_glob = glob(cat(2, tp_dir, label_t2, '/', anatomy_label{5}, '/*'));
+                roi_glob = glob(cat(2, tp_dir, label_t2, '/',anatomy_label{3}, '/*'));
+                remote_glob = glob(cat(2, tp_dir, label_t2, '/',anatomy_label{6}, '/*'));
+
+                load(cat(2, tp_dir, label_t2, '/', label_t2, '_vol_img_3D.mat'));
+                load(myo_glob{1});
+                load(roi_glob{1});
+                load(remote_glob{1});
+                load(cat(2, tp_dir, label_t2, '/', label_t2, '_SliceLoc.mat'));
+                slc_array_t1 = slc_array;
+
+                clear myo_t2_eroded
+                for i = 1:size(mask_myocardium_3D, 3)
+                    myo_t2_eroded(:,:,i) = imerode(mask_myocardium_3D(:,:,i), se);
+                end
+
+                
+                roi_in_myo_t2 = myo_t2_eroded .* freeROIMask_3D;
+                remote_in_myo_t2 = myo_t2_eroded .* myoRefMask_3D;
+                roi_t2 = roi_in_myo_t2 .* vol_img_3D;
+                remote_t2 = remote_in_myo_t2 .* vol_img_3D;
+                t2 = vol_img_3D * 0.1; % SCALE FACTOR
+                myo_t2 = myo_t2_eroded;
+                
+
+                metrics_t2(n).TimePoints(tp_count).time_point = time_point;
+                metrics_t2(n).TimePoints(tp_count).mean_t2_roi = mean(nonzeros(t2 .* roi_in_myo_t2));
+                metrics_t2(n).TimePoints(tp_count).mean_t2_remote = mean(nonzeros(t2 .* remote_in_myo_t2));
+                metrics_t2(n).TimePoints(tp_count).std_t2_roi = std(nonzeros(t2 .* roi_in_myo_t2));
+                metrics_t2(n).TimePoints(tp_count).std_t2_remote = std(nonzeros(t2 .* remote_in_myo_t2));
+                metrics_t2(n).TimePoints(tp_count).skewness_t2_roi = skewness(nonzeros(t2 .* roi_in_myo_t2));
+                metrics_t2(n).TimePoints(tp_count).skewness_t2_remote = skewness(nonzeros(t2 .* remote_in_myo_t2));
+                metrics_t2(n).TimePoints(tp_count).kurtosis_t2_roi = kurtosis(nonzeros(t2 .* roi_in_myo_t2))-3;
+                metrics_t2(n).TimePoints(tp_count).kurtosis_t2_remote = kurtosis(nonzeros(t2 .* remote_in_myo_t2))-3;
+
+                metrics_t2(n).TimePoints(tp_count).SliceAnalysis = struct;
+                metrics_t2(n).TimePoints(tp_count).HeteroAnalysis = struct;
+
+                temp_roi = (t2 .* roi_in_myo_t2);
+                temp_remote = (t2 .* remote_in_myo_t2);
+                temp_myo = (t2 .* myo_t2);
+                t2_norm_remote = zeros(size(t2));
+                t2_norm_roi = zeros(size(t2));
+
+                for slc = 1:size(roi_in_myo_t2,3)
+                    min_temp = min(min((nonzeros(temp_roi(:,:,slc)))));
+                    max_temp = max(max((nonzeros(temp_roi(:,:,slc)))));
+
+                    if min_temp < min_roi_value
+                        min_roi_value = min_temp;
+                    end
+
+                    if max_temp > max_roi_value
+                        max_roi_value = max_temp;
+                    end
+                end
+
+                for slc = 1:size(roi_in_myo_t2,3)
+                    %temp_norm_roi = temp_roi(:,:,slc);
+                    %temp_norm_roi(temp_norm_roi == 0) = nan;
+                    % temp_norm_roi = uint8((temp_roi(:,:,slc) - min(min((nonzeros(temp_roi(:,:,slc)+temp_remote(:,:,slc))))))./ (max(max(nonzeros(temp_roi(:,:,slc)+temp_remote(:,:,slc))))-min(min((nonzeros(temp_roi(:,:,slc)+temp_remote(:,:,slc)))))) * 256);
+                    % temp_norm_remote = uint8((temp_remote(:,:,slc) - min(min((nonzeros(temp_roi(:,:,slc)+temp_remote(:,:,slc))))))./ (max(max(nonzeros(temp_roi(:,:,slc)+temp_remote(:,:,slc))))-min(min((nonzeros(temp_roi(:,:,slc)+temp_remote(:,:,slc)))))) * 256);
+
+                    % Hard-coded for Patient data T1 mapping
+                    temp_norm_roi = temp_roi(:,:,slc);
+                    temp_norm_remote = temp_remote(:,:,slc);
+
+                    metrics_t2(n).TimePoints(tp_count).SliceAnalysis(slc).mean_t2_roi = mean(nonzeros(temp_norm_roi .* roi_in_myo_t2(:,:,slc)));
+                    metrics_t2(n).TimePoints(tp_count).SliceAnalysis(slc).mean_t2_remote = mean(nonzeros(temp_norm_remote .* remote_in_myo_t2(:,:,slc)));
+                    metrics_t2(n).TimePoints(tp_count).SliceAnalysis(slc).std_t2_roi = std(nonzeros(temp_norm_roi .* roi_in_myo_t2(:,:,slc)));
+                    metrics_t2(n).TimePoints(tp_count).SliceAnalysis(slc).std_t2_remote = std(nonzeros(temp_norm_remote .* remote_in_myo_t2(:,:,slc)));
+                    metrics_t2(n).TimePoints(tp_count).SliceAnalysis(slc).skewness_t2_roi = skewness(nonzeros(temp_norm_roi .* roi_in_myo_t2(:,:,slc)));
+                    metrics_t2(n).TimePoints(tp_count).SliceAnalysis(slc).skewness_t2_remote = skewness(nonzeros(temp_norm_remote .* remote_in_myo_t2(:,:,slc)));
+                    metrics_t2(n).TimePoints(tp_count).SliceAnalysis(slc).kurtosis_t2_roi = kurtosis(nonzeros(temp_norm_roi .* roi_in_myo_t2(:,:,slc)))-3;
+                    metrics_t2(n).TimePoints(tp_count).SliceAnalysis(slc).kurtosis_t2_remote = kurtosis(nonzeros(temp_norm_remote .* remote_in_myo_t2(:,:,slc)))-3;
+
+                    t2_norm_roi(:,:,slc) = temp_norm_roi;
+                    t2_norm_remote(:,:,slc) = temp_norm_remote;
+                    metrics_t2(n).TimePoints(tp_count).HeteroAnalysis(slc).hetero_roi = Func_Hetero_Analysis(slc, roi_in_myo_t2, t2_norm_roi);
+                    metrics_t2(n).TimePoints(tp_count).HeteroAnalysis(slc).hetero_remote = Func_Hetero_Analysis(slc, remote_in_myo_t2, t2_norm_remote);
+
+
+                    bipolar = temp_roi(:,:,slc) - mean(nonzeros(temp_remote(:,:,slc)));
+                    weighted_map = double(bipolar < 0) .* 2 .* roi_in_myo_t2(:,:,slc) .* bipolar + double(bipolar >= 0) .* roi_in_myo_t2(:,:,slc) .* bipolar;
+                    
+                    lb = 2*(10 - mean(nonzeros(temp_remote(:,:,slc))));
+                    ub = 60 - mean(nonzeros(temp_remote(:,:,slc)));
+                    weighted_map(weighted_map < lb) = lb;
+                    weighted_map(weighted_map > ub) = ub;
+
+                    %temp_norm_roi = uint8((temp_roi(:,:,slc) - 800)./ (1800-800) * 256);
+                    %temp_norm_remote = uint8((temp_remote(:,:,slc) - 800)./ (1800-800) * 256);
+      
+                    bipolar = temp_remote(:,:,slc) - mean(nonzeros(temp_remote(:,:,slc)));
+                    weighted_map_remote = double(bipolar < 0) .* 2 .* roi_in_myo_t2(:,:,slc) .* bipolar + double(bipolar >= 0) .* roi_in_myo_t2(:,:,slc) .* bipolar;
+                    
+                    weighted_map_remote(weighted_map_remote < lb) = lb;
+                    weighted_map_remote(weighted_map_remote > ub) = ub;
+
+                    temp_norm_roi = uint8((weighted_map - lb)./ (ub-lb) * 256);
+                    % temp_norm_remote = uint8((temp_remote(:,:,slc) - 800)./ (1800-800) * 256);
+
+                    non_roi_value = uint8((0 - lb) ./ (ub - lb) * 256);
+
+                    %temp_norm_roi = uint8((temp_roi(:,:,slc) - 0) ./ (60 - 0) * 256);
+                    % temp_norm_remote = uint8((temp_remote(:,:,slc) - 0) ./ (60 - 10) * 256);
+
+                    temp_norm_remote = uint8((weighted_map_remote - lb) ./ (ub - lb) * 256);
+
+                    t1_norm_roi_slc = temp_norm_roi;
+                    t1_norm_roi_slc(t1_norm_roi_slc == non_roi_value) = [];
+                    %figure(); imhist(lge_norm_roi_slc,20);
+                    p_roi = imhist(t1_norm_roi_slc,20);
+                    nonZeros = find(p_roi);
+                    len = length((nonZeros));
+                    pNonZeros = zeros(1,len);
+
+                    for i = 1:len
+                        pNonZeros(i) = p_roi(nonZeros(i));
+                    end
+
+                    % normalize pNonZeros so that sum(p) is one.
+                    pNonZeros = pNonZeros ./ sum(p_roi);
+                    E_roi = -sum(pNonZeros.*log2(pNonZeros));
+
+
+                    non_remote_value = uint8((0 - lb) ./ (ub - lb) * 256);
+
+                    t1_norm_remote_slc = temp_norm_remote;
+                    t1_norm_remote_slc(t1_norm_remote_slc == non_remote_value) = [];
+                    %figure(); imhist(lge_norm_remote_slc,20);
+                    p_remote = imhist(t1_norm_remote_slc,20);
+
+                    nonZeros = find(p_remote);
+                    len = length((nonZeros));
+                    pNonZeros = zeros(1,len);
+
+                    for i = 1:len
+                        pNonZeros(i) = p_remote(nonZeros(i));
+                    end
+
+                    % normalize pNonZeros so that sum(p) is one.
+                    pNonZeros = pNonZeros ./ sum(p_remote);
+                    E_remote = -sum(pNonZeros.*log2(pNonZeros));
+
+
+                    metrics_t2(n).TimePoints(tp_count).HeteroAnalysis(slc).entropy_roi = E_roi;
+                    metrics_t2(n).TimePoints(tp_count).HeteroAnalysis(slc).entropy_remote = E_remote;
+
+                    L = bwlabel(roi_in_myo_t2(:,:,slc));
+                    if length(unique(L)) > 2
+                        L_cell{count} = cat(2, name, ' ', time_point, ' Slice ', num2str(slc));
+                        count = count + 1;
+                    end
+                end
+
+        end
+    end
+end
 %% Plot (Longitudinal plot)
 time_points_lr = fliplr(time_points);
 xtcks = 1:length(time_points);

@@ -55,6 +55,10 @@ SD=(sqrt(H.^2+V.^2+N.^2));
 %% Identify the starting seed point on the phase quality map (central region of the central slice)
 im_phase_quality=SD.*im_mask;
 SE=strel('square',5);
+if length(size(matrixSize)) == 2
+    matrixSize(3) = 1;
+end
+
 im_phase_qualityMask=im_phase_quality(:,:,round(matrixSize(3)/2)).*imerode(im_mask(:,:,round(matrixSize(3)/2)),SE);
 im_phase_qualityMask=uint16(im_phase_qualityMask*100);
 im_phase_qualityMask(find(im_phase_qualityMask==0))=1000;   % Set region outside of im_mask to an arbitrary very low quality 

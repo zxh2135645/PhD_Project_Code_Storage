@@ -197,7 +197,6 @@ t2star_remote = 38;
 tissue_canvas = struct;
 tissue_canvas_cell = cell(10, 1);
 
-
 for cc = 1:length(tissue_canvas_cell)
     for w = 1:length(width_max)
         t_width = width_max(w);
@@ -460,25 +459,28 @@ close all;
 addpath('../function/');
 
 base_dir = uigetdir;
-f_to_read = cat(2, base_dir, '/Simulation_Results/Phantom/SimPhantom_03162023.mat');
+f_to_read = cat(2, base_dir, '/Simulation_Results/Phantom/SimPhantom_04012023.mat');
 load(f_to_read);
-res_array = SimPhantom_03162023.res_array;
-sigma_array = SimPhantom_03162023.sigma_array;
-width_max = SimPhantom_03162023.width_max;
+res_array = SimPhantom_04012023.res_array;
+sigma_array = SimPhantom_04012023.sigma_array;
+width_max = SimPhantom_04012023.width_max;
 save_dir = cat(2, base_dir, '/img/Simulation_Phantom/');
 %%
+figure();
+
 for s = 1:length(sigma_array)
-    figure();
-    for i = 1:4
-        img = SimPhantom_03162023.tissue_canvas{1}(1).C_cell{1,s};
-        subplot(2,2,i);
-        imagesc(img(:,:,i));
+    for res = 1:length(res_array)
+        img = SimPhantom_04012023.tissue_canvas{1}(1).C_cell{res,s};
+        
+        subplot(2,4,res);
+        imagesc(img(:,:,end-2));
         caxis([0 50]);; axis image; axis off;
         colormap(brewermap([],'RdBu'));
+
     end
     sigma = sigma_array(s);
     sigma_str = num2str(sigma,'%0.2f');
-    fname = cat(2, 'SimPhantom_03162023_w6_Sigma_', sigma_str([1 3 4]) ,'.tif');
+    fname = cat(2, 'SimPhantom_04012023_w1_Sigma_', sigma_str([1 3 4]) ,'_V2.tif');
     saveas(gcf, cat(2, save_dir, fname));
 end
 %% SimPhantom_04042021 analysis

@@ -113,11 +113,13 @@ save(mask_save, 'roi_cmr');
 composite = zeros(dicom_size(1), dicom_size(2));
 if dim == 1
     mean_t1 = zeros(N, 1);
+    sd_t1 = zeros(N, 1);
     for i = 1:N
         composite = composite + FitResults.T1 .* roi.vial_mask_cell{i};
         t1_masked = nonzeros(FitResults.T1 .* roi.vial_mask_cell{i});
         t1_real = t1_masked(~isnan(t1_masked));
         mean_t1(i) = mean(t1_real);
+        sd_t1(i) = std(t1_real);
     end
 elseif dim == 2
     mean_t1 = zeros(row, col);
@@ -127,6 +129,7 @@ elseif dim == 2
             t1_masked = nonzeros(FitResults.T1 .* roi.vial_mask_cell{k,j});
             t1_real = t1_masked(~isnan(t1_masked));
             mean_t1(k,j) = mean(t1_real);
+            sd_t1(k,j) = std(t1_real);
         end
     end
 end
@@ -158,10 +161,12 @@ roi_molli = roi;
 if dim == 1
     % mean value of T1 MOLLI
     mean_t1_molli = zeros(N, 1);
+    sd_t1_molli = zeros(N,1);
     for i = 1:N
         t1_masked = nonzeros(T1_molli{1} .* roi_molli.vial_mask_cell{i});
         t1_real = t1_masked(~isnan(t1_masked));
         mean_t1_molli(i) = mean(t1_real);
+        sd_t1_molli(i) = std(t1_real);
     end
 elseif dim == 2
     % mean value of T1 MOLLI
@@ -171,6 +176,7 @@ elseif dim == 2
             t1_masked = nonzeros(T1_molli{1} .* roi_molli.vial_mask_cell{k,j});
             t1_real = t1_masked(~isnan(t1_masked));
             mean_t1_molli(k,j) = mean(t1_real);
+            sd_t1_molli(k,j) = std(t1_real);
         end
     end
 end
@@ -221,6 +227,62 @@ for i = 1:size(mean_t1, 1)
     title(cat(2, row_info{i}));
     ylim([0 3000]);
 end
+%% Save plot 03/08/2024
+%% From James_Phantom_10102020 folder
+%% Make sure you can just run this section
+
+% mean_t1 = ir_fitting.mean_t1;
+% mean_t1_molli = zeros(size(mean_t1));
+% FitResults = ir_fitting.FitResults;
+% composite = ir_fitting.composite;
+% 
+% sd_t1 = zeros(size(mean_t1));
+% sd_t1_molli = zeros(size(mean_t1));
+
+figure(); 
+ff = [0 2.5 5 10 20 30 40 100];
+
+ff_calibre = [6.729, 30.902, 58.602, 95.044, 216.855, 340.890, 432.811, 997.887]/10;
+
+color_cell_exvivo = {[241, 238, 246]/255, [189, 201, 225]/255, [116, 169, 207]/255, [43, 140, 190]/255, [4, 90, 141]/255};
+color_cell_invivo = {[242,240,247]/255, [203,201,226]/255, [158,154,200]/255, [117,107,177]/255, [84,39,143]/255}; % Purple
+color_cell_avg16 = {[254,240,217]/255, [253,204,138]/255, [252,141,89]/255, [227,74,51]/255, [179,0,0]/255};
+
+mean_t1_new = [mean_t1(2,7), mean_t1(1,:)];
+%mean_t1_molli_new = [mean_t1_molli(2,7), mean_t1_molli(1,:)];
+sd_t1_new = [sd_t1(2,7), sd_t1(1,:)];
+%sd_t1_molli_new = [sd_t1_molli(2,7), sd_t1_molli(1,:)];
+
+T1IRSE_2_5 = [2522.1, 2495.1, 2609.1, 2092.4, 2054.3, 2270.4, 2551.9, 2242.4, 2278.6, 2167,  2641.2, 2260.2, 2225.1, 2839.8, 2025.3, 2624.9, 2507.7, 2259.5, 2388, 2356.9, 2282.5, 2377.2, 2026.4, 2079.8, 2549.8, 2098.7, 2698.4, 2034.7, 2080, 2458.2, 2375.7, 2476.9, 2442.8, 2229.3, 2258.4];
+
+mean_t1_new(2) = mean(T1IRSE_2_5);
+sd_t1_new(2) = std(T1IRSE_2_5);
+mean_t1_molli_new = [2470.987, 2435.545, 2521.44, 2630.062, 2929.64, 2346.405, 1416.556, 326.243];
+sd_t1_molli_new = [42.949, 77.436, 51.666, 75.682, 60.516, 705.228, 449.132, 44.896];
+color_cell_gray = {[245, 245, 245]/255, [220, 220, 220]/255, [211, 211, 211]/255, [192, 192, 192]/255, [169, 169 ,169]/255};
+plotHandles = zeros(4,2);
+%figure();
+
+% Actually plot
+% plotHandles(:,1) = errorbar(ff, mean_t1_new, sd_t1_new, 'LineStyle','none','Marker', '.', 'MarkerSize', 10)
+% hold on;
+% plotHandles(:,2) = errorbar(ff, mean_t1_molli_new, sd_t1_molli_new, 'LineStyle','none','Marker', '.', 'MarkerSize', 10)
+
+plotHandles(:,1) = errorbar(ff_calibre, mean_t1_new, sd_t1_new, 'LineStyle','none','Marker', '.', 'MarkerSize', 10)
+hold on;
+plotHandles(:,2) = errorbar(ff_calibre, mean_t1_molli_new, sd_t1_molli_new, 'LineStyle','none','Marker', '.', 'MarkerSize', 10)
+
+
+set(plotHandles(:,2), 'Marker', '.', 'Color', color_cell_avg16{4});
+set(plotHandles(:,2), 'Marker', 'o', 'LineWidth', 2, ...
+    'MarkerEdgeColor',  color_cell_avg16{5}, 'MarkerFaceColor', color_cell_avg16{2});
+
+set(plotHandles(:,1), 'Marker', 's', 'Color', color_cell_exvivo{4});
+set(plotHandles(:,1), 'Marker', 's',  'LineWidth', 2, ...
+    'MarkerEdgeColor', color_cell_exvivo{5}, 'MarkerFaceColor' , color_cell_exvivo{2});
+
+ylim([0 3500]); xlim([-2 102]);
+grid on;
 %% Save the saved results as data
 ir_fitting = struct;
 ir_fitting.FitResults = FitResults;
@@ -317,6 +379,8 @@ elseif dim == 2
     end
 end
 
+
+
 %% Save the saved results as data
 ir_fitting_we = struct;
 ir_fitting_we.FitResults = FitResults;
@@ -324,6 +388,44 @@ ir_fitting_we.composite = composite;
 ir_fitting_we.mean_t1 = mean_t1_we;
 save(cat(2, subject_data_dir, 'ir_fitting_we.mat'), 'ir_fitting_we');
 
+
+%% Pull up DIXON FF map
+base_dir = uigetdir;
+folder_glob = glob(cat(2, base_dir, '/*'));
+
+labels = {'T1', 'T1MAP', 'T2', 'T2MAP', 'T2STAR', '_T2STAR', 'MGRE', 'T1_TSE', 'FATSAT', 'MT', 'IR'};
+
+label = labels{11};
+idx_array = contains(folder_glob, label);
+
+proj_dir = GetFullPath(cat(2, pwd, '/../../T1_Fat_Project/'));
+if ~exist(proj_dir, 'dir')
+    mkdir(proj_dir)
+end
+
+data_dir = GetFullPath(cat(2, proj_dir, 'data/'));
+if ~exist(data_dir, 'dir')
+    mkdir(data_dir)
+end
+
+subject_name = input('Please type subject name here:  ', 's');
+subject_data_dir = GetFullPath(cat(2, data_dir, subject_name, '/'));
+if ~exist(subject_data_dir, 'dir')
+    mkdir(subject_data_dir)
+end
+
+[list_to_read, order_to_read] = NamePicker(folder_glob);
+%% Read data
+%dicom_fields = {'InversionTime'};
+whatsinit = cell(length(list_to_read), 1);
+slice_data = cell(length(list_to_read), 1);
+for i = 1:length(list_to_read)
+    f = list_to_read{order_to_read(i)};
+    [whatsinit{i}, slice_data{i}] = dicom23D(f);
+end
+%% Pull Image
+figure(); 
+imagesc(whatsinit{1}(:,:,33)); caxis([0 1000]);
 %% display IRSE and IRSE-WE
 figure();
 for i = 1:length(whatsinit)

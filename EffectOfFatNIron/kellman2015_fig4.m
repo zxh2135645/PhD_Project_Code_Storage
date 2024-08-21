@@ -11,7 +11,7 @@ addpath('../M219/');
 
 %% T1 mapping MOLLI
 TI_array = [102, 182, 935, 1010, 1762, 1840, 2587, 3410];
-figure();
+figure('Position', [100 100 400 400]);
 b1 = 750;
 TR = 2.65;
 PhaseEnc = 58;

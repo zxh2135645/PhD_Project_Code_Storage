@@ -1,6 +1,10 @@
 function [x_array, y_array, x_centroid_array, y_centroid_array] = GroovePickNCheckFunc3(img_3D, heart_3D, outputFileName, overwrite_label, doublecheck_label)
 
-if nargin == 3
+if nargin == 2
+    outputFileName = '';
+    overwrite_label = 1;
+    doublecheck_label = 0;
+elseif nargin == 3
     overwrite_label = 1;
     doublecheck_label = 0;
 elseif nargin == 4
@@ -28,6 +32,7 @@ if ~(exist(outputFileName, 'file') && overwrite_label == 0)
             figure();
             imagesc(img_3D(:,:,slc))
             truesize([3*size(img_3D,1), 3*size(img_3D,2)]);
+            caxis([0 100]);
             axis off;
             
             for i = 1:p

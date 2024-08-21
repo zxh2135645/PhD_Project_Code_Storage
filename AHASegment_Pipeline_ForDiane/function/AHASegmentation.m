@@ -1,4 +1,4 @@
-function [Segmentpix, stats, Mask_Segn] =AHASegmentation(Imgin,Maskin,Segn,Groove,Endoin)
+function [Segmentpix, stats, Mask_Segn] = AHASegmentation(Imgin,Maskin,Segn,Groove,Endoin)
 % Modified by Xinheng Zhang on 07/30/2020
 % Added an alternative way to find center, esp useful for imbalanced
 % myocardium shape

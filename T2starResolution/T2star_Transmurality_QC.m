@@ -55,6 +55,10 @@ avg_name = avg_num_cell{1};
 
 perc_trans16 = cell(length(subject_name_cell), 1);
 trans16_avg = zeros(length(subject_name_cell), 1);
+wall_thinn = zeros(length(subject_name_cell), 1);
+
+%calculate the arc
+
 for i = 1:length(subject_name_cell)
     subject_name = subject_name_cell{i};
     % subject_name = input('Please type subject name here:  ', 's');
@@ -76,9 +80,10 @@ for i = 1:length(subject_name_cell)
     thresh = mean(nonzeros(whatsinit{i} .* myo_mask .* remote_mask)) - 2*std(nonzeros(whatsinit{i} .* myo_mask .* remote_mask));
     hemo_mask = (whatsinit{i} < thresh) .* myo_mask .* mi_mask;
     trans16_avg(i) = sum(hemo_mask(:)) ./ sum(mi_mask(:));
-    
-    %figure();
-    %imagesc(myo_mask + hemo_mask*2 + mi_mask);
+
+    %wall_thinn(i) = sum(hemo_mask(:)) ./ sum(mi_mask(:));
+    figure();
+    imagesc(myo_mask + hemo_mask*2 + mi_mask);
 %     perc_array_mi = aha16.aha_analysis.perc_array_mi;
 %     perc_array_temp = nonzeros(perc_array_mi(1,:))';
 %     perc_trans16{i} = perc_array_temp;
@@ -105,3 +110,5 @@ set(gca, 'XTickLabels', []);
 set(gca, 'YTickLabels', []);
 set(gca,'LineWidth', 2,'TickLength',[0.04 0.04]);
 set(gca,'TickDir','out'); % The only other option is 'in'
+
+

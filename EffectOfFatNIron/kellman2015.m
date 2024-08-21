@@ -26,7 +26,7 @@ TR = 2.65;
 dt = 0.1;
 PLOT_EACHSPIN = 0;
 PLOT_SS = 0;
-[MxyTE, BSIM, plotTEidx, bSSFPcat, Msimf] = bSSFP_engine(M0, T1, T2, df, TR, FA, NTR, dt, f_vec, PLOT_EACHSPIN, PLOT_SS);
+[MxyTE, BSIM, plotTEidx, bSSFPcat, Msimf] = bSSFP_engine_old(M0, T1, T2, df, TR, FA, NTR, dt, f_vec, PLOT_EACHSPIN, PLOT_SS);
 
 f_vec_3t = [-600:10:600] + 420;
 [MxyTE_fat3t, BSIM_fat3t, plotTEidx_fat3t, bSSFPcat_fat3t, Msimf_fat3t] = bSSFP_engine(M0, T1_fat, T2_fat, df, TR, FA, NTR, dt, f_vec_3t, PLOT_EACHSPIN, PLOT_SS);

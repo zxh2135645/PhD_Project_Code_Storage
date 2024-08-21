@@ -15,13 +15,15 @@ for i = 1:length(name_glob)
 end
 
 sequence_label = {'MAG', 'PSIR', 'T2star'};
+%sequence_label = {'T1MOLLI'};
+%sequence_label = {'T2star'};
 
 names_to_rule_out = {};
 RuleOutLabel = NameRuleOutFunc(Names, names_to_rule_out);
 Names = Names(RuleOutLabel == 0);
 
 % What's going on with 27?
-name_check = {'484060000063'};
+name_check = {'484060000018'};
 %name_check = {'KIM_BONG_KI', 'HAN_BONG_SANG'};
 name_idx_list = linspace(1, length(Names), length(Names)); % initialize with incremental add
 
@@ -66,17 +68,20 @@ t2star_dicom_fields = {...
     };
 
 output_label = {'LGE', 'T2star'};
+%output_label = {'T2star'};
+%output_label = {'T1'};
 OutputPath = GetFullPath(cat(2, base_dir, '/ContourData/'));
 
-timepoints = {'BL', 'BL2', 'FU'};
+timepoints = {'BL'};
+% timepoints = {'FU'};
 %% Parsing XML file
 % Read DICOM and contours
-for n = 28:28
-% for n = starting_point:length(Names)j
-%for n = starting_point:starting_point
+%for n = 28:28
+%for n = starting_point:length(Names)
+for n = starting_point:starting_point
     name = Names{name_idx_list(n)};
-%for tp = 1:length(timepoints)
-for tp = 1:3
+for tp = 1:length(timepoints)
+%for tp = 1:3
     time_point = timepoints{tp};
     
     % XML file is independent on Labels
@@ -95,7 +100,7 @@ for tp = 1:3
         
     %for ll = 1:length(sequence_label)
     for ll = 3:3
-    % for ll = 1:2
+    %for ll = 1:2
             label = sequence_label{ll};
             
             switch label
@@ -148,6 +153,12 @@ for tp = 1:3
         else
             [volume_image, slice_data, image_meta_data] = dicom23D(dicom(i,:), dicom_fields);
         end
+
+        if strcmp(label, 'T2star')
+            slice_data = slice_data(1);
+            volume_image = volume_image(:,:,1);
+        end
+
         id_cell{i} = slice_data.MediaStorageSOPInstanceUID; % Didn't do anything to it
         
         [mask_heart, mask_myocardium, mask_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count] = ...

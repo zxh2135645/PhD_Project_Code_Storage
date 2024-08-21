@@ -1,10 +1,13 @@
 clear all;
 close all;
+%%
 % Load SimPhantom_2023_analysis.mat
 addpath('../function/');
 
 base_dir = uigetdir;
-fname = 'SimPhantom_2023_analysis.mat';
+%fname = 'SimPhantom_2023_analysis.mat';
+fname = 'SimPhantom_2023_analysis_April.mat';
+
 f_to_read = cat(2, base_dir, '/', fname);
 load(f_to_read);
 
@@ -64,8 +67,8 @@ accu_matt3_avg = (accu_matt3_30+accu_matt3_20+accu_matt3_10+accu_matt3_08+accu_m
 sens_matt2_avg = (sens_matt2_30+sens_matt2_20+sens_matt2_10+sens_matt2_08+sens_matt2_06+sens_matt2_04)/6;
 
 figure();
-imagesc(sens_matt2_avg.');axis image; axis off;
-caxis([0.8 1]);
+imagesc(accu_matt3_avg.');axis image; axis off;
+caxis([0.5 1]);
 colormap(brewermap([],'*RdYlBu'));
 colorbar;
 

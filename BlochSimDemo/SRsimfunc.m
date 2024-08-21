@@ -75,6 +75,8 @@ for nn=1:BSIM.NTR,
         % final step includes gradient spoiling
         if(ss==BSIM.NstepTR)
             Mnew = zrot(spoil_phi)*Mnew;
+            %Mnew = [0;0;Mnew(3)]; % Perfect spoiling
+
         end
         
         Msim(:,step) = Mnew; step = step+1;

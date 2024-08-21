@@ -6,9 +6,10 @@ width_array = [2.40,      0.91,  1.21,  0.53,  0.56,  0.59,          0.92,  0.59
 SNR_array =   [9.48,	  5.20,	 5.63,	4.69,  7.05,  6.31,	         8.52,	7.80,  9.54,  11.04];
 
 bias_array = [0.160714286, 0.404761905, 0.094147583, -1, -1, -1, -0.090909091, 3.252873563, -0.568788501, 0.916167665];
+bias_array = [-0.017857143, 0.547619048, 0.145038168, -1, -1, -0.888888889, -0.090909091, 1.413793103, -0.568788501, 1.155688623];
 
-invivo_array = [2.60, 1.18, 4.3, 0, 0, 0, 0.7, 3.7, 2.1, 3.2];
-gt_array = [2.24	0.84	3.93	1.23	0.56	0.9	0.77	0.87	4.87	1.67];
+invivo_array = [2.20, 1.3, 4.5, 0, 0, 0.1, 0.7, 2.1, 2.1, 3.6];
+gt_array = [2.24	0.84	3.93	1.23	0.56	0.9	 0.77	0.87	4.87	1.67];
 figure();
 p1 = plot3(width_array, bias_array, SNR_array, 'o');
 
@@ -88,7 +89,7 @@ plot(X,yfit(B,X), '--', 'LineWidth', 3);
 Rsq2 = 1 - sum((y - yfit(B,x)).^2)/sum((y - mean(y)).^2) % R^2 0.3290
 
 
-%% Version 3
+%% Version 3 (This is the version for the plot)
 sz = 192;
 
 y = abs(bias_array);
@@ -99,7 +100,6 @@ b0 = [1, 0, 0];                      % Initial Parameter Estimates
 [B, fv] = fminsearch(CF, b0); 
 
 
-
 X = 0.4:0.1:2.5;
 figure('Position', [0 100 400 400]);
 p1 = scatter(width_array, abs(bias_array), sz, 'filled');
@@ -107,8 +107,73 @@ caxis([5 15]);
 hold on;
 plot(X,yfit(B,X), '--k', 'LineWidth', 3);
 set(gca, 'YDir','reverse', 'XAxisLocation','top');
-ylim([-0.2 4]);
+ylim([-0.2 2]);
 Rsq2 = 1 - sum((y - yfit(B,x)).^2)/sum((y - mean(y)).^2) % R^2 0.3290
+scatter(width_array([1 8]), abs(bias_array([1 8])), sz, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength', [.02 .02], ...
+    'XMinorTick', 'off', 'YMinorTick', 'off', 'YGrid', 'on', ...
+    'XColor', [.3 .3 .3], 'YColor', [.3 .3 .3], ...
+    'LineWidth', 2)
+%% Version 4 (non-abs bias)
+sz = 192;
+
+y = abs(bias_array);
+x = width_array;
+yfit = @(b,x) b(1)./(x + b(2)) + b(3);  % Objective Function
+CF = @(b) sum((y-yfit(b,x)).^2);        % Cost Function
+b0 = [1, 0, 0];                      % Initial Parameter Estimates
+[B, fv] = fminsearch(CF, b0); 
+
+B2 = [-B(1), B(2), -B(3)];
+B3 = [B(1), B(2), B(3)+0.1];
+X = 0.4:0.1:2.5;
+X2 = 0.4:0.1:2.1;
+X3 = 2.2:0.1:2.5;
+figure('Position', [0 100 400 400]);
+p1 = scatter(width_array, bias_array, sz, 'filled');
+caxis([5 15]);
+hold on;
+plot(X2,yfit(B,X2), '--k', 'LineWidth', 3);
+plot(X2,yfit(B2,X2), '--k', 'LineWidth', 3);
+plot(X3, zeros(1,length(X3)), '--k', 'LineWidth', 3);
+set(gca, 'YDir','reverse', 'XAxisLocation','top');
+ylim([-2 2]);
+Rsq2 = 1 - sum((y - yfit(B,x)).^2)/sum((y - mean(y)).^2) % R^2 0.3290
+scatter(width_array([1 5 8]), bias_array([1 5 8]), sz, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength', [.02 .02], ...
+    'XMinorTick', 'off', 'YMinorTick', 'off', 'YGrid', 'on', ...
+    'XColor', [.3 .3 .3], 'YColor', [.3 .3 .3], ...
+    'LineWidth', 2)
+
+%% Version 5 (non-abs bias) Curve is not the fitting curve
+sz = 192;
+
+y = abs(bias_array);
+x = width_array;
+yfit = @(b,x) b(1)./(x + b(2)) + b(3);  % Objective Function
+CF = @(b) sum((y-yfit(b,x)).^2);        % Cost Function
+b0 = [1, 0, 0];                      % Initial Parameter Estimates
+[B, fv] = fminsearch(CF, b0); 
+
+B2 = [-B(1), B(2), -B(3)];
+B3 = [B(1), B(2), B(3)+0.2];
+B4 = [-B(1), B(2), -(B(3)+0.2)];
+
+X = 0.4:0.1:2.5;
+
+figure('Position', [0 100 400 600]);
+yline(0, 'LineWidth', 1.5);
+hold on;
+p1 = scatter(width_array, bias_array, sz, 'filled');
+caxis([5 15]);
+
+plot(X,yfit(B3,X), '--k', 'LineWidth', 3);
+plot(X,yfit(B4,X), '--k', 'LineWidth', 3);
+ylim([-2 2]);
+Rsq2 = 1 - sum((y - yfit(B,x)).^2)/sum((y - mean(y)).^2) % R^2 0.3290
+scatter(width_array([1 5 8]), bias_array([1 5 8]), sz, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
 
 set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength', [.02 .02], ...
     'XMinorTick', 'off', 'YMinorTick', 'off', 'YGrid', 'on', ...

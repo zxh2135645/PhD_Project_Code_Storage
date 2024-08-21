@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r font}
 # run these two lines for font set-up
-extrafont::font_import()
+#extrafont::font_import()
 extrafont::loadfonts()
 
 ```
@@ -54,13 +54,15 @@ status <- c(rep("ROI",len1), rep("REMOTE",len2))
 df1 <- data.frame(t1, status)
 
 # Represent it
+# c("#69b3a2", "#404080")
 p <- df1 %>%
   ggplot( aes(x=t1, fill=status)) +
-    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 30) +
+    geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 20) +
     scale_fill_manual(values=c("#69b3a2", "#404080")) +
     xlim(1000, 1500)+
     theme_ipsum() +
     labs(fill="")
+    
 
 # Marginal densities along x axis
 xdens <- axis_canvas(p, axis = "x") +

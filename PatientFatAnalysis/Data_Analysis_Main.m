@@ -22,7 +22,7 @@ names_to_rule_out = {};
 RuleOutLabel = NameRuleOutFunc(Names, names_to_rule_out);
 Names = Names(RuleOutLabel == 0);
 
-name_check = {'484060000001'};
+name_check = {'484060000040'};
 name_idx_list = linspace(1, length(Names), length(Names)); % initialize with incremental add
 
 if length(name_check) == 1
@@ -194,8 +194,8 @@ slice_count_hemo_p = 1;
 se = strel('disk', 1);
 nhood = [1 1 1; 1 1 1; 1 1 1];
 
-for n = 1:(length(Names)-1)
-%for n = 7:7
+%for n = 1:(length(Names)-1)
+for n = starting_point:starting_point
     % for n = starting_point:starting_point
     % Do not need to pull up images for baseline
     name = Names{n};
@@ -209,15 +209,15 @@ for n = 1:(length(Names)-1)
     end
     % tp_count = 0;
     
-    if any(contains(excel_names, name))
-    %if any(contains(good_names, name))
+    %if any(contains(excel_names, name))
+    if any(contains(good_names, name))
     name_for_table_searching = insertAfter(name, 6, '-');
     row = find(contains(id_array,name_for_table_searching));
     
     IMH_cell = table2cell(T(row, 13)); % IMH
     IMH = IMH_cell{1};
     %for tp = 1:length(time_points)
-    for tp = 2:3
+    for tp = 1:1
         time_point = time_points{end-tp+1};
         tp_dir = cat(2, base_dir, '/ContourData/',  name, '/', time_point,  '/');
         if ~exist(tp_dir, 'dir')

@@ -62,7 +62,12 @@ end
 % Temporaly remove
 % ZZ_1YR: slice1 (T1 map issue)
 % pre_QualControl(5).status(6).Slice1 = 0;
-% Tina good
+
+% Tina 6MO missing one slice
+pre_QualControl(6).status(6).Slice1 = 1;
+pre_QualControl(6).status(6).Slice2 = 1;
+pre_QualControl(6).status(6).Slice3 = 0;
+
 % Sahara good
 % Ryn 8WK slice1 (T1 map issue)
 % Ryn 8WK 4 slices, 9MO,1YR 5 slices
@@ -100,4 +105,5 @@ pre_QualControl(10).status(1).Slice3 = 0;
 pre_QualControl(2).status(2).Slice5 = [];
 pre_QualControl(10).status(2).Slice1 = [];
 
+%%
 save(cat(2, metrics_save_dir, 'pre_QualControl.mat'), 'pre_QualControl');

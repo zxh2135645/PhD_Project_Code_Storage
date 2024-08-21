@@ -26,8 +26,8 @@ load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'N
 %% Display image (Write DICOM)
 slc_array = [8 7 6 5 4 3 2 1 14 13 12 11 10 9];
 slc_array = [1 2 3 4 5 6 7 8 9 10 11 12 13 14];
-% num_seg_array = [16, 21, 26, 31, 36, 41];
-num_seg_array = [141, 151, 161, 171, 181, 191];
+num_seg_array = [16, 21, 26, 31, 36, 41];
+%num_seg_array = [141, 151, 161, 171, 181, 191];
 temtemp_4D = zeros(Ny, Nx, length(num_seg_array), length(slc_array));
 
 % cardiac phase and resp phase needs to be encoded
@@ -36,7 +36,7 @@ temtemp_4D = zeros(Ny, Nx, length(num_seg_array), length(slc_array));
 % George_WK8   [24, 1]
 % Ginger_D8    [24, 4]
 % Ginger_WK8   [7, 4]
-% Carlos_D6    [1, 4]
+% Carlos_D6    [20, 4]
 % Paprika_D8   [1, 4]
 % Paprika_WK8  [15, 4]
 % Nutmeg_D6    [24, 1]
@@ -57,7 +57,7 @@ for i = 1:length(slc_array)
     slc = slc_array(i);
     dispim = @(x)fftshift(x(:,:,slc,:),1);
     for num = 1:length(num_seg_array)
-        temp = Gr\reshape(Phi(:,num_seg_array(num),10,1,end), L, []);
+        temp = Gr\reshape(Phi(:,num_seg_array(num),20,4,end), L, []);
         temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
 
         temtemp_4D(:,:,num,i) = temp;
@@ -71,8 +71,8 @@ X = dicomread(slice_data{1}(1).Filename);
 NEco_old = params.NEco_old;
 len = length(slice_data{1})/NEco_old;
 
-%save_dir = GetFullPath(cat(2, fid_path, 'DICOM_LGE_CVI/'));
-save_dir = GetFullPath(cat(2, fid_path, '../DICOM_T2star_CVI/'));
+save_dir = GetFullPath(cat(2, fid_path, 'DICOM_LGE_CVI/'));
+%save_dir = GetFullPath(cat(2, fid_path, '../DICOM_T2star_CVI/'));
 if ~exist(save_dir, 'dir')
     mkdir(save_dir);
 end
@@ -80,10 +80,10 @@ end
 for te = 1:length(num_seg_array)
     num_seg = num_seg_array(te); 
     for i = 1:len
-        % metadata = dicominfo(slice_data{1}(NEco_old*(i-1)+1).Filename);
+        %metadata = dicominfo(slice_data{1}(NEco_old*(i-1)+1).Filename);
         metadata = dicominfo(slice_data{1}(NEco_old*(i-1)+te).Filename);
-        %fname = GetFullPath(cat(2, save_dir, fid_file(1:18), 'Seg', num2str(num_seg), '_Slc', num2str(i), '_LGE', '.dcm'));
-        fname = GetFullPath(cat(2, save_dir, fid_file(1:18), 'Seg', num2str(num_seg), '_Slc', num2str(i), '_PostCon_T2star', '.dcm'));
+        fname = GetFullPath(cat(2, save_dir, fid_file(1:18), 'Seg', num2str(num_seg), '_Slc', num2str(i), '_LGE', '.dcm'));
+        %fname = GetFullPath(cat(2, save_dir, fid_file(1:18), 'Seg', num2str(num_seg), '_Slc', num2str(i), '_PostCon_T2star', '.dcm'));
         
         
         slc_array_flip = flip(slc_array);

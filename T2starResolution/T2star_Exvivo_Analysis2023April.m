@@ -28,6 +28,17 @@ auc_mat = [0.50	  0.48	0.63	0.46	0.59	0.72	0.47	0.50	0.58	0.64;
            0.92	  0.73	0.70	0.50	0.58	0.50	0.50	0.50	0.62	0.69;
            0.67	  0.48	0.60	0.50	0.41	0.50	0.44	0.50	0.60	0.47];
 
+auc_mat_avg16 = [1	  0.99	0.97	0.95	0.96	0.86	0.77	0.97	0.99	0.95    0.86    0.89    0.79    0.67    0.92    0.88    0.92    0.87    0.97    0.80    0.71    0.95    0.93    0.89    0.97    0.96    0.82    0.71;
+           1	  0.98 	0.97	0.97	0.74	0.70	0.92	0.93	0.80	0.77    0.75    0.70    0.67    0.73    0.82    0.72    0.75    0.63    0.51    0.59    0.62    0.67    0.61    0.60    0.53    0.53    0.42    0.55;
+           1	  1 	0.92	0.97	0.88	0.87	0.85	0.94	0.97	0.94    0.88    0.88    0.82    0.82    0.82    0.80    0.79    0.85    0.75    0.69    0.70    0.59    0.67    0.65    0.61    0.64    0.57    0.61;
+           1	  1 	1   	0.80	0.78	1   	0.48	0.92	0.77	0.75    0.63    0.44    0.50    0.50    0.65    0.40    0.46    0.46    0.48    0.50    0.50    0.60    0.42    0.46    0.46    0.48    0.50    0.50;
+           1	  0.94	0.96	0.94	0.51	0.51	0.41	0.92	0.96	0.79    0.84    0.67    0.73    0.73    0.83    0.79    0.65    0.74    0.60    0.61    0.51    0.75    0.64    0.69    0.70    0.59    0.57    0.61;
+           1	  0.82	0.89	0.86	0.85	0.66	0.58	0.90	0.96	0.94    0.98    0.69    0.81    0.85    0.89    0.85    0.90    0.85    0.81    0.77    0.82    0.83    0.88    0.80    0.86    0.82    0.72    0.83;
+           1	  1 	0.95	1   	0.74	0.95	0.78	0.95	0.95	0.95    0.95    0.39    0.42    0.42    0.89    0.89    0.84    0.39    0.45    0.47    0.44    0.74    0.68    0.84    0.45    0.45    0.42    0.50;
+           1	  1 	0.98   	0.90	0.89	0.82	0.65	0.95	0.97	0.76    0.87    0.88    0.65    0.60    0.78    0.81    0.76    0.64    0.60    0.60    0.60    0.68    0.62    0.51    0.50    0.55    0.58    0.50;
+           1	  0.96	0.97	0.95	0.92	0.86	0.64	0.84	0.84	0.84    0.83    0.82    0.81    0.65    0.81    0.74    0.76    0.76    0.74    0.78    0.63    0.72    0.71    0.73    0.68    0.68    0.70    0.58;
+           1   	  0.98	0.83	0.83	0.76	0.68	0.58	0.93	0.97	0.81    0.77    0.85    0.75    0.54    0.83    0.89    0.84    0.65    0.73    0.71    0.68    0.81    0.80    0.78    0.71    0.66    0.73    0.76;];
+
 SNR_mat = [0.31	  3.37	4.11	4.14	5.28	4.54	3.65	4.61	3.85	5.03;
            4.71	  6.25	7.50	6.32	7.93	7.57	6.20	7.56	6.87	7.07;
            6.56	  6.41	8.52	10.44	8.25	9.56	9.31	9.32	11.47	9.22;
@@ -157,10 +168,16 @@ p3 = scatter(width_mat(1,:), auc_mat_in13, sz, SNR_mat_in13,'filled');
 p4 = scatter(width_mat(1,:), auc_mat_in16, sz, SNR_mat_in16,'filled');
 p5 = scatter(width_mat(1,:), auc_mat_in21, sz, SNR_mat_in21,'filled');
 caxis([5 30]);
-%% Width vs AUC (Averaged over spatial resolution)
+%% Width vs AUC (Averaged over spatial resolution: width vs averaged AUC)
+width_array = [2.40,      0.91,  1.21,  0.53,  0.56,  0.59,    0.92,  0.59,  1.10,  0.69];
 sz = 192;
 figure('Position', [0 100 300 600]);
+% 20P10_Exvivo7, 20P11_Exvivo6, 18P90, 18P93, 20P40, 18P92,    18P94_Exvivo3, 18P95,    17P73,   20P48
 auc_avg = [0.85	 0.68	0.73	0.51	0.59	0.60	0.61	0.56	0.66	0.65];
+auc_best = [1.00	 0.9120	 0.8583 	0.6667	0.7292	0.7500	1.00	    0.7667	0.8375	0.8048];
+% 0.8*0.8*8, 1.6*1.6*2, 0.8*0.8*6, 1.6*1.6*2, 1*1*4, 1.3*1.3*4  1,1.3,1.6*2
+% and 1.6*1.6*4, 1.6*1.6*2, 1.3*1.3*2, 0.8*0.8*8
+
 scatter(width_array, auc_avg, sz, 'filled', 'MarkerFaceColor', [0, 0.4470, 0.7410]);
 ylim([.5 1]);
 grid on;
@@ -170,7 +187,7 @@ b = X \ auc_avg';
 yCalc1 = X*b;
 hold on;
 scatter(width_array([1 8]), auc_avg([1 8]), sz, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
-% plot(width_array, yCalc1, 'k', 'LineWidth', 2);
+plot(width_array, yCalc1, 'k', 'LineWidth', 3);
 
 x = width_array.';
 y = auc_avg';
@@ -179,10 +196,195 @@ Rsq2 = 1 - sum((y - yCalc1).^2)/sum((y - mean(y)).^2) % R^2 0.8423
 g = fittype('a-b*exp(-c*x)');
 f0 = fit(x,y,g,'StartPoint',[[ones(size(x)), -exp(-x)]\y; 1]);
 xx = linspace(0.5, 2.5, 50);
-plot(xx,f0(xx),'--k', 'LineWidth', 3);
+%plot(xx,f0(xx),'--k', 'LineWidth', 3);
 
 Rsq2 = 1 - sum((y - f0(x)).^2)/sum((y - mean(y)).^2) % R^2 0.8766
 %set(gca, 'YDir','reverse')
+
+%% Width vs AUC (Averaged over spatial resolution - width vs highest AUC)
+width_array = [2.40,      0.91,  1.21,  0.53,  0.56,  0.59,    0.92,  0.59,  1.10,  0.69];
+sz = 192;
+figure('Position', [0 100 300 600]);
+% 20P10_Exvivo7, 20P11_Exvivo6, 18P90, 18P93, 20P40, 18P92,    18P94_Exvivo3, 18P95,    17P73,   20P48
+%auc_avg = [0.85	 0.68	0.73	0.51	0.59	0.60	0.61	0.56	0.66	0.65];
+auc_best = [1.00	 0.9120	 0.8583 	0.6667	0.7292	0.7500	1.00	    0.7667	0.8375	0.8048];
+% 0.8*0.8*8, 1.6*1.6*2, 0.8*0.8*6, 1.6*1.6*2, 1*1*4, 1.3*1.3*4  1,1.3,1.6*2
+% and 1.6*1.6*4, 1.6*1.6*2, 1.3*1.3*2, 0.8*0.8*8
+
+scatter(width_array, auc_best, sz, 'filled', 'MarkerFaceColor', [0, 0.4470, 0.7410]);
+ylim([.5 1]);
+grid on;
+
+X = [ones(length(width_array'), 1) width_array'];
+b = X \ auc_best';
+yCalc1 = X*b;
+hold on;
+scatter(width_array([1 8]), auc_best([1 8]), sz, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+plot(width_array, yCalc1, 'k', 'LineWidth', 3);
+
+x = width_array.';
+y = auc_best';
+Rsq2 = 1 - sum((y - yCalc1).^2)/sum((y - mean(y)).^2) % R^2 0.8423
+
+g = fittype('a-b*exp(-c*x)');
+f0 = fit(x,y,g,'StartPoint',[[ones(size(x)), -exp(-x)]\y; 1]);
+xx = linspace(0.5, 2.5, 50);
+%plot(xx,f0(xx),'--k', 'LineWidth', 3);
+
+Rsq2 = 1 - sum((y - f0(x)).^2)/sum((y - mean(y)).^2) % R^2 0.8766
+%set(gca, 'YDir','reverse')
+
+%% CNR vs AUC (Averaged over subjects) 2024/07/17
+AUC_invivo_allavg = [0.57,0.69,0.72,0.82,0.66;0.73,0.74,0.80,0.77,0.65;0.74,0.77,0.72,0.69,0.59;0.71,0.67,0.68,0.70,0.57];
+CNR = [0.271152731, 0.403216524, 0.662198867, 1.059054132, 0.275836912; 0.362920365, 0.593043431, 1.202343766, 0.7565595, 0.439118987;0.352409393, 0.903281609, 0.680035797, 0.644388966, 0.163023767; 0.581640052, 0.367325563, 0.335793349, 0.303284038, 0.225562753];
+sz = 192;
+figure('Position', [0 100 600 600]);
+% 20P10_Exvivo7, 20P11_Exvivo6, 18P90, 18P93, 20P40, 18P92,    18P94_Exvivo3, 18P95,    17P73,   20P48
+auc_avg = AUC_invivo_allavg(:);
+CNR = CNR(:);
+% 0.8*0.8*8, 1.6*1.6*2, 0.8*0.8*6, 1.6*1.6*2, 1*1*4, 1.3*1.3*4  1,1.3,1.6*2
+% and 1.6*1.6*4, 1.6*1.6*2, 1.3*1.3*2, 0.8*0.8*8
+
+scatter(CNR, auc_avg, sz, 'filled', 'MarkerFaceColor', [0, 0.4470, 0.7410]);
+ylim([.5 1]);
+grid on;
+
+X = [ones(length(CNR), 1) CNR];
+b = X \ auc_avg;
+yCalc1 = X*b;
+hold on;
+scatter(CNR([10 13]), auc_avg([10 13]), sz, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+plot(CNR, yCalc1, 'k', 'LineWidth', 3);
+
+x = CNR;
+y = auc_avg;
+Rsq2 = 1 - sum((y - yCalc1).^2)/sum((y - mean(y)).^2) % R^2 0.6722
+
+g = fittype('a+b*x');
+f0 = fit(x,y,g,'StartPoint',[[ones(size(x)), x]\y]);
+xx = linspace(0.5, 2.5, 50);
+%plot(xx,f0(xx),'--k', 'LineWidth', 3);
+
+Rsq2 = 1 - sum((y - f0(x)).^2)/sum((y - mean(y)).^2) % R^2 0.7115
+%set(gca, 'YDir','reverse')
+
+
+%% CNR vs AUC (Averaged over subjects) 2024/07/17
+AUC_invivo_allavg = [0.57,0.69,0.72,0.82,0.66;0.73,0.74,0.80,0.77,0.65;0.74,0.77,0.72,0.69,0.59;0.71,0.67,0.68,0.70,0.57];
+CNR = [0.271152731, 0.403216524, 0.662198867, 1.059054132, 0.275836912; 0.362920365, 0.593043431, 1.202343766, 0.7565595, 0.439118987;0.352409393, 0.903281609, 0.680035797, 0.644388966, 0.163023767; 0.581640052, 0.367325563, 0.335793349, 0.303284038, 0.225562753];
+CNR_exvivo_avg16 = [4.917567048, 4.142151951, 3.65411296, 3.390405178, 2.930137319, 2.347969506, 1.761432212;...
+    3.327271233, 3.247062677, 2.695875634, 2.757874984, 2.497432825, 2.029112228, 1.734881351;...
+    2.478948297, 2.075045777, 1.775212634, 1.702296113, 1.83721189, 1.231803074, 1.249931583;...
+    1.770604591, 1.45535285, 1.229800818, 1.178872845, 1.210659654, 1.074993639, 0.789078152];
+AUC_exvivo_avg16 = [1, 0.96, 0.94, 0.92, 0.86, 0.8, 0.71; 0.92, 0.88, 0.88, 0.85, 0.8, 0.76, 0.69; ...
+    0.83, 0.81, 0.82, 0.78, 0.77, 0.74, 0.7; 0.76, 0.75, 0.74, 0.74, 0.71, 0.67, 0.67];
+
+
+sz = 192;
+figure('Position', [0 100 600 600]);
+% 20P10_Exvivo7, 20P11_Exvivo6, 18P90, 18P93, 20P40, 18P92,    18P94_Exvivo3, 18P95,    17P73,   20P48
+auc_avg = AUC_invivo_allavg(:);
+CNR = CNR(:);
+% 0.8*0.8*8, 1.6*1.6*2, 0.8*0.8*6, 1.6*1.6*2, 1*1*4, 1.3*1.3*4  1,1.3,1.6*2
+% and 1.6*1.6*4, 1.6*1.6*2, 1.3*1.3*2, 0.8*0.8*8
+
+scatter(CNR, auc_avg, sz, 'filled', 'MarkerFaceColor', [0, 0.4470, 0.7410]);
+hold on;
+scatter(CNR_exvivo_avg16(:), AUC_exvivo_avg16(:), sz, 'filled', 'MarkerFaceColor', [87 160 211]/255);
+
+
+ylim([.5 1]);
+grid on;
+
+X = [ones(length(CNR), 1) CNR];
+b = X \ auc_avg;
+yCalc1 = X*b;
+
+scatter(CNR([10 13]), auc_avg([10 13]), sz, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+scatter(CNR_exvivo_avg16(1), AUC_exvivo_avg16(1), sz, 'filled', 'MarkerFaceColor', [253,190,133]/255);
+plot(CNR, yCalc1, '--k', 'LineWidth', 3);
+
+x = CNR;
+y = auc_avg;
+Rsq2 = 1 - sum((y - yCalc1).^2)/sum((y - mean(y)).^2) % R^2 0.6722
+
+g = fittype('a+b*x');
+f0 = fit(x,y,g,'StartPoint',[[ones(size(x)), x]\y]);
+xx = linspace(0.5, 2.5, 50);
+%plot(xx,f0(xx),'--k', 'LineWidth', 3);
+
+Rsq2 = 1 - sum((y - f0(x)).^2)/sum((y - mean(y)).^2) % R^2 0.7115
+%set(gca, 'YDir','reverse')
+
+xlim([0 5]);
+
+X = [ones(length(CNR_exvivo_avg16(:)), 1) CNR_exvivo_avg16(:)];
+b = X \ AUC_exvivo_avg16(:);
+yCalc1 = X*b;
+x = CNR_exvivo_avg16(:);
+y = AUC_exvivo_avg16(:);
+Rsq2 = 1 - sum((y - yCalc1).^2)/sum((y - mean(y)).^2) % R^2 0.9080
+plot(CNR_exvivo_avg16(:), yCalc1, '--k', 'LineWidth', 3);
+
+
+x = [CNR;CNR_exvivo_avg16(:)];
+y = [auc_avg;AUC_exvivo_avg16(:)];
+g = fittype('a-b*exp(-c*x)');
+f0 = fit(x,y,g,'StartPoint',[[ones(size(x)), -exp(-x)]\y; 1]);
+xx = linspace(0, 5, 100);
+
+%plot(xx,f0(xx),'--k', 'LineWidth', 3);
+
+Rsq2 = 1 - sum((y - f0(x)).^2)/sum((y - mean(y)).^2)
+
+%% Ver. 3
+%% CNR vs AUC (Averaged over subjects) 2024/07/17
+AUC_invivo_allavg = [0.57,0.69,0.72,0.82,0.66;0.73,0.74,0.80,0.77,0.65;0.74,0.77,0.72,0.69,0.59;0.71,0.67,0.68,0.70,0.57];
+CNR = [0.271152731, 0.403216524, 0.662198867, 1.059054132, 0.275836912; 0.362920365, 0.593043431, 1.202343766, 0.7565595, 0.439118987;0.352409393, 0.903281609, 0.680035797, 0.644388966, 0.163023767; 0.581640052, 0.367325563, 0.335793349, 0.303284038, 0.225562753];
+CNR_exvivo_avg16 = [4.917567048, 4.142151951, 3.65411296, 3.390405178, 2.930137319, 2.347969506, 1.761432212;...
+    3.327271233, 3.247062677, 2.695875634, 2.757874984, 2.497432825, 2.029112228, 1.734881351;...
+    2.478948297, 2.075045777, 1.775212634, 1.702296113, 1.83721189, 1.231803074, 1.249931583;...
+    1.770604591, 1.45535285, 1.229800818, 1.178872845, 1.210659654, 1.074993639, 0.789078152];
+AUC_exvivo_avg16 = [1, 0.96, 0.94, 0.92, 0.86, 0.8, 0.71; 0.92, 0.88, 0.88, 0.85, 0.8, 0.76, 0.69; ...
+    0.83, 0.81, 0.82, 0.78, 0.77, 0.74, 0.7; 0.76, 0.75, 0.74, 0.74, 0.71, 0.67, 0.67];
+
+
+sz = 192;
+figure('Position', [0 100 400 400]);
+% 20P10_Exvivo7, 20P11_Exvivo6, 18P90, 18P93, 20P40, 18P92,    18P94_Exvivo3, 18P95,    17P73,   20P48
+auc_avg = AUC_invivo_allavg(:);
+CNR = CNR(:);
+% 0.8*0.8*8, 1.6*1.6*2, 0.8*0.8*6, 1.6*1.6*2, 1*1*4, 1.3*1.3*4  1,1.3,1.6*2
+% and 1.6*1.6*4, 1.6*1.6*2, 1.3*1.3*2, 0.8*0.8*8
+
+scatter(CNR, auc_avg, sz, 'filled', 'MarkerFaceColor', [0, 0.4470, 0.7410]);
+hold on;
+
+ylim([.5 1]);
+grid on;
+
+X = [ones(length(CNR), 1) CNR];
+b = X \ auc_avg;
+yCalc1 = X*b;
+
+scatter(CNR([10 13]), auc_avg([10 13]), sz, 'filled', 'MarkerFaceColor', [253,190,133]/255);
+scatter(CNR_exvivo_avg16(1), AUC_exvivo_avg16(1), sz, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+plot(CNR, yCalc1, 'k', 'LineWidth', 3);
+
+x = CNR;
+y = auc_avg;
+Rsq2 = 1 - sum((y - yCalc1).^2)/sum((y - mean(y)).^2) % R^2 0.6722
+
+g = fittype('a+b*x');
+f0 = fit(x,y,g,'StartPoint',[[ones(size(x)), x]\y]);
+xx = linspace(0.5, 2.5, 50);
+%plot(xx,f0(xx),'--k', 'LineWidth', 3);
+
+Rsq2 = 1 - sum((y - f0(x)).^2)/sum((y - mean(y)).^2) % R^2 0.7115
+%set(gca, 'YDir','reverse')
+
+xlim([0 5]);
+
 %% Voxel size vs AUC
 auc_mat_D2 = mean(auc_mat,2);
 figure();
@@ -232,6 +434,9 @@ BI = idx_array(I)
 
 AUC_avg16 = [1,nan,nan,nan,nan;nan,nan,nan,nan,nan;nan,nan,nan,nan,nan;nan,nan,nan,nan,nan];
 AUC_invivo = [0.57,0.68,0.68,0.77,0.64;0.69,0.76,0.76,0.75,0.66;0.76,0.76,0.71,0.69,0.6;0.74,0.69,0.66,0.66,0.58];
+%05/29/2023
+AUC_invivo_allavg = [0.57,0.69,0.72,0.82,0.66;0.73,0.74,0.80,0.77,0.65;0.74,0.77,0.72,0.69,0.59;0.71,0.67,0.68,0.70,0.57];
+AUC_invivo_subjectavg = [0.56,0.67,0.68,0.78,0.64;0.67,0.67,0.70,0.73,0.62;0.65,0.68,0.63,0.62,0.54;0.64,0.58,0.60,0.62,0.52];
 
 AUC_avg16_array = AUC_avg16(:);
 AUC_invivo_array = AUC_invivo(:);
@@ -240,7 +445,12 @@ figure(); plot(B, AUC_avg16_array(I),'o'); grid on;
 figure(); plot(B, AUC_invivo_array(I),'o'); grid on;
 
 %% Flatten the voxel size, plot vs AUC (version 2 for SCMR)
+inplane_res = [0.8, 1.0, 1.3, 1.6, 2.1];
+thrplane_res = [2, 4, 6, 8];
 
+vol_mat = ((inplane_res .* inplane_res)' * thrplane_res)';
+
+AUC_invivo = AUC_invivo_allavg;
 figure('Position', [100 0 300 600]);
 Y = AUC_avg16_array(I);
 X = B;
@@ -250,6 +460,7 @@ modelfun = @(b,x) b(1) + b(2)*exp(b(3)*x);
 beta0 = [0 0 0];
 mdl = fitnlm(tbl,modelfun,beta0);
 
+
 ci = coefCI(mdl);
 b = mdl.Coefficients.Estimate;
 
@@ -258,14 +469,14 @@ B_avg16 = B;
 B_avg16(1) = 0.3 * 0.3 * 2;
 plotHandles_auc(:,1) = plot(B_avg16, AUC_avg16_array(I),'o'); grid on;
 hold on;
-% plot(X, Y_pred); %ylim([0.5 1])
-% Y_lb = modelfun(ci(:,1), X);
-% Y_ub = modelfun(ci(:,2), X);
-% plot(X, Y_lb); 
-% plot(X, Y_ub); 
+plot(X, Y_pred); %ylim([0.5 1])
+Y_lb = modelfun(ci(:,1), X);
+Y_ub = modelfun(ci(:,2), X);
+plot(X, Y_lb);
+plot(X, Y_ub);
 set(plotHandles_auc(:,1), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 12, ...
     'MarkerEdgeColor', [0 0 0], 'MarkerFaceColor' , [.75 .75 1]);
-
+%set(plotHandles_auc(:,1), 'Visible','off');
 plotHandles_auc(:,2) = plot(vol_mat(1,:), AUC_invivo(1,:),'o');
 set(plotHandles_auc(:,2), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 12, ...
     'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
@@ -289,3 +500,203 @@ set(gca,'LineWidth', 1.5,'TickLength',[0.02 0.02]);
 set(gca,'TickDir','out', 'YGrid', 'on');
 set(gca,'box','off');
 
+%% Flatten the voxel size, plot vs AUC (version 2 for SCMR) different size for PPT
+inplane_res = [0.8, 1.0, 1.3, 1.6, 2.1];
+thrplane_res = [2, 4, 6, 8];
+
+vol_mat = ((inplane_res .* inplane_res)' * thrplane_res)';
+
+AUC_invivo = AUC_invivo_allavg;
+figure('Position', [100 0 300 300]);
+Y = AUC_avg16_array(I);
+X = B;
+tbl = table(X, Y);
+modelfun = @(b,x) b(1) + b(2)*exp(b(3)*x);
+%modelfun = @(b,x) b(1) + b(2)*x.^b(3);
+beta0 = [0 0 0];
+mdl = fitnlm(tbl,modelfun,beta0);
+
+
+ci = coefCI(mdl);
+b = mdl.Coefficients.Estimate;
+
+Y_pred = modelfun(b, X)
+B_avg16 = B;
+B_avg16(1) = 0.3 * 0.3 * 2;
+plotHandles_auc(:,1) = plot(B_avg16, AUC_avg16_array(I),'o'); grid on;
+hold on;
+plot(X, Y_pred); %ylim([0.5 1])
+Y_lb = modelfun(ci(:,1), X);
+Y_ub = modelfun(ci(:,2), X);
+plot(X, Y_lb);
+plot(X, Y_ub);
+set(plotHandles_auc(:,1), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 12, ...
+    'MarkerEdgeColor', [0 0 0], 'MarkerFaceColor' , [.75 .75 1]);
+%set(plotHandles_auc(:,1), 'Visible','off');
+plotHandles_auc(:,2) = plot(vol_mat(1,:), AUC_invivo(1,:),'o');
+set(plotHandles_auc(:,2), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 12, ...
+    'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+plotHandles_auc(:,3) = plot(vol_mat(2,:), AUC_invivo(2,:),'square');
+set(plotHandles_auc(:,3), 'LineWidth', 1, 'Marker', 'square', 'MarkerSize', 12, ...
+    'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+plotHandles_auc(:,4) = plot(vol_mat(3,:), AUC_invivo(3,:),'diamond');
+set(plotHandles_auc(:,4), 'LineWidth', 1, 'Marker', 'diamond', 'MarkerSize', 12, ...
+    'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+plotHandles_auc(:,5) = plot(vol_mat(4,:), AUC_invivo(4,:),'^');
+set(plotHandles_auc(:,5), 'LineWidth', 1, 'Marker', '^', 'MarkerSize', 12, ...
+    'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+xlim([-1, 36]); 
+ylim([0.5 1.0]);
+%set(gca, 'XTick', [0.04, 0.10, 0.15, 0.20]);
+set(gca, 'XTickLabels', []);
+set(gca, 'XTick',[0 10 20 30 36]);
+set(gca, 'YTick',[0.5 0.6 0.7 0.8 0.9 1]);
+set(gca, 'YTickLabels', []);
+set(gca,'LineWidth', 1.5,'TickLength',[0.02 0.02]);
+set(gca,'TickDir','out', 'YGrid', 'on');
+set(gca,'box','off');
+%% Flatten the voxel size, plot vs AUC (Avg 16)
+
+inplane_res =   [0.3, 0.6, 0.8, 1.0, 1.3, 1.6, 2.1];
+vol_mat = ((inplane_res .* inplane_res)' * thrplane_res)';
+
+AUC_exvivo_allavg = [1, 0.96, 0.94, 0.92, 0.86, 0.8, 0.71; 0.92, 0.88, 0.88, 0.85, 0.8, 0.76, 0.69; 0.83, 0.81, 0.82, 0.78, 0.77, 0.74, 0.7; 0.76, 0.75, 0.74, 0.74, 0.71, 0.67, 0.67];
+AUC_invivo = AUC_invivo_allavg;
+figure('Position', [100 0 400 400]);
+Y = AUC_avg16_array(I);
+X = B;
+tbl = table(X, Y);
+modelfun = @(b,x) b(1) + b(2)*exp(b(3)*x);
+%modelfun = @(b,x) b(1) + b(2)*x.^b(3);
+beta0 = [0 0 0];
+mdl = fitnlm(tbl,modelfun,beta0);
+
+ci = coefCI(mdl);
+b = mdl.Coefficients.Estimate;
+
+Y_pred = modelfun(b, X)
+B_avg16 = B;
+B_avg16(1) = 0.3 * 0.3 * 2;
+plotHandles_auc(:,1) = plot(B_avg16, AUC_avg16_array(I),'o'); grid on;
+hold on;
+plot(X, Y_pred); %ylim([0.5 1])
+Y_lb = modelfun(ci(:,1), X);
+Y_ub = modelfun(ci(:,2), X);
+plot(X, Y_lb);
+plot(X, Y_ub);
+set(plotHandles_auc(:,1), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 12, ...
+    'MarkerEdgeColor', [0 0 0], 'MarkerFaceColor' , [.75 .75 1]);
+%set(plotHandles_auc(:,1), 'Visible','off');
+plotHandles_auc(:,2) = plot(vol_mat(1,:), AUC_exvivo_allavg(1,:),'o');
+set(plotHandles_auc(:,2), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 12, ...
+    'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+plotHandles_auc(:,3) = plot(vol_mat(2,:), AUC_exvivo_allavg(2,:),'square');
+set(plotHandles_auc(:,3), 'LineWidth', 1, 'Marker', 'square', 'MarkerSize', 12, ...
+    'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+plotHandles_auc(:,4) = plot(vol_mat(3,:), AUC_exvivo_allavg(3,:),'diamond');
+set(plotHandles_auc(:,4), 'LineWidth', 1, 'Marker', 'diamond', 'MarkerSize', 12, ...
+    'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+plotHandles_auc(:,5) = plot(vol_mat(4,:), AUC_exvivo_allavg(4,:),'^');
+set(plotHandles_auc(:,5), 'LineWidth', 1, 'Marker', '^', 'MarkerSize', 12, ...
+    'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+xlim([-1, 36]); 
+ylim([0.5 1.0]);
+%set(gca, 'XTick', [0.04, 0.10, 0.15, 0.20]);
+set(gca, 'XTickLabels', []);
+set(gca, 'XTick',[0 10 20 30 36]);
+set(gca, 'YTick',[0.5 0.6 0.7 0.8 0.9 1]);
+set(gca, 'YTickLabels', []);
+set(gca,'LineWidth', 1.5,'TickLength',[0.02 0.02]);
+set(gca,'TickDir','out', 'YGrid', 'on');
+set(gca,'box','off');
+
+%% Width vs AUC (Averaged over spatial resolution)
+width_array = [2.40, 0.91,  1.21,  0.53,  0.56,  0.59, 0.92,  0.59,  1.10,  0.69];
+sz = 192;
+figure('Position', [0 100 300 600]);
+
+
+% 20P10_Exvivo7, 20P11_Exvivo6, 18P90, 18P93, 20P40, 18P92,    18P94_Exvivo3, 18P95,    17P73,   20P48
+auc_avg = [0.8905	 0.7204	    0.8019 0.6231 0.7208  0.8354	0.7108	      0.7369	0.7641	 0.7804];
+
+
+scatter(width_array, auc_avg, sz, 'filled', 'MarkerFaceColor', [0, 0.4470, 0.7410]);
+ylim([.5 1]);
+grid on;
+
+X = [ones(length(width_array'), 1) width_array'];
+b = X \ auc_avg';
+yCalc1 = X*b;
+hold on;
+scatter(width_array([1 8]), auc_avg([1 8]), sz, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+plot(width_array, yCalc1, 'k', 'LineWidth', 3);
+
+x = width_array.';
+y = auc_avg';
+Rsq2 = 1 - sum((y - yCalc1).^2)/sum((y - mean(y)).^2) % R^2 0.8423
+
+g = fittype('a-b*exp(-c*x)');
+f0 = fit(x,y,g,'StartPoint',[[ones(size(x)), -exp(-x)]\y; 1]);
+xx = linspace(0.5, 2.5, 50);
+%plot(xx,f0(xx),'--k', 'LineWidth', 3);
+
+Rsq2 = 1 - sum((y - f0(x)).^2)/sum((y - mean(y)).^2) % R^2 0.8766
+
+%% Flatten the voxel size, plot vs AUC from Simulation - need to load auc_array first
+
+inplane_res =   [0.4, 0.6, 0.8, 1.0, 1.2, 1.6, 2.0];
+vol_mat = ((inplane_res .* inplane_res)' * thrplane_res)';
+
+slc = 1;
+figure('Position', [100 0 800 800]);
+for i = 1:size(auc_array, 3)
+    subplot(2,2,i);
+    AUC_exvivo_allavg = auc_array(1:length(inplane_res),:,i,slc).';
+    AUC_invivo = AUC_invivo_allavg;
+    Y = AUC_avg16_array(I);
+    X = B;
+    tbl = table(X, Y);
+    modelfun = @(b,x) b(1) + b(2)*exp(b(3)*x);
+    %modelfun = @(b,x) b(1) + b(2)*x.^b(3);
+    beta0 = [0 0 0];
+    mdl = fitnlm(tbl,modelfun,beta0);
+
+    ci = coefCI(mdl);
+    b = mdl.Coefficients.Estimate;
+
+    Y_pred = modelfun(b, X)
+    %B_avg16 = B;
+    %B_avg16(1) = 0.3 * 0.3 * 2;
+    %plotHandles_auc(:,1) = plot(B_avg16, AUC_avg16_array(I),'o'); grid on;
+    hold on;
+    plot(X, Y_pred); %ylim([0.5 1])
+    Y_lb = modelfun(ci(:,1), X);
+    Y_ub = modelfun(ci(:,2), X);
+    plot(X, Y_lb);
+    plot(X, Y_ub);
+    %set(plotHandles_auc(:,1), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 12, ...
+    %    'MarkerEdgeColor', [0 0 0], 'MarkerFaceColor' , [.75 .75 1]);
+    %set(plotHandles_auc(:,1), 'Visible','off');
+    plotHandles_auc(:,2) = plot(vol_mat(1,:), AUC_exvivo_allavg(1,:),'o');
+    set(plotHandles_auc(:,2), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 12, ...
+        'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+    plotHandles_auc(:,3) = plot(vol_mat(2,:), AUC_exvivo_allavg(2,:),'square');
+    set(plotHandles_auc(:,3), 'LineWidth', 1, 'Marker', 'square', 'MarkerSize', 12, ...
+        'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+    plotHandles_auc(:,4) = plot(vol_mat(3,:), AUC_exvivo_allavg(3,:),'diamond');
+    set(plotHandles_auc(:,4), 'LineWidth', 1, 'Marker', 'diamond', 'MarkerSize', 12, ...
+        'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+    plotHandles_auc(:,5) = plot(vol_mat(4,:), AUC_exvivo_allavg(4,:),'^');
+    set(plotHandles_auc(:,5), 'LineWidth', 1, 'Marker', '^', 'MarkerSize', 12, ...
+        'MarkerEdgeColor', [0 0 0]/255, 'MarkerFaceColor' , [253,190,133]/255);
+    xlim([-1, 36]);
+    ylim([0.5 1.0]);
+    %set(gca, 'XTick', [0.04, 0.10, 0.15, 0.20]);
+    set(gca, 'XTickLabels', []);
+    set(gca, 'XTick',[0 10 20 30 36]);
+    set(gca, 'YTick',[0.5 0.6 0.7 0.8 0.9 1]);
+    set(gca, 'YTickLabels', []);
+    set(gca,'LineWidth', 1.5,'TickLength',[0.02 0.02]);
+    set(gca,'TickDir','out', 'YGrid', 'on');
+    set(gca,'box','off');
+end

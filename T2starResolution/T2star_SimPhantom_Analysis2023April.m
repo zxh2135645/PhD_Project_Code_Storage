@@ -38,8 +38,8 @@ myo_mask = zeros(Nx, Ny);
 
 hemo_w = res_array(end)/dx;
 hemo_ww = fix(hemo_w/2);
-myo_mask(:, 1:(Nx/2-3*hemo_ww)) = ones(Ny, length(1:(Nx/2-3*hemo_ww)));
-myo_mask(:, (Nx/2+3*hemo_ww)+1:end) = ones(Ny, length(1:(Nx/2-3*hemo_ww)));
+myo_mask(:, 1:(Nx/2-3*hemo_ww-1)) = ones(Ny, length(1:(Nx/2-3*hemo_ww-1)));
+myo_mask(:, (Nx/2+3*hemo_ww)+2:end) = ones(Ny, length(1:(Nx/2-3*hemo_ww-1)));
 t_hemo = zeros(Ny, Nx, length(width_max));
 hemo_mask_cell = cell(length(res_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
 hemo_mask_frame_cell = cell(length(res_array), length(width_max));
@@ -75,14 +75,19 @@ for iter = 1:length(SimPhantom_04012023.tissue_canvas)
             end
             hemo_mask_frame_cell{i,w} = hemo_mask_frame;
             hemo_mask = zeros(Ny, Nx, slides, length(sigma_array));
+            hemo_mask_fwhm = zeros(Ny, Nx, slides, length(sigma_array));
             for j = 1:size(C_cell, 2)
                 for sld = 1:slides
                     thresh = mean(nonzeros(myo_mask .* C_cell{i,j}(:,:,sld))) - 2*std(nonzeros(myo_mask .* C_cell{i,j}(:,:,sld)));
                     hemo_mask(:,:,sld,j) = (C_cell{i,j}(:,:,sld) < thresh); %.* hemo_mask_frame(:,:,i,w);
-                    %thresh_mat(:,:,i,j,w) = thresh;
+                    % thresh_mat(:,:,i,j,w) = thresh;
+                    % thresh_fwhm = 0.5*max(max(C_cell{i,j}(:,:,sld)));
+                    thresh_fwhm = min(min(C_cell{i,j}(:,:,sld))) + 0.5*(max(max(C_cell{i,j}(:,:,sld)))-min(min(C_cell{i,j}(:,:,sld))));
+                    hemo_mask_fwhm(:,:,sld,j) = (C_cell{i,j}(:,:,sld) < thresh_fwhm); %.* hemo_mask_frame(:,:,i,w);
                 end
             end
             hemo_mask_cell{i,w,iter} = hemo_mask;
+            hemo_mask_fwhm_cell{i,w,iter} = hemo_mask_fwhm;
         end
     end
 end
@@ -114,8 +119,15 @@ spec_cell = cell(length(res_array), length(sigma_array), length(width_max), leng
 accu_cell = cell(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
 prec_cell = cell(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
 CNR_cell = cell(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
+T2star_diff_cell = cell(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
+
 SNR_cell = cell(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
+
+SD_cell = cell(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas)); % April 2024
+
 CNR_nom_cell = cell(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
+T2star_diff_nom_cell = cell(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
+
 auc_cell = cell(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
 dice_cell = cell(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
 
@@ -137,8 +149,16 @@ prec_matt = zeros(length(res_array), length(sigma_array), length(width_max), len
 auc_matt = zeros(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
 dice_matt = zeros(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
 CNR_matt = zeros(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
+T2star_diff_matt = zeros(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas)); % April 2024
+
 SNR_matt = zeros(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
+
+SD_matt = zeros(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas)); % April 2024
+
 CNR_nom_matt = zeros(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
+T2star_diff_nom_matt = zeros(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas)); % April 2024
+T2star_div_nom_matt = zeros(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas)); % April 2024
+
 
 % VS truth in canvas
 sens_matt2 = zeros(length(res_array), length(sigma_array), length(width_max), length(SimPhantom_04012023.tissue_canvas));
@@ -159,20 +179,30 @@ for iter = 1:length(SimPhantom_04012023.tissue_canvas)
         truth_map2 = t_hemo(:,:,w);
         
         for i = 1:length(res_array)
+        %for i = 1:1
             res = res_array(i);
             bloc_size = round(res/dx).^2;
             truth_map = hemo_mask_frame_cell{i,w}; % 3D truth map
             hemo_mask = hemo_mask_cell{i,w,iter};
+            %hemo_mask = hemo_mask_fwhm_cell{i,w,iter};
             %  Ny x Nx x slides x sigma
             slides = size(hemo_mask, 3);
             for j = 1:length(sigma_array)
+            %for j = 1:1
                 sens_mat = zeros(slides, 1);
                 spec_mat = zeros(slides, 1);
                 accu_mat = zeros(slides, 1);
                 prec_mat = zeros(slides, 1);
                 CNR_mat = zeros(slides, 1);
+                T2star_diff_mat = zeros(slides, 1); % April 2024
                 SNR_mat = zeros(slides, 1);
+
+                SD_mat = zeros(slides, 1); % April 2024
+                
                 CNR_nom_mat = zeros(slides, 1);
+
+                T2star_diff_nom_mat = zeros(slides, 1); % April 2024
+                T2star_div_nom_mat = zeros(slides, 1); % April 2024
 
                 % VS truth in canvas
                 sens_mat2 = zeros(slides, 1);
@@ -260,9 +290,14 @@ for iter = 1:length(SimPhantom_04012023.tissue_canvas)
                     s_myo = mean(nonzeros(myo .* C_cell{i,j}(:,:,sld)));
                     std_myo = std(nonzeros(myo .* C_cell{i,j}(:,:,sld)));
                     SNR_mat(sld) = s_myo ./ std_myo;
+                    SD_mat = std_myo; % April 2024
                     CNR_mat(sld) = (s_myo-s_hemo) ./ std_myo;
+
+                    T2star_diff_mat(sld) = s_myo - s_hemo;
                     % A different way to do CNR
                     CNR_nom_mat(sld) = (s_myo-s_hemo_nom) ./ std_myo;
+                    T2star_diff_nom_mat(sld) = s_myo - s_hemo_nom;
+                    T2star_div_nom_mat(sld) = s_myo ./ s_hemo_nom;
                 end
 
                 sens_cell{i,j,w,iter} = sens_mat;
@@ -273,6 +308,7 @@ for iter = 1:length(SimPhantom_04012023.tissue_canvas)
                 dice_cell{i,j,w,iter} = dice_mat;
                 CNR_cell{i,j,w,iter} = CNR_mat;
                 SNR_cell{i,j,w,iter} = SNR_mat;
+                SD_cell{i,j,w,iter} = SD_mat; % April 2024
                 CNR_nom_cell{i,j,w,iter} = CNR_nom_mat;
 
                 % VS truth in canvas
@@ -294,9 +330,14 @@ for iter = 1:length(SimPhantom_04012023.tissue_canvas)
                 dice_matt(i,j,w,iter) = mean(dice_mat);
 
                 CNR_matt(i,j,w,iter) = mean(CNR_mat);
+                T2star_diff_matt(i,j,w,iter) = mean(T2star_diff_mat); % April 2024
                 SNR_matt(i,j,w,iter) = mean(SNR_mat);
+                SD_matt(i,j,w,iter) = mean(SD_mat); % April 2024
                 CNR_nom_matt(i,j,w,iter) = mean(CNR_nom_mat);
+                T2star_diff_nom_matt(i,j,w,iter) = mean(T2star_diff_nom_mat); % April 2024
+                T2star_div_nom_matt(i,j,w,iter) = mean(T2star_div_nom_mat); % April 2024
 
+                
                 % VS truth in canvas
                 sens_matt2(i,j,w,iter) = mean(sens_mat2);
                 spec_matt2(i,j,w,iter) = mean(spec_mat2);
@@ -322,6 +363,17 @@ SNR_mat_20 = mean(SNR_matt(:,:,6,:),4);
 SNR_mat_25 = mean(SNR_matt(:,:,7,:),4);
 SNR_mat_30 = mean(SNR_matt(:,:,8,:),4);
 SNR_mat_40 = mean(SNR_matt(:,:,9,:),4);
+
+% April 2024
+SD_mat_04 = mean(SD_matt(:,:,1,:),4);
+SD_mat_06 = mean(SD_matt(:,:,2,:),4);
+SD_mat_08 = mean(SD_matt(:,:,3,:),4);
+SD_mat_10 = mean(SD_matt(:,:,4,:),4);
+SD_mat_15 = mean(SD_matt(:,:,5,:),4);
+SD_mat_20 = mean(SD_matt(:,:,6,:),4);
+SD_mat_25 = mean(SD_matt(:,:,7,:),4);
+SD_mat_30 = mean(SD_matt(:,:,8,:),4);
+SD_mat_40 = mean(SD_matt(:,:,9,:),4);
 
 accu_matt2_04 = mean(accu_matt2(:,:,1,:),4);
 accu_matt2_06 = mean(accu_matt2(:,:,2,:),4);
@@ -394,12 +446,32 @@ CNR_mat_25 = mean(CNR_nom_matt(:,:,7,:),4);
 CNR_mat_30 = mean(CNR_nom_matt(:,:,8,:),4);
 CNR_mat_40 = mean(CNR_nom_matt(:,:,9,:),4);
 
+T2star_diff_nom_mat_04 = mean(T2star_diff_nom_matt(:,:,1,:),4);
+T2star_diff_nom_mat_06 = mean(T2star_diff_nom_matt(:,:,2,:),4);
+T2star_diff_nom_mat_08 = mean(T2star_diff_nom_matt(:,:,3,:),4);
+T2star_diff_nom_mat_10 = mean(T2star_diff_nom_matt(:,:,4,:),4);
+T2star_diff_nom_mat_15 = mean(T2star_diff_nom_matt(:,:,5,:),4);
+T2star_diff_nom_mat_20 = mean(T2star_diff_nom_matt(:,:,6,:),4);
+T2star_diff_nom_mat_25 = mean(T2star_diff_nom_matt(:,:,7,:),4);
+T2star_diff_nom_mat_30 = mean(T2star_diff_nom_matt(:,:,8,:),4);
+T2star_diff_nom_mat_40 = mean(T2star_diff_nom_matt(:,:,9,:),4);
+
+T2star_div_nom_mat_04 = mean(T2star_div_nom_matt(:,:,1,:),4);
+T2star_div_nom_mat_06 = mean(T2star_div_nom_matt(:,:,2,:),4);
+T2star_div_nom_mat_08 = mean(T2star_div_nom_matt(:,:,3,:),4);
+T2star_div_nom_mat_10 = mean(T2star_div_nom_matt(:,:,4,:),4);
+T2star_div_nom_mat_15 = mean(T2star_div_nom_matt(:,:,5,:),4);
+T2star_div_nom_mat_20 = mean(T2star_div_nom_matt(:,:,6,:),4);
+T2star_div_nom_mat_25 = mean(T2star_div_nom_matt(:,:,7,:),4);
+T2star_div_nom_mat_30 = mean(T2star_div_nom_matt(:,:,8,:),4);
+T2star_div_nom_mat_40 = mean(T2star_div_nom_matt(:,:,9,:),4);
+
 %% Putting them together
 CNR_mat_compiled = double(CNR_mat_04>3) + double(CNR_mat_06>3) + double(CNR_mat_08>3) + double(CNR_mat_10>3)+ double(CNR_mat_15>3) + double(CNR_mat_20>3) + double(CNR_mat_25>3) + double(CNR_mat_30>3);
-CNR_mat_avg = (CNR_mat_04+CNR_mat_06+CNR_mat_08+CNR_mat_10+CNR_mat_15+CNR_mat_20+CNR_mat_25+CNR_mat_30)/6;
+CNR_mat_avg = (CNR_mat_04+CNR_mat_06+CNR_mat_08+CNR_mat_10+CNR_mat_15+CNR_mat_20+CNR_mat_25+CNR_mat_30)/8;
 
 figure();
-imagesc(CNR_mat_avg.');axis image; axis off;
+imagesc(CNR_mat_avg.'); axis image; axis off;
 caxis([3 20]);
 colormap(brewermap([],'*RdYlBu'));
 colorbar;
@@ -408,11 +480,85 @@ hold on;
 x = 1:7;
 y = 1:10;
 [X,Y] = meshgrid(x,y);  
-[C,h] = contour(X,Y,CNR_mat_compiled.', 'k', 'LineWidth', 1.5, 'ShowText', 'on')
+% [C,h] = contour(X,Y,CNR_mat_compiled.', [3 4 5 6 7 8], 'k', 'LineWidth', 1.5, 'ShowText', 'on')
+[C,h] = contour(X,Y,CNR_mat_avg.', [3 4 5 6 7 8], 'k', 'LineWidth', 1.5, 'ShowText', 'on')
+
 set(gca,'XAxisLocation','top','YAxisLocation','left','ydir','reverse');
 clabel(C,h,'FontSize',15,'Color','black');
 axis off;
 
+%%
+figure();
+imagesc(CNR_mat_30.');axis image; axis off;
+caxis([3 20]);
+colormap(brewermap([],'*RdYlBu'));
+colorbar;
+
+figure();
+imagesc(CNR_mat_04.');axis image; axis off;
+caxis([3 20]);
+colormap(brewermap([],'*RdYlBu'));
+colorbar;
+%% Just See T2* difference
+T2star_diff_mat_compiled = double(T2star_diff_nom_mat_04>3) + double(T2star_diff_nom_mat_06>3) + double(T2star_diff_nom_mat_08>3) + double(T2star_diff_nom_mat_10>3)+ double(T2star_diff_nom_mat_15>3) + double(T2star_diff_nom_mat_20>3) + double(T2star_diff_nom_mat_25>3) + double(T2star_diff_nom_mat_30>3);
+T2star_diff_mat_avg = (T2star_diff_nom_mat_04+T2star_diff_nom_mat_06+T2star_diff_nom_mat_08+T2star_diff_nom_mat_10+T2star_diff_nom_mat_15+T2star_diff_nom_mat_20+T2star_diff_nom_mat_25+T2star_diff_nom_mat_30)/8;
+
+figure();
+imagesc(T2star_diff_mat_avg.');axis image; axis off;
+caxis([10 19]);
+colormap(brewermap([],'*RdYlBu'));
+colorbar;
+
+hold on;
+x = 1:7;
+y = 1:10;
+[X,Y] = meshgrid(x,y);  
+[C,h] = contour(X,Y,T2star_diff_mat_avg.', 'k', 'LineWidth', 1.5, 'ShowText', 'on')
+set(gca,'XAxisLocation','top','YAxisLocation','left','ydir','reverse');
+clabel(C,h,'FontSize',15,'Color','black');
+axis off;
+
+%% Hww about SD map
+%SD_mat_compiled = double(SD_mat_04>3) + double(SD_mat_06>3) + double(SD_mat_08>3) + double(SD_mat_10>3)+ double(SD_mat_15>3) + double(SD_mat_20>3) + double(SD_mat_25>3) + double(SD_mat_30>3);
+SD_mat_compiled = double(SD_mat_04>4) + double(SD_mat_06>4) + double(SD_mat_08>4) + double(SD_mat_10>4)+ double(SD_mat_15>4) + double(SD_mat_20>4) + double(SD_mat_25>4) + double(SD_mat_30>4);
+SD_mat_avg = (SD_mat_04+SD_mat_06+SD_mat_08+SD_mat_10+SD_mat_15+SD_mat_20+SD_mat_25+SD_mat_30)/8;
+
+figure();
+imagesc(SD_mat_avg.');axis image; axis off;
+%caxis([3 20]);
+colormap(brewermap([],'*RdYlBu'));
+colorbar;
+
+hold on;
+x = 1:7;
+y = 1:10;
+[X,Y] = meshgrid(x,y);  
+% [C,h] = contour(X,Y,CNR_mat_compiled.', [3 4 5 6 7 8], 'k', 'LineWidth', 1.5, 'ShowText', 'on')
+[C,h] = contour(X,Y,SD_mat_avg.', [2.5 5 10 15], 'k', 'LineWidth', 1.5, 'ShowText', 'on')
+% [C,h] = contour(X,Y,SD_mat_compiled.', 'k', 'LineWidth', 1.5, 'ShowText', 'on')
+
+set(gca,'XAxisLocation','top','YAxisLocation','left','ydir','reverse');
+clabel(C,h,'FontSize',15,'Color','black');
+axis off;
+
+%% Just See T2* div
+T2star_div_mat_compiled = double(T2star_div_nom_mat_04>3) + double(T2star_div_nom_mat_06>3) + double(T2star_div_nom_mat_08>3) + double(T2star_div_nom_mat_10>3)+ double(T2star_div_nom_mat_15>3) + double(T2star_div_nom_mat_20>3) + double(T2star_div_nom_mat_25>3) + double(T2star_div_nom_mat_30>3);
+T2star_div_mat_avg = (T2star_div_nom_mat_04+T2star_div_nom_mat_06+T2star_div_nom_mat_08+T2star_div_nom_mat_10+T2star_div_nom_mat_15+T2star_div_nom_mat_20+T2star_div_nom_mat_25+T2star_div_nom_mat_25)/8;
+
+figure();
+imagesc(T2star_div_mat_avg.');axis image; axis off;
+caxis([1 2]);
+colormap(brewermap([],'*RdYlBu'));
+colorbar;
+
+hold on;
+x = 1:7;
+y = 1:10;
+[X,Y] = meshgrid(x,y);  
+[C,h] = contour(X,Y,T2star_div_mat_avg.',[1.5 1.8],  'k', 'LineWidth', 1.5, 'ShowText', 'on')
+set(gca,'XAxisLocation','top','YAxisLocation','left','ydir','reverse');
+clabel(C,h,'FontSize',15,'Color','black');
+axis off;
 %%
 SimPhantom_2023_analysis_April.SNR_mat_04 = SNR_mat_04;
 SimPhantom_2023_analysis_April.SNR_mat_06 = SNR_mat_06;
@@ -422,6 +568,15 @@ SimPhantom_2023_analysis_April.SNR_mat_15 = SNR_mat_15;
 SimPhantom_2023_analysis_April.SNR_mat_20 = SNR_mat_20;
 SimPhantom_2023_analysis_April.SNR_mat_25 = SNR_mat_25;
 SimPhantom_2023_analysis_April.SNR_mat_30 = SNR_mat_30;
+
+SimPhantom_2023_analysis_April.SD_mat_04 = SD_mat_04;
+SimPhantom_2023_analysis_April.SD_mat_06 = SD_mat_06;
+SimPhantom_2023_analysis_April.SD_mat_08 = SD_mat_08;
+SimPhantom_2023_analysis_April.SD_mat_10 = SD_mat_10;
+SimPhantom_2023_analysis_April.SD_mat_15 = SD_mat_15;
+SimPhantom_2023_analysis_April.SD_mat_20 = SD_mat_20;
+SimPhantom_2023_analysis_April.SD_mat_25 = SD_mat_25;
+SimPhantom_2023_analysis_April.SD_mat_30 = SD_mat_30;
 
 
 SimPhantom_2023_analysis_April.res_array = res_array;
@@ -482,5 +637,7 @@ SimPhantom_2023_analysis_April.auc_matt3_25 = auc_matt3_25;
 SimPhantom_2023_analysis_April.auc_matt3_30 = auc_matt3_30;
 
 save_dir = cat(2, base_dir);
-fname = 'SimPhantom_2023_analysis_April.mat';
+%fname = 'SimPhantom_2023_analysis_April.mat';
+%fname = 'SimPhantom_2023_analysis_April_fwhm_V2.mat';
+fname = 'SimPhantom_2023_analysis_April_2024.mat';
 save(cat(2, save_dir, '/', fname), 'SimPhantom_2023_analysis_April');

@@ -205,6 +205,9 @@ len = 36;
 base_x = size(mask_struct(7).myo_mask, 1);
 mask_idx_array = [3:7, [3:7]+7, [3:7]+7*2, [3:7]+7*3];
 
+if avg_num == 16
+    mask_idx_array = 1:1:length(whatsinit);
+end
 for i = 1:length(whatsinit)
     save_idx = save_array(i);
     figure();

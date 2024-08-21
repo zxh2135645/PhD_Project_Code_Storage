@@ -9,11 +9,18 @@ remote_new = [];
 orig_new = [];
 myo_new = [];
 
+roi_in_myo_new = zeros(size(roi_in_myo));
+remote_in_myo_new = zeros(size(roi_in_myo));
+roi_new = zeros(size(roi_in_myo));
+remote_new = zeros(size(roi_in_myo));
+orig_new = zeros(size(roi_in_myo));
+myo_new = zeros(size(roi_in_myo));
+
 switch name
-    
-    case {'Ryn', 'Gobi', '18D16'}
+    % The case is hard-coded
+    case {'Ryn', 'Gobi', '18D16', 'Tina', 'Evelyn', 'Felicity', 'Queenie', 'Sunny'}
         
-        for i = 1:sum(status_check(n).status(tp_count,:))
+        for i = 1:length(status_check(n).status(tp_count,:))
             if  status_check(n).status(tp_count, i) == 1
                 roi_in_myo_new(:,:,slc_count) = roi_in_myo(:,:,i);
                 remote_in_myo_new(:,:,slc_count) = remote_in_myo(:,:,i);

@@ -93,6 +93,8 @@ perc_all01 = [];
 perc_allvivo = [];
 auc_subjects_mean_avg16 = zeros(length(subject_name_cell), 1);
 auc_subjects_mean_invivo = zeros(length(subject_name_cell), 1);
+perc_subjects_avg16_cell = cell(length(subject_name_cell), 1);
+perc_subjects_invivo_cell = cell(length(subject_name_cell), 1);
 
 for i = 1:length(subject_name_cell)
     subject_name = subject_name_cell{i};
@@ -104,11 +106,12 @@ for i = 1:length(subject_name_cell)
             aha16 = load(cat(2, subject_data_dir, 'aha_analysis_', avg_name, '.mat'));
             perc_all16 = [perc_all16, aha16.aha_analysis.perc_array_mi];
             auc_subjects_mean_avg16(i) = mean(aha16.aha_analysis.auc_array_mi);
-            
+            perc_subjects_avg16_cell{i} = aha16.aha_analysis.perc_array_mi;
         elseif j == 2
             aha_invivo = load(cat(2, subject_data_dir, 'aha_analysis_', avg_name, '.mat'));
             perc_allvivo = [perc_allvivo, aha_invivo.aha_analysis2.perc_array_mi];
             auc_subjects_mean_invivo(i) = mean(aha_invivo.aha_analysis2.auc_array_mi);
+            perc_subjects_invivo_cell{i} = aha_invivo.aha_analysis2.perc_array_mi;
         end
     end
 end
@@ -176,6 +179,49 @@ for i = 1:size(perc_allvivo, 1)
     end
     axis tight;
 end
+
+%% 2.2.2 Invivo (Longitudinal, averaged AUC is across 10 subjects)
+lb = 0.5;
+figure('Position', [100 0 1000 1600]);
+k = ([229, 240, 248] - [0, 113, 188]) / (1 - lb); % Light Blue % Dark blue
+AUC_array = zeros(size(perc_allvivo, 1), size(perc_subjects_invivo_cell, 1));
+for j = 1:size(perc_subjects_invivo_cell, 1)
+    perc_invivo = perc_subjects_invivo_cell{j};
+    gt = perc_subjects_avg16_cell{j} > 0.1;
+    for i = 1:size(perc_allvivo, 1)
+        [X,Y,T,AUC,OPTROCPT] = perfcurve(gt(1,:),perc_invivo(i,:), 1);
+        AUC_array(i,j) = AUC;
+    end
+
+    for i = 1:size(perc_allvivo, 1)
+        AUC_avg = mean(AUC_array(i,:));
+        subplot(4,5,i);
+        %plot(X, Y, 'LineWidth', 3, 'color', [246, 101, 72]/255);
+        %xlabel('FPR');
+        %ylabel('TPR');
+        text(0.6,0.2,num2str(round(AUC_avg, 2)),'FontSize',24);
+        % title('ROC for Classification')
+        set(gca, 'FontSize', 16);
+        set(gca, 'Xcolor', 'w', 'Ycolor', 'w')
+        %set(h, 'Color', 'k')
+        % get rid of the white ticks and tick labels, moving the labels closer to
+        % the axes
+        set(gca, 'XTick', []);
+        set(gca, 'YTick', []);
+        pos = get(gca, 'Position');
+        pos(1) = 0.1 + mod(i-1, 5) * 0.127;
+        pos(2) = 0.8 - fix((i-1)/5) * 0.165;
+        set(gca, 'Position', pos);
+        if AUC_avg < lb
+            set(gca,'color', [229, 240, 248]/255)
+        else
+            set(gca,'color', ([229, 240, 248]-k*(AUC_avg-lb))/255)
+        end
+        axis tight;
+    end
+end
+
+%% Two way ANOVA
 
 %% 3.1 Barplot of Transmurality
 perc_trans16 = cell(length(subject_name_cell), 1);
@@ -992,6 +1038,43 @@ set(plotHandles_iron(:,1), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 10, ...
 set(plotHandles_iron(:,2), 'LineWidth', 2, 'Color', [.3, .3, .3]);
 xlim([0.03, 0.22]); ylim([0.6 2.4]);
 set(gca, 'XTick', [0.04, 0.10, 0.15, 0.20]);
+set(gca, 'YTick', [0.6, 1, 1.4, 1.8, 2.2]);
+set(gca, 'XTickLabels', []);
+set(gca, 'YTickLabels', []);
+set(gca,'LineWidth', 1.5,'TickLength',[0.025 0.025]);
+set(gca,'TickDir','out', 'YGrid', 'on');
+set(gca,'box','off')
+
+%% 6.2 Iron content -> after 3.1 -> plot hemo-width vs iron-content
+subject_name_cell = {'18P90', '18P93', '20P40', '20P10_Exvivo7', '20P11_Exvivo6', '18P92', '18P94_Exvivo3', '18P95', '17P73', '20P48'};
+iron_remote = [37.524, 44.387, 31.759, 27.296, 32.443, 31.385, 36.850, 37.827, 44.101, 36.543]; % ug/g
+iron_mi =     [53.031, 37.556, 30.755, 61.667, 42.751, 33.786, 39.168, 48.570, 52.152, 44.290]; % ug/g
+iron_ratio =  iron_mi ./ iron_remote;
+
+hemo_width = [1.21, 0.53, 0.56, 2.40, 0.91, 0.59, 0.92, 0.59, 1.10, 0.69]';
+
+figure('Position', [100 0 700 350]);
+plotHandles_iron(:,1) = plot(hemo_width, iron_ratio, 'o');
+
+X1 = [hemo_width];
+mdl1 = fitlm(X1, iron_ratio);
+mdl1.Coefficients;
+ci = coefCI(mdl1);
+b1 = mdl1.Coefficients.Estimate;
+
+fitted_avg16 = b1(1) + X1*b1(2);
+hold on;
+plotHandles_iron(:,2) = plot(hemo_width, fitted_avg16, 'Color', [0, 0.4470, 0.7410], 'LineWidth', 3);
+plotHandles_iron(:,3) = plot(hemo_width([4 8]), iron_ratio([4 8]), 'o');
+set(plotHandles_iron(:,1), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 14, ...
+    'MarkerEdgeColor', [0, 0.4470, 0.7410], 'MarkerFaceColor' , [0, 0.4470, 0.7410]);
+set(plotHandles_iron(:,2), 'LineWidth', 3, 'Color', [.3, .3, .3]);
+set(plotHandles_iron(:,3), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 14, ...
+    'MarkerEdgeColor', [237, 62, 47]/255, 'MarkerFaceColor' , [237, 62, 47]/255);
+
+xlim([0.5, 2.5]); 
+ylim([0.6 2.4]);
+%set(gca, 'XTick', [0.04, 0.10, 0.15, 0.20]);
 set(gca, 'YTick', [0.6, 1, 1.4, 1.8, 2.2]);
 set(gca, 'XTickLabels', []);
 set(gca, 'YTickLabels', []);

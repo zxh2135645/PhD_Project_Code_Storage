@@ -3,6 +3,9 @@ close all;
 
 %% Linear regression and Bland-Altman
 %% Cardiac Function (Ejection Fraction)
+color_cell1 = {[254,240,217]/255, [253,204,138]/255, [252,141,89]/255, [227,74,51]/255, [179,0,0]/255};
+color_cell2 = {[241, 238, 246]/255, [189, 201, 225]/255, [116, 169, 207]/255, [43, 140, 190]/255, [4, 90, 141]/255};
+
 
 addpath('../function/BlandAltman/');
 % Heart muscle territories per patient
@@ -30,18 +33,18 @@ data2 = cat(3, lrt_acute(:), lrt_chronic(:));
 tit = 'Ejection Fraction (EF) Comparison'; % figure title
 gnames = {territories, states}; % names of groups in data {dimension 1 and 2}
 label = {'CMR-EF','LRT-EF','%'}; % Names of data sets
-corrinfo = {'n','SSE','r2','eq'}; % stats to display of correlation scatter plot
+corrinfo = {'r2', 'P', 'eq'}; % stats to display of correlation scatter plot
 BAinfo = {'RPC(%)','ks'}; % stats to display on Bland-ALtman plot
 limits = 'auto'; % how to set the axes limits
-if 1 % colors for the data sets may be set as:
+if 0 % colors for the data sets may be set as:
 	colors = 'br';      % character codes
 else
-	colors = [0 0 1;... % or RGB triplets
-		      1 0 0];
+	colors = [color_cell1{5};... % or RGB triplets
+		      color_cell2{5}];
 end
-
+axesLimits = [20 40 20 40];
 % Generate figure with symbols
-[cr, fig, statsStruct] = BlandAltman(data1, data2,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr, fig, statsStruct] = BlandAltman_Customized(data1, data2,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48, 'AxesLimits', axesLimits);
 
 
 data1_acute = cat(3, cmr_acute(:));
@@ -50,8 +53,8 @@ data2_acute = cat(3, lrt_acute(:));
 % BA plot paramters
 states_acute = {'WK1'};
 gnames = {territories, states_acute}; % names of groups in data {dimension 1 and 2}
-
-[cr_acute, fig_acute, statsStruct_acute] = BlandAltman(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr_acute, fig_acute, statsStruct_acute] = BlandAltman_Customized(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48,...
+    'AxesLimits', axesLimits);
 
 
 data1_chronic = cat(3, cmr_chronic(:));
@@ -59,10 +62,15 @@ data2_chronic = cat(3, lrt_chronic(:));
 
 % BA plot paramters
 states_chronic = {'WK8'};
-colors = 'rb'; 
+%colors = 'rb'; 
+colors = [color_cell2{5};... % or RGB triplets
+		      color_cell1{5}];
+cc = [color_cell2{2};...
+    color_cell1{3}];
 gnames = {territories, states_chronic}; % names of groups in data {dimension 1 and 2}
 
-[cr_chronic, fig_chronic, statsStruct_chronic] = BlandAltman(data1_chronic, data2_chronic,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr_chronic, fig_chronic, statsStruct_chronic] = BlandAltman_Customized(data1_chronic, data2_chronic,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48, 'MarkerFaceColors', cc,...
+    'AxesLimits', axesLimits);
 
 
 %% Infarct Size
@@ -92,18 +100,20 @@ data2 = cat(3, lrt_acute(:), lrt_chronic(:));
 tit = 'MI Size Comparison'; % figure title
 gnames = {territories, states}; % names of groups in data {dimension 1 and 2}
 label = {'CMR-MI size','LRT-MI size','%'}; % Names of data sets
-corrinfo = {'n','SSE','r2','eq'}; % stats to display of correlation scatter plot
+corrinfo = {'r2', 'P', 'eq'}; % stats to display of correlation scatter plot
 BAinfo = {'RPC(%)','ks'}; % stats to display on Bland-ALtman plot
 limits = 'auto'; % how to set the axes limits
-if 1 % colors for the data sets may be set as:
+if 0 % colors for the data sets may be set as:
 	colors = 'br';      % character codes
 else
-	colors = [0 0 1;... % or RGB triplets
-		      1 0 0];
+	colors = [color_cell1{5};... % or RGB triplets
+		      color_cell2{5}];
 end
+axesLimits = [0 50 0 50];
 
 % Generate figure with symbols
-[cr, fig, statsStruct] = BlandAltman(data1, data2,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr, fig, statsStruct] = BlandAltman_Customized(data1, data2,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48,...
+    'AxesLimits', axesLimits);
 
 
 data1_acute = cat(3, cmr_acute(:));
@@ -113,18 +123,22 @@ data2_acute = cat(3, lrt_acute(:));
 states_acute = {'WK1'};
 gnames = {territories, states_acute}; % names of groups in data {dimension 1 and 2}
 
-[cr_acute, fig_acute, statsStruct_acute] = BlandAltman(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
-
+[cr_acute, fig_acute, statsStruct_acute] = BlandAltman_Customized(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48,...
+    'AxesLimits', axesLimits);
 
 data1_chronic = cat(3, cmr_chronic(:));
 data2_chronic = cat(3, lrt_chronic(:));
 
 % BA plot paramters
 states_chronic = {'WK8'};
-colors = 'rb'; 
+colors = [color_cell2{5};... % or RGB triplets
+		      color_cell1{5}];
+cc = [color_cell2{2};...
+    color_cell1{3}];
 gnames = {territories, states_chronic}; % names of groups in data {dimension 1 and 2}
 
-[cr_chronic, fig_chronic, statsStruct_chronic] = BlandAltman(data1_chronic, data2_chronic,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr_chronic, fig_chronic, statsStruct_chronic] = BlandAltman_Customized(data1_chronic, data2_chronic,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48, 'MarkerFaceColors', cc,...
+    'AxesLimits', axesLimits);
 
 %% Infarct Transmurality
 % Heart muscle territories per patient
@@ -152,18 +166,20 @@ data2 = cat(3, lrt_acute(:), lrt_chronic(:));
 tit = 'MI Transmurality Comparison'; % figure title
 gnames = {territories, states}; % names of groups in data {dimension 1 and 2}
 label = {'CMR-MI','LRT-MI','%'}; % Names of data sets
-corrinfo = {'n','SSE','r2','eq'}; % stats to display of correlation scatter plot
+corrinfo = {'r2', 'P', 'eq'}; % stats to display of correlation scatter plot
 BAinfo = {'RPC(%)','ks'}; % stats to display on Bland-ALtman plot
 limits = 'auto'; % how to set the axes limits
-if 1 % colors for the data sets may be set as:
+if 0 % colors for the data sets may be set as:
 	colors = 'br';      % character codes
 else
-	colors = [0 0 1;... % or RGB triplets
-		      1 0 0];
+	colors = [color_cell1{5};... % or RGB triplets
+		      color_cell2{5}];
 end
+axesLimits = [40 90 40 90];
 
 % Generate figure with symbols
-[cr, fig, statsStruct] = BlandAltman(data1, data2,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr, fig, statsStruct] = BlandAltman_Customized(data1, data2,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48,...
+    'AxesLimits', axesLimits);
 
 
 data1_acute = cat(3, cmr_acute(:));
@@ -173,7 +189,8 @@ data2_acute = cat(3, lrt_acute(:));
 states_acute = {'WK1'};
 gnames = {territories, states_acute}; % names of groups in data {dimension 1 and 2}
 
-[cr_acute, fig_acute, statsStruct_acute] = BlandAltman(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr_acute, fig_acute, statsStruct_acute] = BlandAltman_Customized(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48,...
+    'AxesLimits', axesLimits);
 
 
 data1_chronic = cat(3, cmr_chronic(:));
@@ -181,10 +198,14 @@ data2_chronic = cat(3, lrt_chronic(:));
 
 % BA plot paramters
 states_chronic = {'WK8'};
-colors = 'rb'; 
+colors = [color_cell2{5};... % or RGB triplets
+		  color_cell1{5}];
+cc = [color_cell2{2};...
+    color_cell1{3}]; 
 gnames = {territories, states_chronic}; % names of groups in data {dimension 1 and 2}
 
-[cr_chronic, fig_chronic, statsStruct_chronic] = BlandAltman(data1_chronic, data2_chronic,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr_chronic, fig_chronic, statsStruct_chronic] = BlandAltman_Customized(data1_chronic, data2_chronic,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48, 'MarkerFaceColors', cc,...
+    'AxesLimits', axesLimits);
 
 
 %% MVO
@@ -210,18 +231,20 @@ data2_acute = cat(3, lrt_acute(:));
 tit = 'MVO Size Comparison'; % figure title
 gnames = {territories, states}; % names of groups in data {dimension 1 and 2}
 label = {'CMR-MVO','LRT-MVO','%'}; % Names of data sets
-corrinfo = {'n','SSE','r2','eq'}; % stats to display of correlation scatter plot
+corrinfo = {'r2', 'P', 'eq'}; % stats to display of correlation scatter plot
 BAinfo = {'RPC(%)','ks'}; % stats to display on Bland-ALtman plot
 limits = 'auto'; % how to set the axes limits
-if 1 % colors for the data sets may be set as:
+if 0 % colors for the data sets may be set as:
 	colors = 'br';      % character codes
 else
-	colors = [0 0 1;... % or RGB triplets
-		      1 0 0];
+	colors = [color_cell1{5};... % or RGB triplets
+		      color_cell2{5}];
 end
+% axesLimits = [40 90 40 90];
 
 % BA plot paramters
-[cr_acute, fig_acute, statsStruct_acute] = BlandAltman(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr_acute, fig_acute, statsStruct_acute] = BlandAltman_Customized(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48);
+
 %% Hemorrhage
 % Heart muscle territories per patient
 territories = {''};
@@ -235,9 +258,11 @@ nstates = length(states);
 %            Lisbon Jesse  George Chili  Nutmeg Ginger Dave  Carlos Paprika          
 lrt_acute = [2.2,   7.65,  9.01,  5.62,  5.82,  6.63,  7.16, 12.26, 2.84];
 %             Lisbon  Jesse  George Nutmeg Ginger Paprika
-lrt_chronic = [3,     3.96,  5.04,  3.34,  4.22,  1.52, nan,nan,nan];
+% lrt_chronic = [4.81,     3.96,  5.04,  3.34,  4.22,  1.52, nan, nan, nan];
+lrt_chronic = [4.81,     3.96,  5.04,  3.34,  4.22,  1.52, 0, 0, 0];
 cmr_acute = [2.62, 7.99, 9.78, 7.79, 5.59, 6.39, 6.34, 11.28, 2.81];
-cmr_chronic = [4.79, 3.02, 5.07, 3.43, 3.2, 1.58, nan,nan,nan];
+% cmr_chronic = [5.30, 3.02, 5.07, 3.43, 3.2, 1.58, nan, nan, nan];
+cmr_chronic = [5.30, 3.02, 5.07, 3.43, 3.2, 1.58, 0, 0, 0];
 
 % Baseline data with noise
 data1 = cat(3, cmr_acute(:), cmr_chronic(:));
@@ -247,18 +272,21 @@ data2 = cat(3, lrt_acute(:), lrt_chronic(:));
 tit = 'Hemorrhage Comparison'; % figure title
 gnames = {territories, states}; % names of groups in data {dimension 1 and 2}
 label = {'CMR-Hemorrhage','LRT-Hemorrhage','%'}; % Names of data sets
-corrinfo = {'n','SSE','r2','eq'}; % stats to display of correlation scatter plot
+corrinfo = {'r2', 'P', 'eq'}; % stats to display of correlation scatter plot
 BAinfo = {'RPC(%)','ks'}; % stats to display on Bland-ALtman plot
 limits = 'auto'; % how to set the axes limits
-if 1 % colors for the data sets may be set as:
+if 0 % colors for the data sets may be set as:
 	colors = 'br';      % character codes
 else
-	colors = [0 0 1;... % or RGB triplets
-		      1 0 0];
+	colors = [color_cell1{5};... % or RGB triplets
+		      color_cell2{5}];
 end
 
+axesLimits = [0 14 0 14];
+
 % Generate figure with symbols
-[cr, fig, statsStruct] = BlandAltman(data1, data2,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr, fig, statsStruct] = BlandAltman_Customized(data1, data2,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48,...
+    'AxesLimits', axesLimits);
 
 
 data1_acute = cat(3, cmr_acute(:));
@@ -268,7 +296,8 @@ data2_acute = cat(3, lrt_acute(:));
 states_acute = {'WK1'};
 gnames = {territories, states_acute}; % names of groups in data {dimension 1 and 2}
 
-[cr_acute, fig_acute, statsStruct_acute] = BlandAltman(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr_acute, fig_acute, statsStruct_acute] = BlandAltman_Customized(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48,...
+    'AxesLimits', axesLimits);
 
 
 data1_chronic = cat(3, cmr_chronic(:));
@@ -276,8 +305,12 @@ data2_chronic = cat(3, lrt_chronic(:));
 
 % BA plot paramters
 states_chronic = {'WK8'};
-colors = 'rb'; 
+colors = [color_cell2{5};... % or RGB triplets
+		  color_cell1{5}];
+cc = [color_cell2{2};...
+    color_cell1{3}]; 
 gnames = {territories, states_chronic}; % names of groups in data {dimension 1 and 2}
 
-[cr_chronic, fig_chronic, statsStruct_chronic] = BlandAltman(data1_chronic, data2_chronic,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 8);
+[cr_chronic, fig_chronic, statsStruct_chronic] = BlandAltman_Customized(data1_chronic, data2_chronic,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48, 'MarkerFaceColors', cc,...
+    'AxesLimits', axesLimits);
 

@@ -13,12 +13,16 @@ Scan_Type='Cardiac';
 
 % Fresh heart 21P18
 dicom_dir = uigetdir();
+
+%%
 % dicom_folder = '3D_IDEAL_Avg4_Bipolar';
 % dicom_folder = 'T2STARMAP_ANATOMICAL_0014';              % 21P18
 %dicom_folder = '3D_MGRE_SA_HIRES_0_9X0_9X1_PATIENT_0128'; % 21P18
 %dicom_folder = '3D_MGRE_SA_HIRES_0_9X0_9X1_PATIENT_0006'; % 21P17
 %dicom_folder = 'T2STARMAP_ANATOMICAL_0015';               % 21P17
-dicom_folder = 'T2STARMAP_ANATOMICAL_0010';                % RYN
+%dicom_folder = 'T2STARMAP_ANATOMICAL_0010';                % RYN
+
+dicom_folder = 'KY_Patient_Data/DMR0466920/FU/T2star/series0032-Body/';                % RYN
 dicom_fields = {...
     'Filename',...
     'Height', ...
@@ -126,7 +130,8 @@ else
 end
 
 %%
-iField_trunc = iField(:,:,13:16,:);
+% iField_trunc = iField(:,:,13:16,:);
+iField_trunc = iField(:,:,:,:);
 % figure(); imagesc(angle(iField_trunc(:,:,1,2)./iField_trunc(:,:,1,1))); caxis([-1 1]);
 % figure(); imagesc(angle(iField_trunc(:,:,1,3)./iField_trunc(:,:,1,2))); caxis([-1 1]);
 % figure(); imagesc(angle(iField_trunc(:,:,1,4)./iField_trunc(:,:,1,3))); caxis([-1 1]);
@@ -178,7 +183,7 @@ LABEL = 1;
 [water,fat,iFreq,unwph_uf,unwph,N_std, R2s, fitting_error] = ...
     spurs_gc(iField_trunc(:,:,:,:),TE*1e-3,f_central,voxel_size, Mask>0, SUBSAMPLE, dfat, LABEL);
 %% Save data
-slc = 3;
+slc = 1;
 figure;
 subplot(2,2,1);
 imagesc(abs(fat(:,:,slc)));colorbar;colormap jet; caxis([0,0.2]);
