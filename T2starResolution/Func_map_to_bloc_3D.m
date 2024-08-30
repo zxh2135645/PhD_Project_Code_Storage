@@ -8,9 +8,18 @@ if Nmod == 0
     N = fix(Nx/Nres);
 else
     Npad = (Nres - Nmod) / 2;
-    temp = padarray(img, [Npad, Npad], 'symmetric', 'post');
-    B = padarray(temp, [Npad, Npad], 'symmetric', 'pre');
+    disp(cat(2, 'Npad is: ', num2str(Npad)));
     N = fix(Nx/Nres) + 1;
+    if fix(Npad) == Npad
+        % temp = padarray(img, [Npad, Npad], 'symmetric', 'post');
+        % B = padarray(temp, [Npad, Npad], 'symmetric', 'pre');
+        B = padarray(img, [Npad, Npad], 'symmetric', 'both');
+    else
+        Npad1 = ceil(Npad);
+        Npad2 = floor(Npad);
+        temp = padarray(img, [Npad1, Npad1], 'symmetric', 'post');
+        B = padarray(temp, [Npad2, Npad2], 'symmetric', 'pre');
+    end
 end
 
 Nres_throughplane = round(res_through / dz); % res / dy
@@ -21,8 +30,9 @@ if Nmod_z == 0
     N_3d = fix(Nz/Nres_throughplane);
 else
     Npad_z = (Nres_throughplane - Nmod_z) / 2;
-    temp = padarray(B, [1, 1, Npad_z], 'symmetric', 'post');
-    B_z = padarray(temp, [1, 1, Npad_z], 'symmetric', 'pre');
+    %temp = padarray(B, [1, 1, Npad_z], 'symmetric', 'post');
+    %B_z = padarray(temp, [1, 1, Npad_z], 'symmetric', 'pre');
+    B_z = padarray(B, [1, 1, Npad_z], 'symmetric', 'both');
     N_3d = fix(Nz/Nres_throughplane) + 1;
 end
 
@@ -58,7 +68,12 @@ for n = 1:N
     end
 end
 
-C = B_z(Npad+1:N*Nres-Npad, Npad+1:N*Nres-Npad, Npad_z+1:N_3d*Nres_throughplane-Npad_z);
-label_mat = label_mat(Npad+1:N*Nres-Npad, Npad+1:N*Nres-Npad, Npad_z+1:N_3d*Nres_throughplane-Npad_z);
+if fix(Npad) == Npad
+    C = B_z(Npad+1:N*Nres-Npad, Npad+1:N*Nres-Npad, Npad_z+1:N_3d*Nres_throughplane-Npad_z);
+    label_mat = label_mat(Npad+1:N*Nres-Npad, Npad+1:N*Nres-Npad, Npad_z+1:N_3d*Nres_throughplane-Npad_z);
+else
+    C = B_z(Npad2+1:N*Nres-Npad1, Npad2+1:N*Nres-Npad1, Npad_z+1:N_3d*Nres_throughplane-Npad_z);
+    label_mat = label_mat(Npad2+1:N*Nres-Npad1, Npad2+1:N*Nres-Npad1, Npad_z+1:N_3d*Nres_throughplane-Npad_z);
+end
 
 end
