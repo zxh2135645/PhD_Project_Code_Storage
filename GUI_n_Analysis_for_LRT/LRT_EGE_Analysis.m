@@ -1,6 +1,7 @@
 clear all;
 close all;
-
+%%
+addpath('../function/')
 %% 
 x_sofia = [3.7	3.5	3.3	2.5	2.1	1.7	1.2	0.9	0.6	0.3	0.3	0.3	0.1	0.2	0.3 nan];
 y_sofia = [nan, 6, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,	0, nan, nan,	0];
@@ -243,6 +244,9 @@ end
 % BA plot paramters
 [cr_acute, fig_acute, statsStruct_acute] = BlandAltman_Customized(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48, 'MarkerFaceColors', color_palette_marker);
 
+label = {'CMR-MVO','LRT-MVO','%'}; % Names of data sets
+[cr_acute, fig_acute, statsStruct_acute] = BlandAltman_Customized(data2_acute, data1_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48, 'MarkerFaceColors', color_palette_marker);
+
 %% MVO
 addpath('../function/BlandAltman/');
 % Heart muscle territories per patient
@@ -280,6 +284,8 @@ end
 % BA plot paramters
 [cr_acute, fig_acute, statsStruct_acute] = BlandAltman_Customized(data1_acute, data2_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48, 'MarkerFaceColors', color_palette_marker);
 
+label = {'CMR-MVO','LRT-MVO','%'}; % Names of data sets
+[cr_acute, fig_acute, statsStruct_acute] = BlandAltman_Customized(data2_acute, data1_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48, 'MarkerFaceColors', color_palette_marker);
 
 %% For Publication (Dave)
 color_cell1 = {[254,240,217]/255, [253,204,138]/255, [252,141,89]/255, [227,74,51]/255, [179,0,0]/255};
@@ -313,6 +319,38 @@ grid on;
 xlim([0 20]); ylim([0 18]);
 set(gca,'box','off');
 
+%% For Publication (Lisbon)
+color_cell1 = {[254,240,217]/255, [253,204,138]/255, [252,141,89]/255, [227,74,51]/255, [179,0,0]/255};
+color_cell2 = {[241, 238, 246]/255, [189, 201, 225]/255, [116, 169, 207]/255, [43, 140, 190]/255, [4, 90, 141]/255};
+x_array = 1:18;
+x_lisbon_lge = [16.5	14.5	10.4	9.6	8.6	7.1	7.9	5.4	5	4	3.6	2.7	2.3	2	2.0 nan nan nan];
+y_lisbon_lge = [nan, 16.6, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,	nan, nan, nan, nan, 1.8 nan];
+
+
+figure('Position', [0 100 400 600]);
+
+%plot(x_dave_lge, '-', 'LineWidth', 2);
+x = x_array(1:15).';
+y = x_lisbon_lge(1:15).';
+g = fittype('a-b*exp(-c*x)');
+f0 = fit(x,y,g,'StartPoint',[[ones(size(x)), -exp(-x)]\y; 1]);
+
+xx1 = linspace(1, 15, 15);
+plot(xx1,f0(xx1),'-k', 'LineWidth', 3);
+hold on;
+xx2 = linspace(15, 20, 6);
+plot(xx2,f0(xx2),'--k', 'LineWidth', 3);
+
+
+ph1 = scatter(x_array, x_lisbon_lge, 192, 'o', 'LineWidth', 3, 'MarkerEdgeColor', color_cell1{4}, 'MarkerFaceColor', color_cell1{3});
+ph2 = scatter(x_array, y_lisbon_lge, 192, '^',   'LineWidth', 3, 'MarkerEdgeColor', color_cell2{4}, 'MarkerFaceColor', color_cell2{2});
+set(ph1, 'MarkerFaceAlpha', 0.5); 
+set(ph2, 'MarkerFaceAlpha', 0.5); 
+
+title('Dave');
+grid on;
+xlim([0 20]); ylim([0 18]);
+set(gca,'box','off');
 %% For Publication (Chili)
 x_chili_lge = [6.6,4.3,4.2,3.8,4,3.8,3.7,3.8,3.9,3.7,3.7,3.6,3.2,3.2,2.8,nan,nan,nan];
 y_chili_lge = [nan, 9.7, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan,	4.6, nan, nan, nan, nan, 3];
@@ -338,6 +376,40 @@ set(ph1, 'MarkerFaceAlpha', 0.5);
 set(ph2, 'MarkerFaceAlpha', 0.5); 
 
 title('Chili');
+grid on;
+xlim([0 20]); ylim([0 18]);
+set(gca,'box','off');
+
+
+%% Newer version 2025
+%% For Publication (Dave)
+color_cell1 = {[254,240,217]/255, [253,204,138]/255, [252,141,89]/255, [227,74,51]/255, [179,0,0]/255};
+color_cell2 = {[241, 238, 246]/255, [189, 201, 225]/255, [116, 169, 207]/255, [43, 140, 190]/255, [4, 90, 141]/255};
+x_array = 1:18;
+x_dave_lge = [15.9,12.1,12,10.8,10.1,9.2,9.1,7.8,6.6,6.5,6.1,5.8,5.6,4.8,4.5,nan,nan,nan];
+y_dave_lge = [nan, 12, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, 4.5, nan, nan,	nan, nan, 2.9];
+
+figure('Position', [0 100 600 200]);
+
+%plot(x_dave_lge, '-', 'LineWidth', 2);
+x = x_array(1:15).';
+y = x_dave_lge(1:15).';
+g = fittype('a-b*exp(-c*x)');
+f0 = fit(x,y,g,'StartPoint',[[ones(size(x)), -exp(-x)]\y; 1]);
+
+xx1 = linspace(1, 15, 15);
+plot(xx1,f0(xx1),'-k', 'LineWidth', 3);
+hold on;
+xx2 = linspace(15, 20, 6);
+plot(xx2,f0(xx2),'--k', 'LineWidth', 3);
+
+
+ph1 = scatter(x_array, x_dave_lge, 192, 'o', 'LineWidth', 3, 'MarkerEdgeColor', color_cell1{4}, 'MarkerFaceColor', color_cell1{3});
+ph2 = scatter(x_array, y_dave_lge, 192, '^',   'LineWidth', 3, 'MarkerEdgeColor', color_cell2{4}, 'MarkerFaceColor', color_cell2{2});
+set(ph1, 'MarkerFaceAlpha', 0.5); 
+set(ph2, 'MarkerFaceAlpha', 0.5); 
+
+title('Dave');
 grid on;
 xlim([0 20]); ylim([0 18]);
 set(gca,'box','off');

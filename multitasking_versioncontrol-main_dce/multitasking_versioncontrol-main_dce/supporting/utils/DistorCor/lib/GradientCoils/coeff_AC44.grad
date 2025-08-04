@@ -1,0 +1,88 @@
+#*[ Script ****************************************************************\
+#
+# Name        : $PDIR/default/meas/coeff_AC44.grad
+#
+# Author      : BV_ICE
+#
+# Language    : make
+#
+# Description : Defines Legendre coefficients in spherical harmonics for
+#               high end gradient coil AC44 (Allegra).
+#
+#****************************************************************************/
+#* Changed: 18-Dec-2000; F. Hebrank MRET; 35a13e; CHARM: - *********************\
+#
+# Requirement Key: 083_elh_sw_HEGInstallation
+#
+# Description : Creation: coefficients got from M.Gebhardt MRFG1 and validated
+#		with System 20006
+#
+#****************************************************************************/
+#* Changed: 14-March-2002; F. Hebrank MRET; N4VA21A; CHARM: - *********************\
+#
+# Requirement Key: 083_elh_sw_HEGInstallation
+#
+# Description : Corrected coefficients after recalculation at MRFG1 (Eva Eberlein)
+# 		including non-zonale coefficients for z-coil
+#
+#****************************************************************************/
+#* Changed: 13-June-2002; F. Hebrank MRET; N4VA21A; CHARM: MR_00308816 ************\
+#
+# Requirement Key: 083_elh_sw_HEGInstallation
+#
+# Description : Non-zonale coefficients for z-coil removed after measurement 
+# 		with System 20103
+#
+#****************************************************************************/
+
+#*] END: */
+ vision/Magnetom 083+, Gradientsystem ac44,  Gx,y,z = 40/25 mT/m
+ win_low = 0, win_high = 0, win_algo = 0, win_dummy = 2;
+ 0.140 m = R0,  lnorm = 4? A(1,0) = B(1,1) = A(1,1) = 0;
+ 0 = CoSyMode;
+ Expansion in Spherical Harmonics
+ ================================
+  
+ NO.  TYPE             SPECTRUM                 AXIS
+
+  1 A( 3, 0)            0.01582                  z
+  2 A( 5, 0)           -0.21356                  z
+  3 A( 7, 0)            0.04414                  z
+  4 A( 9, 0)            0.03690                  z
+  5 A(11, 0)	       -0.03377			 z
+  6 A(13, 0)            0.01538			 z
+101 A( 2, 1)           -0.01483                  x      
+102 A( 3, 1)            0.00591                  x 
+103 A( 3, 3)	       -0.00669	                 x
+104 A( 4, 1)            0.02030                  x
+105 A( 5, 1)           -0.06312                  x
+106 A( 6, 1)            0.02535                  x
+107 A( 6, 3)            0.00450                  x
+108 A( 7, 1)           -0.04340                  x
+109 A( 7, 3)           -0.00705                  x
+110 A( 8, 1)           -0.03061                  x
+111 A( 9, 1)            0.05111                  x
+112 A( 9, 3)            0.00471                  x
+113 A(10, 1)            0.02452                  x
+114 A(11, 1)           -0.02583                  x
+115 A(12, 1)           -0.01379                  x
+116 A(13, 1)            0.00925                  x
+117 A(14, 1)            0.00546                  x
+201 B( 2, 1)           -0.01003                  y     
+202 B( 3, 1)           -0.01029                  y
+203 B( 3, 3)	       -0.00626			 y
+204 B( 4, 1)            0.02296                  y     
+205 B( 5, 1)           -0.06528                  y     
+206 B( 5, 5)           -0.00405                  y     
+207 B( 6, 1)            0.01851                  y     
+208 B( 6, 3)           -0.00404                  y      
+209 B( 7, 1)           -0.02832                  y     
+210 B( 7, 3)            0.00513			 y
+211 B( 8, 1)           -0.02224                  y     
+212 B( 9, 1)            0.03872                  y     
+213 B( 9, 3)           -0.00302                  y     
+214 B(10, 1)            0.01768                  y     
+215 B(11, 1)           -0.01977                  y     
+216 B(12, 1)           -0.00999                  y     
+217 B(13, 1)            0.00693                  y     
+218 B(14, 1)            0.00401                  y     

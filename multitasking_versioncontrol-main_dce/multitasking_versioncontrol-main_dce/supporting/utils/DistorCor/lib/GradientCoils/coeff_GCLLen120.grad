@@ -1,0 +1,60 @@
+#*[ Script ****************************************************************\
+#
+# Name        : davinciq.grad (Februar09)
+#
+# Author      : S. Harter
+#
+# Language    : 
+#
+# Description : Defines Legendre coefficients in spherical harmonics for
+#               Gradient Coil daVinci (r0=0.25m , s.u.) 
+#               
+#****************************************************************************/
+#*********************************************************************************
+# This is a designed fake coeff file, it is make sure that when the coeff file format 
+# make a line length bigger than 120, then it cannot pass the UT
+#*********************************************************************************
+
+#*] END: */
+ daVinci 098, Gradientsystem davinci , Gx,y,z = 33 mT/m
+ win_low = 0, win_high = 0, win_algo = 0, win_dummy = 2;
+ 0.250 m = R0, lnorm = 4? A(1,0) = B(1,1) = A(1,1) = 0;
+ 0 = CoSyMode;
+ Expansion in   Spherical   Harmonics
+ ================================
+
+ NO.    TYPE                  SPECTRUM                                AXIS
+
+  1 A( 3, 0)                                                                    -0.10800                              z
+  2 A( 5, 0)                 -0.09360                               z
+  3 A( 7, 0)                  0.06020                               z
+  4 A( 9, 0)                 -0.02200                               z
+  5 A(11, 0)                  0.00340                               z
+  6 A(13, 0)                 -0.00240                               z
+102 A(3, 1)                  -0.09648                               x
+103 A(3, 3)                  -0.01377                               x
+104 A(5, 1)                  -0.07734                               x
+105 A(5, 3)                   0.00494                               x
+106 A(5, 5)                   0.00182                               x
+107 A(7, 1)                   0.03187                               x
+108 A(7, 3)                   0.00104                               x
+109 A(7, 5)                  -0.00260                               x
+110 A(7, 7)                   0.00052                               x
+111 A(9, 1)                  -0.00762                               x
+112 A(9, 3)                  -0.00043                               x
+113 A(9, 5)                   0.00147                               x
+114 A(9, 7)                  -0.00026                               x
+202 B(3,1)                   -0.10003                               y
+203 B(3,3)                    0.00840                               y
+204 B(5,1)                   -0.07456                               y
+205 B(5,3)                   -0.00121                               y
+206 B(5,5)                   -0.00061                               y
+207 B(7,1)                    0.03170                               y
+208 B(7,3)                   -0.00303                               y
+209 B(7,5)                   -0.00173                               y
+210 B(7,7)                    0.00009                               y
+211 B(9,1)                   -0.00831                               y
+212 B(9,3)                    0.00147                               y
+213 B(9,5)                    0.00095                               y
+214 B(9,7)                    0.00026                               y
+215 B(9,9)                   -0.00017                               y

@@ -24,13 +24,13 @@ end
 Groove = BaseGroove + 60;
 basal_idx = idx_array(aha_slice == 1);
 
-[Segmentpix, stats, Mask_Segn] = AHASegmentation(ff(:,:,basal_idx), myo_ff(:,:,basal_idx), 6, Groove);
+[Segmentpix, stats, Mask_Segn] = AHASegmentation(ff(:,:,basal_idx), myo_ff(:,:,basal_idx), 6, Groove(basal_idx));
 
-LocPixCount1 = zeros(6, 1);
+LocPixCount1 = zeros(6, 2);
 for i = 1:6
     for j = 1:size(Segmentpix, 2)
-        LocPixCount1(i) = LocPixCount1(i) + mean(Segmentpix{i,j});
-
+        LocPixCount1(i,1) = LocPixCount1(i,1) + mean(Segmentpix{i,j});
+        LocPixCount1(i,2) = LocPixCount1(i,2) + std(Segmentpix{i,j});
         % SegTotalPixCount1(i) = SegTotalPixCount1(i) + length(Segmentpix{i,j});
     end
 end
@@ -38,15 +38,16 @@ end
 LocPixCount1 = LocPixCount1 ./ size(Segmentpix, 2);
 
 % Mid-ventricular
-LocPixCount2 = zeros(6, 1);
+LocPixCount2 = zeros(6, 2);
 % SegTotalPixCount2 = zeros(6, 1);
 Groove = BaseGroove + 60;
 mid_idx = idx_array(aha_slice == 2);
 
-[Segmentpix, stats, Mask_Segn] = AHASegmentation(ff(:,:,mid_idx), myo_ff(:,:,mid_idx), 6, Groove);
+[Segmentpix, stats, Mask_Segn] = AHASegmentation(ff(:,:,mid_idx), myo_ff(:,:,mid_idx), 6, Groove(mid_idx));
 for i = 1:6
     for j = 1:size(Segmentpix, 2)
-        LocPixCount2(i) = LocPixCount2(i) + mean(Segmentpix{i,j});
+        LocPixCount2(i,1) = LocPixCount2(i,1) + mean(Segmentpix{i,j});
+        LocPixCount2(i,2) = LocPixCount2(i,2) + std(Segmentpix{i,j});
         % SegTotalPixCount2(i) = SegTotalPixCount2(i) + length(Segmentpix{i,j});
     end
 end
@@ -54,16 +55,17 @@ end
 LocPixCount2 = LocPixCount2 ./ size(Segmentpix, 2);
 
 % Apical
-LocPixCount3 = zeros(4, 1);
+LocPixCount3 = zeros(4, 2);
 SegTotalPixCount3 = zeros(4, 1);
 Groove = BaseGroove + 75;
 apical_idx = idx_array(aha_slice == 3);
 
-[Segmentpix, stats, Mask_Segn] = AHASegmentation(ff(:,:,apical_idx), myo_ff(:,:,apical_idx), 4, Groove);
+[Segmentpix, stats, Mask_Segn] = AHASegmentation(ff(:,:,apical_idx), myo_ff(:,:,apical_idx), 4, Groove(mid_idx));
 
 for i = 1:4
     for j = 1:size(Segmentpix, 2)
-        LocPixCount3(i) = LocPixCount3(i) + mean(Segmentpix{i,j});
+        LocPixCount3(i,1) = LocPixCount3(i,1) + mean(Segmentpix{i,j});
+        LocPixCount3(i,2) = LocPixCount3(i,2) + std(Segmentpix{i,j});
         % SegTotalPixCount3(i) = SegTotalPixCount3(i) + length(Segmentpix{i,j});
     end
 end

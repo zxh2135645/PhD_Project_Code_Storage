@@ -16,6 +16,15 @@ nterritories = length(territories);
 states = {'WK1', 'WK8'};
 nstates = length(states);
 
+% LVEDV
+%            Sofia Lisbon Paris  Jesse  George Chili    Nutmeg Ginger Dave  Carlos Paprika Cinnamon           
+lrt_acute = [50.58, 53.441, 51.79, 44.42, 47.84, 59.12, 55.05, 46.83, 55.71, 55.43, 39.89, 52.15];
+cmr_acute = [44.00, 54.88,  55.94, 52.79, 57.18, 67.99, 58.00, 60.00, 54.00, 69.00, 51.00, 54.00];
+
+%              Sofia  Lisbon  Paris  Jesse  George Nutmeg Ginger Cinnamon        
+lrt_chronic = [     , 48.88,  53.13, 60.37, 52.20, 59.39, 52.22, 61.15,nan,nan,nan];
+cmr_chronic = [50.01, 60.00,  76.21, 49.82, 52.00, 56.00, 61.00, 63.00,nan,nan,nan];
+
 % Data preparation
 %            Sofia Lisbon Paris  Jesse  George Chili  Nutmeg Ginger Dave  Paprika Cinnamon           
 lrt_acute = [35.98, 32.1, 27.35, 36.89, 34.87, 32.05, 24.57, 39.93, 24.62, 27.25, 33.31];

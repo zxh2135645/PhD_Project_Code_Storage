@@ -1,0 +1,68 @@
+#*[ Script ****************************************************************\
+#
+# Name        : $PDIR/default/meas/coeff_sonata.grad
+#
+# Author      : BV_ICE
+#
+# Language    : make
+#
+# Description : Defines Legendre coefficients in spherical harmonics for
+#               high end gradient coil sonata.
+#
+#****************************************************************************/
+#* Changed: 19-JAN-1999; M.Gress MRIS; 35a13a; CHARM: - *********************\
+#
+# Requirement Key: 083_elh_sw_HEGInstallation
+#
+# Description : Creation: file received from F.Schmitt/M.Gebhardt MRG
+#
+#****************************************************************************/
+#* Changed: 10-JUN-1999; M.Gress MRIS; 35a13a; CHARM: - *********************\
+#
+# Requirement Key: 083_elh_sw_HEGInstallation
+#
+# Description : new data from E.Eberlein, MRG
+#
+#****************************************************************************/
+#* Changed: 28-JUN-1999; O.Schreck MRIS; 35a13a; CHARM: 273366 **************\
+#
+# Requirement Key: -
+#
+# Description : string " vision" must be contained in first line
+#
+#****************************************************************************/
+#* Changed: 03-FEB-2000; F.Hebrank MRET; 35a13c; CHARM: 276779 **************\
+#
+# Requirement Key: -
+#
+# Description : correction of coefficients 
+#
+#****************************************************************************/
+
+#*] END: */
+ vision/Sonata 047+, Gradientsystem Sonata,  Gx,y,z = 40/33 mT/m
+ win_low = 0, win_high = 0, win_algo = 0, win_dummy = 2;
+ 0.25 m = R0,  lnorm = 4? A(1,0) = B(1,1) = A(1,1) = 0;
+ 0 = CoSyMode;
+ Expansion in Spherical Harmonics
+ ================================
+ 
+ NO.  TYPE             SPECTRUM                 AXIS
+
+  1 A( 3, 0)           -0.1073                  z
+  2 A( 5, 0)           -0.0963                  z
+  3 A( 7, 0)            0.0481                  z
+  4 A( 9, 0)           -0.0138                  z
+101 A( 3, 1)           -0.1168                  x
+102 A( 3, 3)           -0.0043                  x
+103 A( 5, 1)           -0.0748                  x
+104 A( 7, 1)            0.0366                  x
+105 A( 9, 1)           -0.0087                  x
+106 A( 5, 3)            0.0029                  x
+201 B( 3, 1)           -0.1082                  y
+202 B( 3, 3)            0.0045                  y
+203 B( 5, 1)           -0.0827                  y
+204 B( 7, 1)            0.0400                  y
+205 B( 9, 1)           -0.0095                  y
+106 B( 5, 3)           -0.0030                  y
+106 B( 5, 5)           -0.0026                  y

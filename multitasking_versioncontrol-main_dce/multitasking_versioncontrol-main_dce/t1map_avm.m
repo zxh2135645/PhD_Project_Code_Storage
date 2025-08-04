@@ -1,0 +1,209 @@
+% T1 mapping with 2nd order TV
+TR = Params.alTR_seconds ;
+%load('mask_rect.mat')
+alpha = 0.001; beta = 0.0001; flip = Params.flipAngleArray * pi/180;
+t1_map = zeros(Ny, Nx, Nz, sizes(5));
+pixDim = [Params.voxelSpacing(1) Params.voxelSpacing(2)];
+opts = optimset('MaxIter', 1, 'Algorithm', 'trust-region-reflective', ...
+    'Display', 'off', ...
+    'UseParallel', false);
+Gr=TemporalBasis.Gr;
+Phi=TemporalBasis.Phi;
+U=SpatialCoeff.U;
+L=32;
+
+% % Initialize mask
+% mask_2d = logical(mask(:,:,1));
+
+% Ensure the parallel pool is available
+if isempty(gcp('nocreate'))
+    parpool; % Start parallel pool using default settings
+end
+d2a = 0;
+d2b = 0;
+d2c = 0;
+
+%% Normalization
+for i = 1
+    dispim = @(x,st)fftshift(x(:,:,i,:),1);
+    for j = 1
+        for k = 1
+            temp = Gr\reshape(Phi(:,:,j,k,:), L, []);
+            temp = reshape(reshape(dispim(reshape(U, Ny, Nx, Nz, [])),[],L) * temp, Ny, Nx, [], Params.Necho);
+            cw = 0.5*max(vec(abs(temp)));
+            figure();
+            imagesc(abs(temp(:,:,end,1))/cw); axis image;
+            roi = drawpolygon;
+            bpmask= createMask(roi);
+        end
+    end
+end
+
+for i = 1
+    dispim = @(x,st)fftshift(x(:,:,i,:),1);
+    for j = 1
+        for k = 1
+            temp = Gr\reshape(Phi(:,:,j,k,:), L, []);
+            temp = reshape(reshape(dispim(reshape(U, Ny, Nx, Nz, [])),[],L) * temp, Ny, Nx, [], Params.Necho);
+            cw = 0.5*max(vec(abs(temp)));
+            figure();
+            imagesc(abs(temp(:,:,end,1))/cw); axis image;
+            roi = drawpolygon;
+            mask_2d= createMask(roi);
+        end
+    end
+end
+%% Main processing loop
+for m = 1:size(Phi, 5)
+    % Re-initialize variables for each measurement condition
+    t1_map_array = zeros(Ny*Nx, 1); % Change: Re-initialize t1_map_array inside the m loop
+    xx1 = zeros(Ny*Nx, 1);          % Change: Re-initialize xx1 inside the m loop
+    xx2 = zeros(Ny*Nx, 1);          % Change: Re-initialize xx2 inside the m loop
+    res_array = zeros(Ny*Nx, 1);    % Change: Re-initialize res_array inside the m loop
+    xxx1 = zeros(Ny*Nx, 1) + 150;
+    xxx2 = zeros(Ny*Nx, 1) - 0.1;
+    xxx3 = zeros(Ny*Nx, 1) + 0.81;
+
+    for i = 1 % Change: Ensure looping over all slices (not fixed to 6)
+        dispim = @(x) fftshift(x(:,:,i,:), 1); % Define the dispim function for the current slice
+        for tvit = 1:10
+
+            % Process each measurement condition
+            temp = Gr \ reshape(Phi(:,:,1,1,m), L, []);
+            temp = reshape(reshape(dispim(reshape(U, Ny, Nx, Nz, [])), [], L) * temp, Ny, Nx, [], Params.Necho);
+            temp1=imgaussfilt(abs(temp)./mean(abs(temp(bpmask))),1);
+            ipt = abs(reshape(temp(:,:,:), [], size(Phi, 2)));
+            
+
+            mask_1d = mask_2d(:);
+
+            n = (1:size(Phi, 2)) - 1;
+
+            lb = [1e-3, -1, 1e-10];
+            ub = [5000, 1, 1000];
+
+            for kk = 1:Ny*Nx
+                if mask_1d(kk)
+                    ipt_kk = ipt(kk, :);
+                    [~, b] = min(ipt_kk);
+                    ipt_kk(1:b-1) = -ipt_kk(1:b-1);
+                    y = double(ipt_kk(1:size(Phi, 2)));
+                    x0 = [xxx1(kk), xxx2(kk), xxx3(kk)];
+
+                    fun = @(x) x(3) .* (1 - exp(-TR/x(1))) ./ (1 - cos(flip) .* exp(-TR/x(1))) .* ...
+                        (1 + (x(2)-1) .* (exp(-TR/x(1)) .* cos(flip)).^(n-1)) - y;
+
+                    [x, resnorm] = lsqnonlin(fun, x0, lb, ub, opts);
+
+                    t1_map_array(kk) = x(1);
+                    xx1(kk) = x(2);
+                    xx2(kk) = x(3);
+                    res_array(kk) = resnorm;
+                end
+            end
+
+            t1_mapt = reshape(t1_map_array, Ny, Nx);
+            x2 = reshape(xx1, Ny, Nx);
+            x3 = reshape(xx2, Ny, Nx);
+
+            % TV reduction
+            if tvit > 2
+                t1_tv = t1_mapt;
+                d1a = norm(xxx1(:) - t1_tv(:) + 1e-10, 'fro');
+                x2_tv = x2;
+                d1b = norm(xxx2(:) - x2_tv(:) + 1e-10, 'fro');
+                x3_tv = x3;
+                d1c = norm(xxx3(:) - x3_tv(:) + 1e-10, 'fro');
+                for nDtv = 1:1e3
+                    % TV reduction for T1
+                    if d2a <= (beta*d1a) || nDtv == 1
+                        [~, gtv2] = tv2dSd(t1_mapt, pixDim, 1);
+                        t1_mapt = t1_mapt - alpha*d1a*gtv2;
+                        d2a = norm(t1_mapt(:) - t1_tv(:) + 1e-10, 'fro');
+                    end
+                    % TV reduction for x2
+                    if d2b <= (beta*d1b) || nDtv == 1
+                        [~, gtv2] = tv2dSd(x2, pixDim, 1);
+                        x2 = x2 - alpha*d1b*gtv2;
+                        d2b = norm(x2(:) - x2_tv(:) + 1e-10, 'fro');
+                    end
+                    % TV reduction for x3
+                    if d2c <= (beta*d1c) || nDtv == 1
+                        [~, gtv3] = tv2dSd(x3, pixDim, 1);
+                        x3 = x3 - alpha*d1c*gtv3;
+                        d2c = norm(x3(:) - x3_tv(:) + 1e-10, 'fro');
+                    end
+                    if(d2a > (beta*d1a) && d2b > (beta*d1b) && d2c > (beta*d1c))
+                        break;
+                    end
+                end
+            end
+
+            % Update xxx1, xxx2, xxx3 for the next iteration or measurement condition
+            xxx1 = t1_mapt(:);
+            xxx2 = x2(:);
+            xxx3 = x3(:);
+        end
+        % Store the final TV-reduced T1 map for this measurement condition
+        t1_map_tv(:,:,i,m) = t1_mapt; % Store the T1 map, not the TV-reduced version
+    end
+end
+
+imdisp([t1_map_tv(:,:,i,:) ],[0 1000],colormap(jet))
+% Apply Gaussian filtering to each slice and measurement condition
+% for i = 1:Nz
+%     for ii = 1:size(t1_map_tv, 4)
+%         t1_map_tvsm(:,:,i,ii) = imgaussfilt(t1_map_tv(:,:,i,ii), 0.5);
+%     end
+% end
+
+%imdisp(t1_map_tv,[0 1000],colormap(jet))
+
+function [s, gtv] = tv2dSd(img, pix, flag)
+% Computes the total variation of the image and its gradient.
+% img: input image
+% pix: pixel dimensions
+% flag: if true, computes the gradient of the total variation
+
+gtv = 0; % Initialize gradient of total variation
+[nx, ny] = size(img);
+[x, y] = meshgrid(1:ny, 1:nx);
+x = x * pix(1);
+y = y * pix(2);
+
+% Compute 1st-order derivatives
+[ux, uy] = gradient(img, pix(1), pix(2));
+
+% Compute 2nd-order derivatives
+[uxx, uxy] = gradient(ux, pix(1), pix(2));
+[uyx, uyy] = gradient(uy, pix(1), pix(2));
+
+% Combine 1st and 2nd order derivatives for total variation
+ds = sqrt(abs(ux).^2 + abs(uy).^2 + abs(uxx).^2 + abs(uyy).^2 + abs(uxy).^2 + abs(uyx).^2 + 1e-10);
+s = sum(ds(:)); % Total Variation of the image
+
+if flag
+    % Normalize the gradients
+    Nux = ux ./ sqrt(abs(ds).^2 + 1e-10);
+    Nuy = uy ./ sqrt(abs(ds).^2 + 1e-10);
+    Nuxx = uxx ./ sqrt(abs(ds).^2 + 1e-10);
+    Nuyy = uyy ./ sqrt(abs(ds).^2 + 1e-10);
+    Nuxy = uxy ./ sqrt(abs(ds).^2 + 1e-10);
+    Nuyx = uyx ./ sqrt(abs(ds).^2 + 1e-10);
+
+    %
+    % Compute divergence of the normalized gradients
+    divNux = divergence(x, y, Nux, zeros(size(Nux)));
+    divNuy = divergence(x, y, zeros(size(Nuy)), Nuy);
+    divNuxx = divergence(x, y, Nuxx, zeros(size(Nuxx)));
+    divNuyy = divergence(x, y, zeros(size(Nuyy)), Nuyy);
+    divNuxy = divergence(x, y, Nuxy, zeros(size(Nuxy)));
+    divNuyx = divergence(x, y, zeros(size(Nuyx)), Nuyx);
+
+    % Sum the divergences and take the negative
+    gtv = -(divNux + divNuy + divNuxx + divNuyy + divNuxy + divNuyx);
+
+    % Normalize the gradient of total variation
+    gtv = gtv / norm(abs(gtv(:)), 'fro');
+end
+end

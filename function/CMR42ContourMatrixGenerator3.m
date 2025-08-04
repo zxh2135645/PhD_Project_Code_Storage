@@ -1,4 +1,4 @@
-function [shifted_heart, shifted_myo, shifted_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count] ...
+function [shifted_heart, shifted_myo, shifted_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count, contour_idx] ...
     = CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder, old_freeROI_label)
 % Second version, improved performance. Initially used for CNN
 % segmentation.
@@ -115,6 +115,7 @@ if any(contour_idx(:))
             count = 1;
             
             ctr_index_array = []; %%%%% Not necessary
+            clear excludeCtr_mat
             for j = 1 : num_slice
                 if any(excludeCtr_struct.(fname{i}){j}(:))
                     excludeCtr_mat(:,:,count) =  excludeCtr_struct.(fname{i}){j};

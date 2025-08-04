@@ -1,0 +1,35 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "preLaunchTask": "set_cuda_visible_devices", 
+            "program": "/mnt/gpussd1/jc_350/matlab/matlab2023b/bin/glnxa64/MATLAB",
+            "args": ["-r", "cu_finufft_test"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name":"LD_LIBRARY_PATH",
+                    "value":"/home/jc_350/Toolboxes/finufft/build:${env:LD_LIBRARY_PATH}",
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "text": "handle SIGSEGV nostop"
+                },
+                {
+                     "text": "handle SIGSEGV noprint"
+                }
+            ],
+            "miDebuggerPath": "/usr/local/cuda-12.0/bin/cuda-gdb"
+        }
+    ]
+}

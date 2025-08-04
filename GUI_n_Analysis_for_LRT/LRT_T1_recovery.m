@@ -8,7 +8,17 @@ close all;
 Nseg = 192;
 TR = 0.0131;
 alpha_deg = 5;
-alpha0_deg = 180;
+alpha0_deg = 180; % For IR
+% alpha0_deg = 90; % For SR
+TI = 0.0105;
+
+% Nseg = 680;
+% TR = 0.00357;
+Nseg = 680;
+TR = 0.00357;
+alpha_deg = 5;
+alpha0_deg = 180; % For IR
+% alpha0_deg = 90; % For SR
 TI = 0.0105;
 
 alpha = 5 * pi / 180;
@@ -24,13 +34,17 @@ B0 = -1;
 % curve = Sint(1, e(R1), alpha, B0);
 
 %% New fitting
+cutoff = 20;
+
+
 E1 = @(t, R1) exp(-t*R1);
 M0= 1;
 M00 = -M0;
-reps = 20;
+reps = 20; % Why is this 20?? to reach a pseudo-steady-state
 M01 = M0 * (1 - 2*E1(TI, R1));
 Mz = zeros(Nseg*reps, 1);
-R1s = 1 ./ logspace(log10(.1),log10(2),401);
+R1s = 1 ./ logspace(log10(.1),log10(2),401); % For IR
+%R1s = 1 ./ logspace(log10(.1),log10(4),401); % For SR
 
 Mz_dict = zeros(length(R1s), Nseg);
 Mz_dict_norm = zeros(length(R1s), Nseg);
@@ -53,7 +67,8 @@ end
 %plot(Mz)
 
 Mz_dict_norm_abs = abs(Mz_dict_norm);
-Mz_dict_norm_abs_truc = Mz_dict_norm_abs(:,21:end);
+Mz_dict_norm_abs_truc = Mz_dict_norm_abs(:,(cutoff+1):end);
+%Mz_dict_norm_abs_truc = Mz_dict_norm_abs(:,(cutoff+1):2:end);
 %% Load Data
 [fid_file, fid_path] = uigetfile('*.mat');
 load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params', 'Hidx');
@@ -80,21 +95,100 @@ if ~exist(mask_f)
 else
     load(mask_f);
 end
+
+ close all;
 %%
-N_nt = 14;
+% cardiac phase and resp phase needs to be encoded
+% Dave_D8      [12, 4]
+% George_D6    [16, 4]
+% George_WK8   [24, 1]
+% Ginger_D8    [24, 4]
+% Ginger_WK8   [7, 4]
+% Carlos_D6    [20, 4]
+% Paprika_D8   [1, 4]
+% Paprika_WK8  [15, 4]
+% Nutmeg_D6    [24, 1]
+% Nutmeg_WK8   [18, 4]
+% Cinnamon_D8  [6, 4]
+% Cinnamon_WK8 [12, 4]
+% Chili_D8     [11, 4]
+% Sofia_D6     [1, 1]
+% Sofia_WK8    [2, 1]
+% Paris_D6     [23, 1]
+% Paris_WK8    [1, 4]
+% Lisbon_D6    [4, 1]
+% Lisbon_WK8   [10, 1]
+% Jesse_D8     [4, 1]
+% Jesse_WK8    [14, 1]
+
+% Donut_WK8     [ , 4]
+% Latte_D7      [ , 4]
+% Latte_WK8     [ , 1]
+% Stilton_WK8   [ , 1]
+% Twinkie_WK8   [ , 1]
+
+% cardiac phase and resp phase for Precon T1
+% Paris_D6     [1, 1]
+
+
+
+%% IR
+N_nt = 15;
+N_nt = 8;
+N_nt = size(Phi, 5);
+slc = 3;
+t1_map_3d_nt = zeros(Ny, Nx, Nz, N_nt);
+card_phase_array = [9];
+%card_phase = 9;
+resp_phase = 4;
+t1_map_4d_nt = zeros(Ny, Nx, Nz, N_nt, length(card_phase_array));
+
+
+for nt = 1:N_nt
+    %for nt = 1:2
+    for i = 1:Nz
+        %for i = slc:slc
+        dispim = @(x,st) fftshift(x(:,:,i,:), 1);
+        for j = 1:length(card_phase_array)
+            card_phase = card_phase_array(j);
+
+            temp = Gr\reshape(Phi(:,:,card_phase,resp_phase,nt), L, []);
+            temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
+            cw = 0.5*max(vec(abs(temp)));
+
+            % ipt_2d = abs(reshape(temp(:,:,11:end), [], (Nseg-20)/2));
+            ipt_2d = abs(reshape(temp(:,:,(cutoff+1):end), [], (Nseg-cutoff)));
+            % ipt_2d = abs(reshape(temp(:,:,:), [], Nseg));
+            % mask = roipoly(abs(temp(:,:,41)) / cw); axis image;
+            mask_1d = vec(mask);
+
+            tic;
+            T1Mapping_DictFit_Func2;
+            toc;
+
+            %t1_map_3d_nt(:,:,i,nt) = t1_map_2d;
+            t1_map_4d_nt(:,:,i,nt,j) = t1_map_2d;
+        end
+    end
+end
+
+%% SR
+N_nt = 1;
 slc = 4;
 t1_map_3d_nt = zeros(Ny, Nx, Nz, N_nt);
+card_phase = 10;
+resp_phase = 1;
 for nt = 1:N_nt
 %for nt = 1:2
-    % for i = 1:Nz
-    for i = slc:slc
+    for i = 1:Nz
+    %for i = slc:slc
         dispim = @(x,st) fftshift(x(:,:,i,:), 1);
         
-        temp = Gr\reshape(Phi(:,:,1,1,nt), L, []);
+        temp = Gr\reshape(Phi(:,:,card_phase,resp_phase,nt), L, []);
         temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
         cw = 0.5*max(vec(abs(temp)));
         
-        ipt_2d = abs(reshape(temp(:,:,21:end), [], (Nseg-20)));
+        ipt_2d = abs(reshape(temp(:,:,1:end-20), [], (Nseg-20)));
         % ipt_2d = abs(reshape(temp(:,:,:), [], Nseg));
         % mask = roipoly(abs(temp(:,:,41)) / cw); axis image;
         mask_1d = vec(mask);
@@ -107,25 +201,39 @@ for nt = 1:N_nt
     end
     
 end
+
+t1_map_tmp = circshift(t1_map_3d_nt, 5, 3);
+figure();
+for i = 1:size(t1_map_3d_nt, 3)
+    subplot(3,5,i);
+    imagesc(t1_map_tmp(:,:,i)); axis image;
+    clim([500, 2000])
+end
+
 %% Check images
 figure();
 for i = 1:size(t1_map_3d_nt, 4)
     subplot(3,5,i);
     imagesc(t1_map_3d_nt(:,:,slc,i)); axis image;
+    colorbar;
+    clim([0 2000]);
 end
+
 
 % why!
-figure('Position', [100 100 900 900]);
-% imagesc(t1_map_3d_nt(:,:,3,1));
-mapoi = t1_map_3d_nt(:,:,slc,1);
-imagesc(mapoi); axis image;
-roi_coord = drawpolygon;
-roi = createMask(roi_coord);
+% figure('Position', [100 100 900 900]);
+% % imagesc(t1_map_3d_nt(:,:,3,1));
+% mapoi = t1_map_3d_nt(:,:,slc,1);
+% imagesc(mapoi); axis image;
+% roi_coord = drawpolygon;
+% roi = createMask(roi_coord);
+% 
+% mean_t1_array = zeros(size(t1_map_3d_nt, 4), 1);
+% for i = 1:size(t1_map_3d_nt, 4)
+%     mean_t1_array(i) = mean(nonzeros(t1_map_3d_nt(:,:,slc,i) .* roi));
+% end
 
-mean_t1_array = zeros(size(t1_map_3d_nt, 4), 1);
-for i = 1:size(t1_map_3d_nt, 4)
-    mean_t1_array(i) = mean(nonzeros(t1_map_3d_nt(:,:,slc,i) .* roi));
-end
+
 
 % N_nt = 15;
 % rep_array = [1:5:192];
@@ -142,6 +250,25 @@ end
 %     end
 % end
 
+%% Display T1 maps
+%t1_map_3d_nt_shifted = fftshift(t1_map_3d_nt, 3);
+t1_map_3d_nt_shifted = fftshift(t1_map_4d_nt, 3);
+
+figure();
+for slc = 1:size(t1_map_3d_nt_shifted, 3)
+    subplot(4,4,slc);
+    imagesc(t1_map_3d_nt_shifted(:,:,slc,2,1));
+    clim([0 2000]);
+end
+%% Save As MAT
+save_dir = cat(2, fid_path, 'dDCE_T1_Dict_Diastole/');
+if ~exist(save_dir, 'dir')
+    mkdir(save_dir);
+end
+
+%save(cat(2, save_dir, 'T1Map_PostCon_Seg15_June26th_', num2str(card_phase), '.mat'), 't1_map_3d_nt_shifted');
+save(cat(2, save_dir, 'T1Map_PrePostCon_Seg11', '.mat'), 't1_map_3d_nt_shifted');
+
 %% ImageJ
 % Convert mat to dicom (T1 map)
 figure();
@@ -150,14 +277,37 @@ for i = 1:size(t1_map_3d_nt, 4)
     imagesc(t1_map_3d_nt(:,:,slc,i).*mask(:,:,slc)); caxis([100 1000]); axis image;
 end
 
-save_dir = cat(2, fid_path, 'DICOM_T1_Dict_Seg14/');
+save_dir = cat(2, fid_path, 'DICOM_T1_Dict_Diastole/');
 if ~exist(save_dir, 'dir')
     mkdir(save_dir);
 end
 
 dicom_dir = uigetdir;
 
+sizes = size(Phi);
 Func_ConvertMat_Dicom_ImageJ(t1_map_3d_nt, fid_file, dicom_dir, save_dir, slc, sizes);
+
+
+%% For Mona's Registration purpose: 10/24/2024
+save_dir = cat(2, fid_path, 'T1_w_Diastole/');
+if ~exist(save_dir, 'dir')
+    mkdir(save_dir);
+end
+
+dispim = @(x,st) fftshift(x(:,:,slc,:), 1);
+temp = Gr\reshape(Phi(:,:,card_phase,resp_phase,:), L, []);
+temp = reshape(reshape(dispim(reshape(U, Ny, Nx, Nz, [])),[],L) * temp, Ny, Nx, [], params.NEco);
+%cw = 0.5*max(vec(abs(temp)));
+cw = 7e-04;
+implay(abs(temp)/cw);
+
+sizes = size(Phi);
+T1w = reshape(abs(temp), Ny, Nx, sizes(2), sizes(5));
+implay(abs(T1w())/cw);
+save(cat(2,save_dir, 'T1w_slc3_Diastole.mat'), 'T1w');
+
+mask_rect = mask(:,:,slc);
+save(cat(2,save_dir, 'mask_rect.mat'), 'mask_rect');
 
 %% T1 map values
 figure('Position', [100 100 900 900]);

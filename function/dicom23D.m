@@ -201,60 +201,114 @@ function [volume_image, slice_data, image_meta_data] = ...
             true_index = true_index + 1;
             header = dicominfo(full_path);
             slice_image = dicomread(header);
-            
+
             % Save selected header data into the structure slice_data
             for j = 1:numel(dicom_fields) % loop through dicom field names
                 current_field = dicom_fields{j};
-                if contains(header.ManufacturerModelName, 'Vida')
-                    if ~isfield(header, current_field)
-                        switch current_field
-                            
-                            case {'PixelSpacing', 'SliceThickness'}
-                                if isfield(header.PerFrameFunctionalGroupsSequence.Item_1.PixelMeasuresSequence.Item_1, current_field)
-                                    slice_data(true_index).(current_field) = header.PerFrameFunctionalGroupsSequence.Item_1.PixelMeasuresSequence.Item_1.(current_field);
-                                else
-                                    ['header did not contain the field ' current_field]
-                                end %if
-                                
-                            case {'SliceLocation'}
-                                if isfield(header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_11fe.Item_1, 'Private_0021_1188')
-                                    slice_data(true_index).(current_field) = header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_11fe.Item_1.Private_0021_1188;
-                                else
-                                    ['header did not contain the field ' current_field]
-                                end %if
-                            otherwise
-                                if isfield(header, current_field)
-                                    slice_data(true_index).(current_field) = header.(current_field);
-                                else
-                                    ['header did not contain the field ' current_field]
-                                end %if
+                if isfield(header, 'ManufacturerModelName')
+                    if contains(header.ManufacturerModelName, 'Vida') || contains(header.ManufacturerModelName, 'MAGNETOM Sempra')
+                        if ~isfield(header, current_field)
+                            switch current_field
+
+                                case {'PixelSpacing', 'SliceThickness'}
+                                    if isfield(header.PerFrameFunctionalGroupsSequence.Item_1.PixelMeasuresSequence.Item_1, current_field)
+                                        slice_data(true_index).(current_field) = header.PerFrameFunctionalGroupsSequence.Item_1.PixelMeasuresSequence.Item_1.(current_field);
+                                    else
+                                        ['header did not contain the field ' current_field]
+                                    end %if
+
+                                case {'SliceLocation'}
+                                    % modified by Xinheng Zhang 06/20/2025
+                                    if isfield(header.PerFrameFunctionalGroupsSequence.Item_1, 'Private_0021_11fe')
+                                        if isfield(header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_11fe.Item_1, 'Private_0021_1188')
+                                            slice_data(true_index).(current_field) = header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_11fe.Item_1.Private_0021_1188;
+                                        else
+                                            ['header did not contain the field ' current_field]
+                                        end %if
+                                    elseif isfield(header.PerFrameFunctionalGroupsSequence.Item_1, 'Private_0021_10fe')
+                                        if isfield(header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_10fe.Item_1, 'Private_0021_1088')
+                                            slice_data(true_index).(current_field) = header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_10fe.Item_1.Private_0021_1088;
+                                        else
+                                            ['header did not contain the field ' current_field]
+                                        end %if
+                                    end
+                                otherwise
+                                    if isfield(header, current_field)
+                                        slice_data(true_index).(current_field) = header.(current_field);
+                                    else
+                                        ['header did not contain the field ' current_field]
+                                    end %if
+                            end
+                        else
+                            slice_data(true_index).(current_field) = header.(current_field);
                         end
                     else
-                        slice_data(true_index).(current_field) = header.(current_field);
+                        % Deal with requested fields not found in header
+                        if isfield(header, current_field)
+                            slice_data(true_index).(current_field) = header.(current_field);
+                        else
+                            ['header did not contain the field ' current_field]
+                        end %if
                     end
-                    
-                    
-                else
-                    % Deal with requested fields not found in header
-                    if isfield(header, current_field)
-                        slice_data(true_index).(current_field) = header.(current_field);
+                elseif isfield(header, 'Manufacturer')
+                    if contains(header.Manufacturer, 'CircleCVI')
+                        if ~isfield(header, current_field)
+                            switch current_field
+
+                                case {'PixelSpacing', 'SliceThickness'}
+                                    if isfield(header.PerFrameFunctionalGroupsSequence.Item_1.PixelMeasuresSequence.Item_1, current_field)
+                                        slice_data(true_index).(current_field) = header.PerFrameFunctionalGroupsSequence.Item_1.PixelMeasuresSequence.Item_1.(current_field);
+                                    else
+                                        ['header did not contain the field ' current_field]
+                                    end %if
+
+                                case {'SliceLocation'}
+                                    % modified by Xinheng Zhang 06/20/2025
+                                    if isfield(header.PerFrameFunctionalGroupsSequence.Item_1, 'Private_0021_11fe')
+                                        if isfield(header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_11fe.Item_1, 'Private_0021_1188')
+                                            slice_data(true_index).(current_field) = header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_11fe.Item_1.Private_0021_1188;
+                                        else
+                                            ['header did not contain the field ' current_field]
+                                        end %if
+                                    elseif isfield(header.PerFrameFunctionalGroupsSequence.Item_1, 'Private_0021_10fe')
+                                        if isfield(header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_10fe.Item_1, 'Private_0021_1088')
+                                            slice_data(true_index).(current_field) = header.PerFrameFunctionalGroupsSequence.Item_1.Private_0021_10fe.Item_1.Private_0021_1088;
+                                        else
+                                            ['header did not contain the field ' current_field]
+                                        end %if
+                                    end
+                                otherwise
+                                    if isfield(header, current_field)
+                                        slice_data(true_index).(current_field) = header.(current_field);
+                                    else
+                                        ['header did not contain the field ' current_field]
+                                    end %if
+                            end
+                        else
+                            slice_data(true_index).(current_field) = header.(current_field);
+                        end
                     else
-                        ['header did not contain the field ' current_field]
-                    end %if
-                end
-            end % loop through dicom field names
-            % done saving filtered header data
-            
+                        % Deal with requested fields not found in header
+                        if isfield(header, current_field)
+                            slice_data(true_index).(current_field) = header.(current_field);
+                        else
+                            ['header did not contain the field ' current_field]
+                        end %if
+                    end
+                end % loop through dicom field names
+                % done saving filtered header data
+            end
+
             % Save slice data
             slice_data(true_index).SliceData = slice_image;
-            
+
             % Save extra fields
             needed_header_tags = [...
                 isfield(header, 'PixelSpacing'), ...
                 isfield(header, 'SliceThickness'), ...
                 isfield(header, 'SliceLocation')...
                 ];
-            
+
             if all(needed_header_tags)
                 pixel_spacing = header.PixelSpacing;
                 slice_data(true_index).PhysicalHeight = ...
@@ -269,9 +323,9 @@ function [volume_image, slice_data, image_meta_data] = ...
             else
                 no_pixel_spacing = true;
             end % if pixel spacing
-            
+
         end % if isdicom
-        
+
         waitbar(i/N,h);
     end % loop through directory listing
     % Eliminate empty structs at end.

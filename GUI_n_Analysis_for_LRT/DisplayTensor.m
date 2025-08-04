@@ -4,9 +4,9 @@ close all;
 [fid_file, fid_path] = uigetfile('*.mat');
 load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params');
 %% single slice - slice dimension
-dispim = @(x)fftshift(x(:,:,2,:),1);
+dispim = @(x)fftshift(x(:,:,3,:),1);
 
-temp = Gr\reshape(Phi(:,41,:,1,end), L, []);
+temp = Gr\reshape(Phi(:,192,13,:,end), L, []);
 temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
 cw = max(vec(abs(temp)));
 
@@ -110,6 +110,7 @@ for nsec = 1:Nsect
 end
 
 %% Pull-up T2* weighted - single slice
+addpath('../function/')
 Nseg = size(Phi,2);
 Nsect = size(Phi,5);
 img2_save = cat(2, fid_path, 'img_t2star/');
@@ -132,8 +133,8 @@ for nsec = 1:Nsect
        if neco == 1
           temp_4D = zeros([Ny, Nx, Nseg, NEco_old]); 
        end
-       load(echo_f_glob{neco}, 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nz', 'params', 'sizes');
-       temp = Gr\reshape(Phi(:,:,1,1,nsec), L, []);
+       load(echo_f_glob{neco+5}, 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nz', 'params', 'sizes');
+       temp = Gr\reshape(Phi(:,:,4,1,nsec), L, []);
        temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, []);
        % cw = 0.5*max(vec(abs(temp)));
        temp_4D(:,:,:,neco) = temp;

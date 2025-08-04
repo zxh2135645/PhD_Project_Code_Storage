@@ -1,0 +1,9 @@
+FSU_test = cufinufftf2d1(single(st.om(:,1)),single(st.om(:,2)), FSU_slice, -1, 1e-6, 320,320, 280*320,1);
+
+export LD_LIBRARY_PATH=/home/jc_350/Toolboxes/finufft/build:$LD_LIBRARY_PATH
+
+mexcuda -R2018a -I/home/jc_350/Toolboxes/finufft/include -L/home/jc_350/Toolboxes/finufft/build -lcufinufft cufinufftf2d1.cu
+
+mex -R2018a -I/home/jc_350/Toolboxes/finufft/include -L/home/jc_350/Toolboxes/finufft/build -lfinufft finufftf2d1.c
+
+mexcuda -R2018a -G -g -I/home/jc_350/Toolboxes/finufft/include  -L/home/jc_350/Toolboxes/finufft/build -lcufinufft -L/usr/local/cuda-12.0/lib64 -lcufft AhA_ps_cufinufft.cu

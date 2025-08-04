@@ -1,0 +1,4 @@
+# ignore mat file
+*.mat
+*.asv
+

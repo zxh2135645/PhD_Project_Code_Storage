@@ -1,0 +1,74 @@
+#*[ Script ****************************************************************\
+#
+# Name        : coeff_AS022.grad
+#
+# Author      : BV_ICE
+#
+# Language    : 
+#
+# Description : Defines Legendre coefficients in spherical harmonics for
+#               Gradient Coil AS022
+#
+#****************************************************************************/
+#* Changed: 13-Feb-2004; T. Heumann, MRES-Meas          *********************\
+#
+# Requirement Key: 
+#
+# Description : Uebernahme der Parameter aus der VA27A
+#
+#****************************************************************************/
+#* Changed: 22-Mar-2004; V. Canda, MRES-BV              *********************\
+#
+# Requirement Key: 
+#
+# Description : File syntax corrected. (Previous version did not work.)
+#               Coeficients updated according to the input of Eva Eberlein.
+#
+#****************************************************************************/
+#* Changed: 18-Augr-2004; H. Werthner, MRES             *********************\
+#
+# Requirement Key: 
+#
+# Description : This is the coefficient file for "Espree". 
+#
+#****************************************************************************/
+#* Changed: 11-Oct-2004; V. Canda, MRES-BV              *********************\
+#
+# Requirement Key: 
+#
+# Description : Updated coeficients according to the input of Stefan Stocker.
+#
+#****************************************************************************/
+#* Changed: 15-September-2005; V. Canda MREW ********************************\
+#
+#  Added a new "red"-slice-related parameter BentBz. (Bent Slice Boundary
+#  in Z direction.) All slices outside of the ellipsoid [R0, R0, BentBz]
+#  will be "red", even if the slice sampling poins on the slice say: "green".
+#  This is necessary to make the "red" function monotonous on Espree.
+#
+#  The particular value 0.175m was experimentaly obtained by Ch.Koeglmeier.
+#
+#****************************************************************************/
+
+#*] END: */
+ vision/Sonata 022, Gradientsystem AS022 , Gx,y,z = 40/33 mT/m
+ win_low = 0, win_high = 0, win_algo = 0, win_dummy = 2;
+ 0.225 m = R0, lnorm = 4? A(1,0) = B(1,1) = A(1,1) = 0;
+ 0 = CoSyMode, BentBz = 0.175 m;
+ Expansion in   Spherical   Harmonics
+ ================================
+
+ NO.    TYPE                  SPECTRUM                                AXIS
+
+  1 A( 3, 0)                -0.109                                     z
+  2 A( 5, 0)                -0.068                                     z
+  3 A( 7, 0)                 0.031                                     z
+  4 A( 9, 0)                -0.009                                     z
+101 A( 3, 1)                -0.106                                     x
+103 A( 5, 1)                -0.087                                     x
+104 A( 7, 1)                 0.04                                      x
+105 A( 9, 1)                -0.011                                     x
+201 B( 3, 1)                -0.12                                      y
+203 B( 5, 1)                -0.073                                     y
+204 B( 7, 1)                 0.037                                     y
+205 B( 9, 1)                -0.011                                     y

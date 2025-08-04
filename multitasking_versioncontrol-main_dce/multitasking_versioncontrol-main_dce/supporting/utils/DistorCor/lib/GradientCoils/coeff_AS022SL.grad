@@ -1,0 +1,76 @@
+#*[ Script ****************************************************************\
+#
+# Name        : coeff_AS022Slim.grad
+#
+# Author      : BV_ICE
+#
+# Language    : 
+#
+# Description : Defines Legendre coefficients in spherical harmonics for
+#               Gradient Coil AS022slim
+#
+#****************************************************************************/
+#* Changed: 26-July-2005; H. Werthner MRES **********************************\
+#
+#  Notice, that the 5 lines between the "CoSyMode"-line and the "1 A(...)"-line
+#  will not be read, i. e. if the blank line after " NO.    TYPE ..." is missing,
+#  the first Legendre coefficient line "1 A(...) ..." will not be read!
+#
+#****************************************************************************/
+#* Changed: 15-September-2005; V. Canda MREW ********************************\
+#
+#  Added a new "red"-slice-related parameter BentBz. (Bent Slice Boundary
+#  in Z direction.) All slices outside of the ellipsoid [R0, R0, BentBz]
+#  will be "red", even if the slice sampling poins on the slice say: "green".
+#  This is necessary to make the "red" function monotonous on Espree.
+#
+#  The particular value 0.175m was experimentaly obtained by Ch.Koeglmeier.
+#
+#****************************************************************************/
+
+#*] END: */
+ vision/Sonata 022, Gradientsystem AS022Slim , Gx,y,z = 40/33 mT/m
+ win_low = 0, win_high = 0, win_algo = 0, win_dummy = 2;
+ 0.225 m = R0, lnorm = 4? A(1,0) = B(1,1) = A(1,1) = 0;
+ 0 = CoSyMode, BentBz = 0.175 m;
+ Expansion in   Spherical   Harmonics
+ ================================
+
+ NO.    TYPE                  SPECTRUM                                AXIS
+
+  1 A( 3, 0)                -0.1188                                    z
+  2 A( 5, 0)                -0.0561                                    z
+  3 A( 7, 0)                 0.0245                                    z
+  4 A( 9, 0)                -0.0053                                    z
+  5 A(11, 0)                 0.0004                                    z
+101 A( 3, 1)                -0.1565                                    x
+102 A( 3, 3)                -0.0049                                    x
+103 A( 5, 1)                -0.0459                                    x
+104 A( 5, 3)                 0.0042                                    x
+105 A( 5, 5)                -0.0023                                    x
+106 A( 7, 1)                 0.0236                                    x
+107 A( 7, 3)                -0.0022                                    x
+108 A( 7, 5)                -0.0009                                    x
+109 A( 7, 7)                 0.0005                                    x
+110 A( 9, 1)                -0.0061                                    x
+111 A( 9, 3)                 0.0007                                    x
+112 A( 9, 5)                 0.0003                                    x
+113 A( 9, 7)                -0.0001                                    x
+114 A( 9, 9)                -0.0002                                    x
+115 A(11, 1)                 0.0014                                    x
+116 A(11, 3)                -0.0002                                    x
+201 B( 3, 1)                -0.1563                                    y
+202 B( 3, 3)                -0.0032                                    y
+203 B( 5, 1)                -0.0410                                    y
+204 B( 5, 3)                -0.0024                                    y
+205 B( 5, 5)                -0.0040                                    y
+206 B( 7, 1)                 0.0212                                    y
+207 B( 7, 3)                 0.0023                                    y
+208 B( 7, 5)                 0.0001                                    y
+209 B( 7, 7)                -0.0004                                    y
+210 B( 9, 1)                -0.0053                                    y
+211 B( 9, 3)                -0.0008                                    y
+212 B( 9, 7)                 0.0002                                    y
+213 B( 9, 9)                -0.0001                                    y
+214 B(11, 1)                 0.0011                                    y
+215 B(11, 3)                 0.0003                                    y

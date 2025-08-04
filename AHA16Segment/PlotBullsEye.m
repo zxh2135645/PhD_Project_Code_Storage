@@ -23,7 +23,7 @@ clr = colorbar;
 clr.Color = [1 1 1];
 %clr.TickLabels = {'0%', '100%'};
 clr.Ticks = [0, 100];
-%clr.Limits = [0, 100];
+%clr.Limits = [0, 0.5];
 set(gca, 'FontSize', 12)
 
 

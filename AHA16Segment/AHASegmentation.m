@@ -1,4 +1,4 @@
-function [Segmentpix, stats, Mask_Segn] =AHASegmentation(Imgin,Maskin,Segn,Groove,Endoin)
+function [Segmentpix, stats, Mask_Segn] =AHASegmentation(Imgin,Maskin,Segn,Groove_array,Endoin)
 % Modified by Xinheng Zhang on 07/30/2020
 %  Mistakes in assigning Mask_Segn, resolved. 06/22/2022
 % Added an alternative way to find center, esp useful for imbalanced
@@ -25,7 +25,7 @@ for m=1:size(Imgin,3)
     nintv= 2*pi/Segn;
     Img=Imgin(:,:,m);
     
-    
+    Groove = Groove_array(m);
     for n=1:Segn
         nmax=n*nintv+Groove/180*pi;
         nmin=(n-1)*nintv+Groove/180*pi;

@@ -27,7 +27,7 @@ load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'N
 slc_array = [8 7 6 5 4 3 2 1 14 13 12 11 10 9];
 slc_array = [1 2 3 4 5 6 7 8 9 10 11 12 13 14];
 num_seg_array = [16, 21, 26, 31, 36, 41];
-%num_seg_array = [141, 151, 161, 171, 181, 191];
+% num_seg_array = [141, 151, 161, 171, 181, 191];
 temtemp_4D = zeros(Ny, Nx, length(num_seg_array), length(slc_array));
 
 % cardiac phase and resp phase needs to be encoded
@@ -53,11 +53,15 @@ temtemp_4D = zeros(Ny, Nx, length(num_seg_array), length(slc_array));
 % Jesse_D8     [4, 1]
 % Jesse_WK8    [14, 1]
 
+% Latte_WK8     [18, 1]
+resp_phase = 1;
+card_phase = 18;
+
 for i = 1:length(slc_array)
     slc = slc_array(i);
     dispim = @(x)fftshift(x(:,:,slc,:),1);
     for num = 1:length(num_seg_array)
-        temp = Gr\reshape(Phi(:,num_seg_array(num),20,4,end), L, []);
+        temp = Gr\reshape(Phi(:,num_seg_array(num),card_phase,resp_phase,end), L, []);
         temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
 
         temtemp_4D(:,:,num,i) = temp;
@@ -72,7 +76,7 @@ NEco_old = params.NEco_old;
 len = length(slice_data{1})/NEco_old;
 
 save_dir = GetFullPath(cat(2, fid_path, 'DICOM_LGE_CVI/'));
-%save_dir = GetFullPath(cat(2, fid_path, '../DICOM_T2star_CVI/'));
+% save_dir = GetFullPath(cat(2, fid_path, '/DICOM_T2star_CVI/'));
 if ~exist(save_dir, 'dir')
     mkdir(save_dir);
 end

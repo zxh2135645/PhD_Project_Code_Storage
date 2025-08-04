@@ -68,8 +68,20 @@ function surfaceObject = fillBullseye(varargin)
     % Create meshgrid for surface plot.
     X = repmat(lin',1,sz(2)*upsmp+1) .* cos(theta*pi/180);
     Y = repmat(lin',1,sz(2)*upsmp+1) .* sin(theta*pi/180);
-        
+
+    % Example: assign RGB manually for a surface
+    cmap = viridis(256); % Custom colormap
+    val = cdata;       % Value between 0 and 1 (normalized)
+    valIdx = round(val * 255) + 1;
+    valIdx = min(valIdx, 256); % Avoid index out of bounds
+    rgbMap = cmap(valIdx, :);
+
+    % Reshape for surface (must be MxNx3)
+    rgbCData = reshape(rgbMap, [size(val), 3]);
+
     surfaceObject = surf(gca,X,Y,zeros(size(X)),cdata);
+    colormap viridis;
+    %set(surfaceObject, 'CData', rgbCData);
     set(surfaceObject,'EdgeColor','none');
     set(gca,'View',[0 90]);
 

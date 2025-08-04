@@ -1,0 +1,116 @@
+#*[ Script ****************************************************************\
+#
+#  This file uses Lnorm = 4, i.e. implicitly
+#  A(1,0) = 1.0
+#  A(1,1) = 1.1547 (2/Sqrt[3])
+#  B(1,1) = 1.1547 (2/Sqrt[3])
+#
+#*************************************************************************
+#
+# Name        : coeff_GC25.grad
+#
+# Date        : 2016-07-26
+#
+# Author      : Andreas Krug
+#
+# Language    : 
+#
+# Description : Defines Legendre coefficients in spherical harmonics for
+#               Gradient Coil GC25 (up to 17th order, at radius 0.275m)
+#
+#****************************************************************************/
+#* Changed: 26-July-2005; H. Werthner MRES **********************************\
+#
+#  Notice, that the 5 lines between the "CoSyMode"-line and the "1 A(...)"-line
+#  will not be read, i. e. if the blank line after " NO.    TYPE ..." is missing,
+#  the first Legendre coefficient line "1 A(...) ..." will not be read!
+#
+#****************************************************************************/
+#* Changed: 15-September-2005; V. Canda MREW ********************************\
+#
+#  Added a new "red"-slice-related parameter BentBz. (Bent Slice Boundary
+#  in Z direction.) All slices outside of the ellipsoid [R0, R0, BentBz]
+#  will be "red", even if the slice sampling poins on the slice say: "green".
+#  This is necessary to make the "red" function monotonous on Espree.
+#
+#  The particular value 0.175m was experimentaly obtained by Ch.Koeglmeier.
+#
+#****************************************************************************/
+#
+#
+#			STAND 26.7.2016, Andreas
+#
+#
+#*] END: */
+ vision/daGama, Gradientsystem daGama , Gx,y,z = 60/60 mT/m
+ win_low = 0, win_high = 0, win_algo = 0, win_dummy = 2;
+ 0.275 m = R0, lnorm = 4? A(1,0) = B(1,1) = A(1,1) = 0;
+ 0 = CoSyMode, 
+ Expansion in   Spherical   Harmonics
+ ================================
+
+ NO.    TYPE                  SPECTRUM                                AXIS
+
+1     A( 3, 0)              -0.11647                       z
+2     A( 5, 0)              -0.11657                       z
+3     A( 7, 0)               0.09790                       z
+4     A( 9, 0)              -0.05392                       z
+5     A(11, 0)               0.02378                       z
+6     A(13, 0)              -0.00863                       z
+7     A(15, 0)               0.00247                       z
+8     A(17, 0)              -0.00040                       z
+101   A( 3, 1)              -0.13664726                       x
+102   A( 3, 3)              -0.07226116                       x
+103   A( 5, 1)              -0.07551742                       x
+104   A( 5, 3)               0.00750555                       x
+105   A( 5, 5)              -0.00949164                       x
+106   A( 7, 1)               0.02992984                       x
+107   A( 7, 3)               0.00994197                       x
+108   A( 7, 5)              -0.00180133                       x
+109   A( 7, 7)               0.00176669                       x
+110   A( 9, 1)              -0.00688202                       x
+111   A( 9, 3)              -0.00407609                       x
+112   A( 9, 5)               0.00112006                       x
+113   A( 9, 7)               0.00115470                       x
+114   A(11, 1)               0.00240178                       x
+115   A(11, 5)              -0.00025403                       x
+116   A(11, 7)              -0.00055426                       x
+117   A(11,11)               0.00043879                       x
+118   A(13, 1)              -0.00124708                       x
+119   A(13, 3)               0.00064663                       x
+120   A(13, 5)               0.00015011                       x
+121   A(13,13)              -0.00023094                       x
+122   A(15, 1)               0.00058890                       x
+123   A(15, 3)              -0.00039260                       x
+124   A(15, 7)               0.00017321                       x
+125   A(17, 1)              -0.00026558                       x
+126   A(17, 3)               0.00018475                       x
+201   B( 3, 1)              -0.13347184                       y
+202   B( 3, 3)              -0.01035766                       y
+203   B( 5, 1)              -0.08005539                       y
+204   B( 5, 3)               0.01495337                       y
+205   B( 5, 5)               0.00152420                       y
+206   B( 7, 1)               0.03218150                       y
+207   B( 7, 3)              -0.01187032                       y
+208   B( 7, 5)              -0.00586588                       y
+209   B( 7, 7)              -0.00086603                       y
+210   B( 9, 1)              -0.00728616                       y
+211   B( 9, 3)               0.00494212                       y
+212   B( 9, 5)               0.00275973                       y
+213   B( 9, 7)               0.00056580                       y
+214   B( 9, 9)              -0.00092376                       y
+215   B(11, 1)               0.00225167                       y
+216   B(11, 3)              -0.00113161                       y
+217   B(11, 5)              -0.00085448                       y
+218   B(11, 7)              -0.00049652                       y
+219   B(11, 9)               0.00048497                       y
+220   B(11,11)              -0.00021939                       y
+221   B(13, 1)              -0.00114315                       y
+222   B(13, 5)               0.00023094                       y
+223   B(13, 7)               0.00041569                       y
+224   B(13, 9)              -0.00012702                       y
+225   B(15, 1)               0.00055426                       y
+226   B(15, 7)              -0.00024249                       y
+227   B(17, 1)              -0.00025403                       y
+228   B(17, 7)               0.00011547                       y                                               
+ 

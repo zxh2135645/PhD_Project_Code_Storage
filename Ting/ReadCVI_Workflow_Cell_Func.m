@@ -29,6 +29,9 @@ end
             slc_array = [];
             if any(strcmp(label, t2star_labels))
                 glob_idx = [];
+            elseif strcmp(label, 'T1_Day0')
+                time_idx = {};
+                time_idx_num = [];
             end
             slc_start = 1;
             slc_end = 1;
@@ -204,9 +207,16 @@ end
                     slc_array = [slc_array, slice_data.SliceLocation];
                     if any(strcmp(label, t2star_labels))
                         glob_idx = [glob_idx, i];
+                    elseif strcmp(label, 'T1_Day0')
+                        dirname = slice_data.Filename;
+                        strings = strsplit(dirname, '/');
+                        fname= strings{end-1};
+                        strings2 = strsplit(fname, '_');
+                        time_idx{total_match} = strings2{1};
+                        time_idx_num(total_match) = sscanf(strings2{1}, '%dMIN');
                     end
                 end
-                
+
             end
             
             %% Save all as mat file
@@ -215,6 +225,20 @@ end
             
             % TODO
             if total_match ~= 0
+                if strcmp(label, 'T1_Day0')
+                    [time_idx_num_sorted idx] = sort(time_idx_num);
+                    time_idx = time_idx(idx);
+                    vol_img_3D = vol_img_3D(idx);
+                    mask_heart_3D = mask_heart_3D(idx);
+                    mask_myocardium_3D = mask_myocardium_3D(idx);
+                    mask_blood_3D = mask_blood_3D(idx);
+                    excludeMask_3D = excludeMask_3D(idx);
+                    myoRefMask_3D = myoRefMask_3D(idx);
+                    noReflowMask_3D = noReflowMask_3D(idx);
+                    freeROIMask_3D = freeROIMask_3D(idx);
+                    slc_array = slc_array(idx);
+                end
+
                 dstPath = cat(2, dstFolder, '/', label, '_vol_img_3D.mat');
                 save(dstPath, 'vol_img_3D');
                 
@@ -272,6 +296,9 @@ end
                     end
                     dstPath = cat(2, dstFolder, '/', label, '_Index.mat');
                     save(dstPath, 'glob_names');
+                elseif strcmp(label, 'T1_Day0')
+                    dstPath = cat(2, dstFolder, '/', label, '_TimeIndex.mat');
+                    save(dstPath, 'time_idx');
                 end
             
                 disp(cat(2, name, ':   ', label));

@@ -1,0 +1,38 @@
+#*[ Script ****************************************************************\
+#
+#
+# Author      : BV_ICE
+#
+# Language    : make
+#
+# Description : Defines Legendre coefficients in spherical harmonics for
+#               Rhapsody gradient coil (AS08).
+#
+#****************************************************************************/
+#*] END: */
+ Magnetom Rhapsody, Gradientsystem AS08,  Gx,y,z = 10/15 mT/m
+ win_low = 0, win_high = 0, win_algo = 0, win_dummy = 2;
+ 0.20 m = R0,  lnorm = 4? A(1,0) = B(1,1) = A(1,1) = 0;
+ 1 = CoSyMode;
+ Expansion in Spherical Harmonics
+ ================================
+ 
+ NO.  TYPE             SPECTRUM			AXIS
+
+  1 A( 3, 0)  		     -0.029			z
+  2 A( 5, 0)  	       	     -0.0650			z
+  3 A( 7, 0)  		      0.0620			z
+  4 A( 9, 0)  		     -0.0070			z
+101 A( 3, 1)  		      0.0470			x
+102 A( 5, 1)  	             -0.0540			x
+103 A( 5, 3)                 -0.0160			x
+105 A( 7, 1)  		      0.0350			x
+108 A( 9, 1)		      0.0200			x
+109 A( 9, 3)		      0.0130			x
+201 B( 3, 1)  		      0.0380			y
+203 B( 5, 1)  	       	     -0.0510			y
+204 B( 5, 3)  	              0.0260			y
+205 B( 7, 1)  		      0.0370			y
+206 B( 7, 3)  	              0.0080			y
+208 B( 9, 1)		      0.0180			y
+209 B( 9, 3)	             -0.0100			y
