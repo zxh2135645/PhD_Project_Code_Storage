@@ -176,6 +176,7 @@ n = 1;
 % end
 
 % XZ 06/08/2022
+%RawdataFT_5D = kspace;
 iField = permute(RawdataFT_5D,[1 2 3 5 4])*100; % NumRO, NumPE, NumSlices, NumCh, NumEcho =>  NumRO, NumPE, NumSlices, NumEcho, NumCh
 
 Mask_pre = ones((size(iField,1)-2), (size(iField, 2)-2), size(iField, 3));

@@ -14,7 +14,10 @@ TI = 0.0105;
 
 % Nseg = 680;
 % TR = 0.00357;
-Nseg = 680;
+Nseg = 680/2;
+TR = 0.00357*2;
+
+Nseg = 500;
 TR = 0.00357;
 alpha_deg = 5;
 alpha0_deg = 180; % For IR
@@ -34,8 +37,7 @@ B0 = -1;
 % curve = Sint(1, e(R1), alpha, B0);
 
 %% New fitting
-cutoff = 20;
-
+cutoff = 21;
 
 E1 = @(t, R1) exp(-t*R1);
 M0= 1;
@@ -136,9 +138,9 @@ end
 N_nt = 15;
 N_nt = 8;
 N_nt = size(Phi, 5);
-slc = 3;
+slc = 5;
 t1_map_3d_nt = zeros(Ny, Nx, Nz, N_nt);
-card_phase_array = [9];
+card_phase_array = [12];
 %card_phase = 9;
 resp_phase = 4;
 t1_map_4d_nt = zeros(Ny, Nx, Nz, N_nt, length(card_phase_array));
@@ -256,9 +258,9 @@ t1_map_3d_nt_shifted = fftshift(t1_map_4d_nt, 3);
 
 figure();
 for slc = 1:size(t1_map_3d_nt_shifted, 3)
-    subplot(4,4,slc);
-    imagesc(t1_map_3d_nt_shifted(:,:,slc,2,1));
-    clim([0 2000]);
+    subplot(4,5,slc);
+    imagesc(t1_map_3d_nt_shifted(:,:,slc,end,1));
+    clim([0 1000]);
 end
 %% Save As MAT
 save_dir = cat(2, fid_path, 'dDCE_T1_Dict_Diastole/');
@@ -267,7 +269,7 @@ if ~exist(save_dir, 'dir')
 end
 
 %save(cat(2, save_dir, 'T1Map_PostCon_Seg15_June26th_', num2str(card_phase), '.mat'), 't1_map_3d_nt_shifted');
-save(cat(2, save_dir, 'T1Map_PrePostCon_Seg11', '.mat'), 't1_map_3d_nt_shifted');
+save(cat(2, save_dir, 'T1Map_PostCon_Seg8', '.mat'), 't1_map_3d_nt_shifted');
 
 %% ImageJ
 % Convert mat to dicom (T1 map)

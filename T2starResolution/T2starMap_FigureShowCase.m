@@ -25,14 +25,16 @@ Nz = 48; % Effective slides location
 
 %%
 k = 1;
-n = 2;
+n = 1;
 
 transmural = transmural_array(k);
 
-load(cat(2, 'C:\Users\xz100\Documents\Data\T2star_SimulationPhantom\Ellip_T2starMetrics_Blocked_LinReg_Transmural', num2str(transmural), '_ComprehensiveNoiseLevel_', num2str(n), '.mat'));
+% load(cat(2, 'C:\Users\xz100\Documents\Data\T2star_SimulationPhantom\Ellip_T2starMetrics_Blocked_LinReg_Transmural', num2str(transmural), '_ComprehensiveNoiseLevel_', num2str(n), '.mat'));
+load(cat(2, '/Users/jameszhang/Documents/MATLAB/T2star_Resolution_Project/Simulation_Results/3D_MagPurtabation/Analysis/Ellip_T2starMetrics_Blocked_LinReg_Transmural', num2str(transmural), '_ComprehensiveNoiseLevel_', num2str(n), '.mat'));
+
 t2star_map = t2star_metrics.t2star_map;
 
 %%
-figure('Position', [100 100 400 400]); imagesc(t2star_map(:,:,48,1,1));
+figure('Position', [100 100 400 400]); imagesc(t2star_map(:,:,48,8,4));
 axis image; axis off;
 colormap(brewermap([],'RdBu')); clim([0 100]);

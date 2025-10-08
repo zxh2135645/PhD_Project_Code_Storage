@@ -22,7 +22,10 @@ dicom_dir = uigetdir();
 %dicom_folder = 'T2STARMAP_ANATOMICAL_0015';               % 21P17
 %dicom_folder = 'T2STARMAP_ANATOMICAL_0010';                % RYN
 
-dicom_folder = 'KY_Patient_Data/DMR0466920/FU/T2star/series0032-Body/';                % RYN
+% dicom_folder = 'KY_Patient_Data/DMR0466920/FU/T2star/series0032-Body/';
+
+dicom_folder = 'Q-DIXON_MIMIC_TRA_BH_2_1VOX_0078/';                % RYN
+
 dicom_fields = {...
     'Filename',...
     'Height', ...
@@ -183,7 +186,7 @@ LABEL = 1;
 [water,fat,iFreq,unwph_uf,unwph,N_std, R2s, fitting_error] = ...
     spurs_gc(iField_trunc(:,:,:,:),TE*1e-3,f_central,voxel_size, Mask>0, SUBSAMPLE, dfat, LABEL);
 %% Save data
-slc = 1;
+slc = 40;
 figure;
 subplot(2,2,1);
 imagesc(abs(fat(:,:,slc)));colorbar;colormap jet; caxis([0,0.2]);
@@ -200,10 +203,10 @@ fat_flag = fat > water;
 ff(fat_flag) = abs(fat(fat_flag)) ./ abs(fat(fat_flag) + water(fat_flag));
 ff(~fat_flag) = 1 - (abs(water(~fat_flag))) ./ abs(fat(~fat_flag) + water(~fat_flag));
 
-figure(); subplot(2,2,1); imagesc(ff(:,:,1));caxis([0 0.2]);
-subplot(2,2,2); imagesc(ff(:,:,2));caxis([0 0.2]);
-subplot(2,2,3); imagesc(ff(:,:,3));caxis([0 0.2]);
-subplot(2,2,4); imagesc(ff(:,:,4));caxis([0 0.2]);
+figure(); subplot(2,2,1); imagesc(ff(:,:,41));caxis([0 0.2]);
+subplot(2,2,2); imagesc(ff(:,:,42));caxis([0 0.2]);
+subplot(2,2,3); imagesc(ff(:,:,43));caxis([0 0.2]);
+subplot(2,2,4); imagesc(ff(:,:,44));caxis([0 0.2]);
 
 figure(); subplot(2,2,1); imagesc(fitting_error(:,:,1));caxis([0 0.2]);
 subplot(2,2,2); imagesc(fitting_error(:,:,2));caxis([0 0.2]);

@@ -1,9 +1,14 @@
-function [shifted_heart, shifted_myo, shifted_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count, contour_idx] ...
-    = CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder, old_freeROI_label)
+function [shifted_heart, shifted_myo, shifted_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count, contour_idx, refPoint, inferPoint] ...
+    = CMR42ContourMatrixGenerator4(con, volume_image, slice_data, dstFolder, old_freeROI_label)
 % Second version, improved performance. Initially used for CNN
 % segmentation.
 % Need to work on this to make it 3D compatible? 02/03/2021 - XZ
 % This is hard-coded to solve freeROI coordinate record
+
+% 08/28/2025 XZ
+% Implemented ref, inferior points
+% Added contour scaling check
+
 if nargin == 4
     old_freeROI_label = 0;
 end
@@ -42,43 +47,43 @@ if any(contour_idx(:))
         if contour_idx(i) ~= 0
             ctype = con.contours(contour_idx(i)).ctype;
         end
-        epi_flow{i} = zeros(size(volume_image, 2), size(volume_image,1));
-        endo_flow{i} = zeros(size(volume_image, 2), size(volume_image,1));
-        excludeContour{i} = zeros(size(volume_image, 2), size(volume_image,1));
-        myoRef{i} = zeros(size(volume_image, 2), size(volume_image,1));
-        NoReFlow{i} = zeros(size(volume_image, 2), size(volume_image, 1));
-        freeROI{i} = zeros(size(volume_image, 2), size(volume_image, 1));
+        % epi_flow{i} = zeros(size(volume_image, 2), size(volume_image,1));
+        % endo_flow{i} = zeros(size(volume_image, 2), size(volume_image,1));
+        % excludeContour{i} = zeros(size(volume_image, 2), size(volume_image,1));
+        % myoRef{i} = zeros(size(volume_image, 2), size(volume_image,1));
+        % NoReFlow{i} = zeros(size(volume_image, 2), size(volume_image, 1));
+        % freeROI{i} = zeros(size(volume_image, 2), size(volume_image, 1));
         for j = 1:length(ctype)
             contour_type = ctype{j};
             if strcmp(contour_type, 'saendocardialContour')
-                for c = 1: length(con.contours(contour_idx(i)).pts{j})
-                    endo_flow{i}([ceil(con.contours(contour_idx(i)).pts{j}(c,1))], [ceil(con.contours(contour_idx(i)).pts{j}(c,2))]) = 1;
-                end
+                %for c = 1: length(con.contours(contour_idx(i)).pts{j})
+                    endo_flow{i} = con.contours(contour_idx(i)).pts{j};
+                %end
             elseif strcmp(contour_type, 'saepicardialContour')
-                for c = 1: length(con.contours(contour_idx(i)).pts{j})
-                    epi_flow{i}([ceil(con.contours(contour_idx(i)).pts{j}(c,1))], [ceil(con.contours(contour_idx(i)).pts{j}(c,2))]) = 1;
-                end
+                %for c = 1: length(con.contours(contour_idx(i)).pts{j})
+                    epi_flow{i} = con.contours(contour_idx(i)).pts{j};
+                %end
             elseif contains(contour_type, 'excludeEnhancementAreaContour')
-                for c = 1: length(con.contours(contour_idx(i)).pts{j})
-                    excludeContour{i}([ceil(con.contours(contour_idx(i)).pts{j}(c,1))], [ceil(con.contours(contour_idx(i)).pts{j}(c,2))]) = 1;
-                end
+                %for c = 1: length(con.contours(contour_idx(i)).pts{j})
+                    excludeContour{i} = con.contours(contour_idx(i)).pts{j};
+                %end
                 excludeCtr_struct.(contour_type) = excludeContour;
             elseif contains(contour_type, 'saReferenceMyoContour')
-                for c = 1: length(con.contours(contour_idx(i)).pts{j})
-                    myoRef{i}([ceil(con.contours(contour_idx(i)).pts{j}(c,1))], [ceil(con.contours(contour_idx(i)).pts{j}(c,2))]) = 1;
-                end
+                %for c = 1: length(con.contours(contour_idx(i)).pts{j})
+                    myoRef{i} = con.contours(contour_idx(i)).pts{j};
+                %end
             elseif contains(contour_type, 'noReflowAreaContour')
-                for c = 1: length(con.contours(contour_idx(i)).pts{j})
-                    NoReFlow{i}([ceil(con.contours(contour_idx(i)).pts{j}(c,1))], [ceil(con.contours(contour_idx(i)).pts{j}(c,2))]) = 1;
-                end
+                %for c = 1: length(con.contours(contour_idx(i)).pts{j})
+                    NoReFlow{i} = con.contours(contour_idx(i)).pts{j};
+                %end
             elseif contains(contour_type, 'freeDrawRoiContour')
                 if old_freeROI_label == 0
                     for c = 1: length(con.contours(contour_idx(i)).pts{j})
-                        freeROI{i}([ceil(con.contours(contour_idx(i)).pts{j}(c,1))], [ceil(con.contours(contour_idx(i)).pts{j}(c,2))]) = 1;
+                        freeROI{i} = con.contours(contour_idx(i)).pts{j};
                     end
                 else
                     for c = 1: length(con.contours(contour_idx(i)).pts{j})
-                        freeROI{i}([round(con.contours(contour_idx(i)).pts{j}(c,1)/2)], [round(con.contours(contour_idx(i)).pts{j}(c,2)/2)]) = 1;
+                        freeROI{i} = con.contours(contour_idx(i)).pts{j}(c,1)/2;
                     end
                 end
             elseif contains(contour_type, 'sacardialRefPoint')
@@ -93,6 +98,59 @@ if any(contour_idx(:))
         end
     end
     
+
+    fname = fieldnames(excludeCtr_struct);
+    if ~isempty(fname)
+        for f = 1:length(fname)
+            contour_type = fname{f};
+            excludeContour = excludeCtr_struct.(contour_type);
+            % Get centroids for all contour types
+            [excludeContour_corr] = ...
+                CMR42Contour_CheckCentroids_simple(num_slice, excludeContour, volume_image);
+
+            for i = 1:num_slice
+                excludeContour{i} = zeros(size(volume_image, 2), size(volume_image,1));
+
+                for c = 1: length(excludeContour_corr{i})
+                    excludeContour{i}([round(excludeContour_corr{i}(c,1))], [round(excludeContour_corr{i}(c,2))]) = 1;
+                end
+            end
+
+            excludeCtr_struct.(contour_type) = excludeContour;
+        end
+    else
+        contour_type = 'excludeEnhancementAreaContour';
+        excludeContour_corr = excludeContour;
+        excludeCtr_struct.(contour_type) = excludeContour;
+    end
+
+    [endo_flow_corr, epi_flow_corr, excludeContour_dummy, myoRef_corr, NoReFlow_corr, freeROI_corr] = ...
+        CMR42Contour_CheckCentroids(num_slice, endo_flow, epi_flow, excludeContour_corr, myoRef, NoReFlow, freeROI, volume_image);
+
+    for i = 1:num_slice
+        epi_flow{i} = zeros(size(volume_image, 2), size(volume_image,1));
+        endo_flow{i} = zeros(size(volume_image, 2), size(volume_image,1));
+        myoRef{i} = zeros(size(volume_image, 2), size(volume_image,1));
+        NoReFlow{i} = zeros(size(volume_image, 2), size(volume_image, 1));
+        freeROI{i} = zeros(size(volume_image, 2), size(volume_image, 1));
+        for c = 1:length(endo_flow_corr{i})
+            endo_flow{i}([round(endo_flow_corr{i}(c,1))], [round(endo_flow_corr{i}(c,2))]) = 1;
+        end
+        for c = 1:length(epi_flow_corr{i})
+            epi_flow{i}([round(epi_flow_corr{i}(c,1))], [round(epi_flow_corr{i}(c,2))]) = 1;
+        end
+
+        for c = 1: length(myoRef_corr{i})
+            myoRef{i}([round(myoRef_corr{i}(c,1))], [round(myoRef_corr{i}(c,2))]) = 1;
+        end
+        for c = 1: length(NoReFlow_corr{i})
+            NoReFlow{i}([round(NoReFlow_corr{i}(c,1))], [round(NoReFlow_corr{i}(c,2))]) = 1;
+        end
+        for c = 1: length(freeROI_corr{i})
+            freeROI{i}([round(freeROI_corr{i}(c,1))], [round(freeROI_corr{i}(c,2))]) = 1;
+        end
+    end
+
     % Remove zero matrix
     count = 1;
     index_array = [];
@@ -131,6 +189,8 @@ if any(contour_idx(:))
                     excludeCtr_mat(:,:,count) =  excludeCtr_struct.(fname{i}){j};
                     ctr_index_array = [ctr_index_array; j];
                     count = count + 1;
+                else
+                    excludeCtr_mat = [];
                 end
             end
             excludeContour_edit(i, 1:2) = {fname{i}, excludeCtr_mat};
@@ -252,7 +312,6 @@ if any(contour_idx(:))
             myoRefCell{2} = myo_index_array;
             % Can quickly add myo_index_array back
         end
-        
         
         
         % Export No Reflow

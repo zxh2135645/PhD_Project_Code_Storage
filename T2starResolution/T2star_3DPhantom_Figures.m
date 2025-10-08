@@ -6,8 +6,9 @@ addpath('../function/');
 base_dir = uigetdir; % T2star_Resolution_Project/Simulation_Results/3D_MagPurtabation
 
 %load(cat(2, base_dir, '/Analysis/Ellip_T2starWSNR_Metrics.mat'));
-load(cat(2, base_dir, '/Analysis/Ellip_T2starWSNR_Metrics_BySlice.mat'));
-
+%load(cat(2, base_dir, '/Analysis/Ellip_T2starWSNR_Metrics_BySlice.mat'));
+load(cat(2, base_dir, '/Analysis/Ellip_T2starWSNR_Metrics_BySlice_NoiseLevelComprehensive_Transmural0.0125'));
+size(t2star_snrs.t2starnr_array)
 vec = @(x) x(:);
 %% Initialization
 snr_array = [0.0250    0.0500    0.1000    0.1500    0.2000    0.2500    0.3000    0.3500    0.4000    0.4500   0.5000  1.0000  2.0000];
@@ -18,6 +19,8 @@ TE_array = [2.55, 5.80, 9.90, 15.56, 21.22]';
 
 t2starnr_array = t2star_snrs.t2starnr_array;
 t2starwnr_array = t2star_snrs.t2starwnr_array;
+% t2starnr_array = t2star_metrics.t2starnr_array;
+% t2starwnr_array = t2star_metrics.t2starwnr_array;
 %% voxel size vs SNR
 inplane_select = [1:7];
 voxel_sz_array = sqrt((res_array.^2)' * res_through_array);

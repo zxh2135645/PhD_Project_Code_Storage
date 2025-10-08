@@ -1,16 +1,16 @@
-
 % Read CVI longitudinal main script
 clear all;
 close all;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Input
-% 
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 addpath('./function/');
 addpath('./GUI_n_Analysis_for_LRT/');
 addpath('./T1NFF/');
+addpath('./PatientFatAnalysis/');
 
 % ================================ Identify your major folder, in this case
 % ROC_analysis/
@@ -50,12 +50,22 @@ sequence_label = {'BOOST2', 'LGE', 'T2'};
 % sequence_label = {'temp'};
 %% Name check
 name_check = 'BAI_YAN_SHENG';
+name_check = 'CHENG_YONG';
+name_check = 'ZHENG_YI';
 starting_point = find(strcmp(name_check, Names),1);
 
+% Issues in CHENG_YONG, CHEN_JING, CHEN_PENG, FENG_LEI, FENG_SHU_FANG,
+% JIANG_XIN_HUA, LIANG_JI_CHUN, 'LIU_CHEN_HAO', 'LI_JIN', 'LI_JING_HUI',
+% 'LU_HAI_HUI', 
+
+% Missing LGE: JING_AN_KUN
+
+% Something wrong with 'PEI_LI_YAN', 'XU_JI_JIE', 'YUAN_BAI_KUN', 'ZHAO_ZHONG_FU'
+
 %
-% Make it not a lways overwrite
+% Make it not always overwrite
 %for n = starting_point:length(Names)
-for n = starting_point:starting_point
+for n = starting_point:length(Names)
     % for n = starting_point:starting_point
     name = Names{n};
     real_name_temp = strsplit(name, '_');
@@ -84,7 +94,8 @@ for n = starting_point:starting_point
             for xml_ind = 1:size(cvi42wsx, 1)
                 % As Yinyin reported, this one has two xml file because T1 and LGE are shown in different cvi42 directory
                 % Thus, there are two different files
-                con_cell{end+1} = CMR42ContourReader(cvi42wsx(xml_ind,:));
+                xml_temp = strrep(cvi42wsx(xml_ind,:), ' ', '');
+                con_cell{end+1} = CMR42ContourReader(xml_temp);
             end
             % Iterate through MAG, PSIR and LGE
             for con_idx = 1:length(con_cell)
@@ -105,7 +116,7 @@ for n = starting_point:starting_point
 
                     old_freeROI_label = 0;
                     echo_idx_te = 1;
-                    ReadCVI_Workflow_IndianPatient_Analysis_Func(con, dicom_folder, dstFolder, dicom_fields, old_freeROI_label, echo_idx_te);
+                    ReadCVI_Workflow_Liuxin_Analysis_Func(con, dicom_folder, dstFolder, dicom_fields, old_freeROI_label, echo_idx_te);
                     
                     % if ~isempty(dicom_glob)
                     %     for dd = 1:length(dicom_glob)

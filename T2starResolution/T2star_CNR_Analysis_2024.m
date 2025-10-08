@@ -285,7 +285,7 @@ for i = 1:length(idx_array)
     %w = c.FontSize;
     %c.FontSize = 20;
 
-    colormap_dir = cat(2, subject_dir, 'ColormapOverlaid_', avg_name, '/');
+    colormap_dir = cat(2, subject_dir, 'ColormapOverlaid_', avg_name, '_ColorblindFriendly/');
     if ~exist(colormap_dir, 'dir')
         mkdir(colormap_dir)
     end
@@ -342,7 +342,9 @@ for i = 1:length(idx_array)
     
     ax2 = axes;
     imagesc(ax2, temp_double .* hemo_mask_downsampled_cropped, 'AlphaData', 0.9*hemo_mask_downsampled_cropped);
-    pbaspect([size(img2_cropped, 2), size(img2_cropped, 1) 1]); colormap(ax2, 'cool');
+    pbaspect([size(img2_cropped, 2), size(img2_cropped, 1) 1]); 
+    colormap(ax2, 'hsv'); 
+    %colormap(ax2, brewermap([],'*YlGn'));
     caxis(ax1, [0 100]); caxis(ax2, [1 2]); linkprop([ax1 ax2], 'Position');
     ax2.Visible = 'off';
 

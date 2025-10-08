@@ -7,23 +7,21 @@ close all;
 [fid_file, fid_path] = uigetfile('*.mat');
 load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params', 'Hidx', 'RR_int');
 %% single slice - slice dimension
-dispim = @(x)fftshift(x(:,:,3,:),1);
-resp_phase = 4;
+dispim = @(x)fftshift(x(:,:,19,:),1);
+resp_phase = 1;
 card_phase = 1;
-temp = Gr\reshape(Phi(:,200,:,resp_phase,end), L, []);
+temp = Gr\reshape(Phi(:,201,:,resp_phase,end), L, []);
 temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
-cw = 0.8*max(vec(abs(temp)));
+cw = 0.5*max(vec(abs(temp)));
 
 
 ax1 = implay(abs(temp/cw));
 % figure();
 % ax2 = imagesc(abs(temp(:,:,1)/cw)); axis image; colormap gray;axis off;
 %% Whole heart
-
-
 for i = 1:Nz
     dispim = @(x)fftshift(x(:,:,i,:),1);
-    temp = Gr\reshape(Phi(:,80,card_phase,resp_phase,end), L, []);
+    temp = Gr\reshape(Phi(:,101,card_phase,resp_phase,end), L, []);
     temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
     if i == 1
         temp_wholeheart = temp;
@@ -31,11 +29,11 @@ for i = 1:Nz
         temp_wholeheart(:,:,i) = temp;
     end
 end
-cw = 0.8*max(vec(abs(temp_wholeheart)));
+cw = 0.5*max(vec(abs(temp_wholeheart)));
 temp = fftshift(temp_wholeheart,3);
 %% Save representative images as gif
 % Save representative images as gif
-delay_time = 0.5;
+delay_time = 0.1;
 save_path = cat(2, fid_path, 'representative_gif/');
 if ~exist(save_path, 'dir')
     mkdir(save_path);
@@ -44,7 +42,7 @@ end
 % Crop temp to Nx/2 x Ny/2 at the center before GIF creation
 crop_Nx = floor(Nx/2);
 crop_Ny = floor(Ny/2);
-center_x = floor(Nx/2) + 1;
+center_x = floor(Nx/2) + 1+20;
 center_y = floor(Ny/2) + 1;
 x_start = center_x - floor(crop_Nx/2);
 y_start = center_y - floor(crop_Ny/2);
@@ -66,7 +64,7 @@ for n = 1:size(temp_cropped , 3)
     frame = getframe(fh);
     im = frame2im(frame);
     [imind,cm] = rgb2ind(im,256);
-    filename = cat(2, fid_file(1:17), ['_representative_#_Seg500_post.gif']);
+    filename = cat(2, fid_file(1:17), ['_representative_#_Seg192_Cart_T1.gif']);
     if n == 1
         imwrite(imind,cm,cat(2,save_path,filename),'gif', 'DelayTime',delay_time, 'Loopcount',inf);
     else

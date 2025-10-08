@@ -7,6 +7,7 @@ base_dir = uigetdir;
 folder_glob = glob(cat(2, base_dir, '\*'));
 
 labels = {'LRT'};
+%labels = {'IM'};
 
 label = labels{1};
 idx_array = contains(folder_glob, label);

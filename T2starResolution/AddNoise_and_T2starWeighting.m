@@ -2,6 +2,8 @@ clear all;
 close all;
 
 %% GRE simulation (Remote)
+addpath('../EffectOfFatNIron/');
+addpath('../BlochSimDemo/')
 T1_remote = 1125; % Liliana Tribuna et al. 2021
 T2_remote = 40.1; % Brianna et al. 2022
 
@@ -60,7 +62,7 @@ noise_map = zeros(Nx, Ny, Nz, length(sigma_array));
 for n = 1:length(sigma_array)
     noise_map(:,:,:,n) = randn(Nx, Ny, Nz) * sigma_array(n) + 1i * randn(Nx, Ny, Nz) * sigma_array(n);
 end
-
+%%
 T2star_Parameters.noise_map = noise_map;
 save('/Users/jameszhang/Documents/MATLAB/T2star_Resolution_Project/Simulation_Results/3D_MagPurtabation/T2star_Parameters_1024x1024x24.mat', 'T2star_Parameters', '-v7.3');
 %% Plot noise map
