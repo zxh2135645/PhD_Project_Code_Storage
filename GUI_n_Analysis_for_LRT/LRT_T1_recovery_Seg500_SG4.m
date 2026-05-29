@@ -28,7 +28,7 @@ B0 = -1;
 % curve = Sint(1, e(R1), alpha, B0);
 
 %% New fitting
-cutoff = 41;
+cutoff = 21;
 
 
 E1 = @(t, R1) exp(-t*R1);
@@ -96,23 +96,22 @@ end
 % cardiac phase and resp phase needs to be encoded
 % Dave_D8      [12, 4]
 
-
-
 %% IR
 N_nt = 15;
 N_nt = 8;
 N_nt = size(Phi, 5);
-slc = 3;
+slc = 20;
 t1_map_3d_nt = zeros(Ny, Nx, Nz, N_nt);
-card_phase_array = [15, 16, 17, 18, 19, 20];
+card_phase_array = [1];
 %card_phase = 9;
-resp_phase = 4;
+resp_phase = 1;
 t1_map_4d_nt = zeros(Ny, Nx, Nz, N_nt, length(card_phase_array));
 
 
 for nt = 1:N_nt
     %for nt = 1:2
-    for i = 1:Nz
+    %for i = 1:Nz
+    for i = 7:7
         %for i = slc:slc
         dispim = @(x,st) fftshift(x(:,:,i,:), 1);
         for j = 1:length(card_phase_array)
@@ -144,7 +143,47 @@ t1_map_3d_nt_shifted = fftshift(t1_map_4d_nt, 3);
 
 figure();
 for slc = 1:size(t1_map_3d_nt_shifted, 3)
-    subplot(4,4,slc);
+    subplot(4,5,slc);
     imagesc(sum(t1_map_3d_nt_shifted(:,:,slc,2),5));
-    clim([0 2000]);
+    clim([100 1200]);
 end
+
+%%
+mask_f = cat(2, fid_path, 'mask_heart.mat');
+mask = zeros(Ny, Nx, Nz);
+if ~exist(mask_f)
+    for i = 1:Nz
+        dispim = @(x,st)fftshift(x(:,:,i,:),1);
+        for j = 1:1
+            for k = 1:1
+                temp = Gr\reshape(Phi(:,:,j,k,:), L, []);
+                temp = reshape(reshape(dispim(reshape(U, Ny, Nx, Nz, [])),[],L) * temp, Ny, Nx, [], params.NEco);
+                cw = 0.5*max(vec(abs(temp)));
+                figure();
+                imagesc(abs(temp(:,:,end,1))/cw); axis image;
+                roi = drawpolygon;
+                mask(:,:,i) = createMask(roi);
+            end
+        end
+    end
+    save(mask_f, 'mask');
+else
+    load(mask_f);
+end
+%%
+t1_map_3d_nt_shifted = fftshift(t1_map_4d_nt, 3);
+mask_shifted = fftshift(mask,3);
+figure();
+for slc = 1:size(t1_map_3d_nt_shifted, 3)
+    subplot(4,5,slc);
+    imagesc(sum(t1_map_3d_nt_shifted(:,:,slc,2).*mask_shifted(:,:,slc),5));
+    clim([100 2000]);
+end
+%%
+save_dir = cat(2, fid_path, 'dDCE_T1_Dict_Diastole/');
+if ~exist(save_dir, 'dir')
+    mkdir(save_dir);
+end
+
+%save(cat(2, save_dir, 'T1Map_PostCon_Seg15_June26th_', num2str(card_phase), '.mat'), 't1_map_3d_nt_shifted');
+save(cat(2, save_dir, 'T1Map_PostCon_Seg10_U_tv_smoothing1.5', '.mat'), 't1_map_3d_nt_shifted');

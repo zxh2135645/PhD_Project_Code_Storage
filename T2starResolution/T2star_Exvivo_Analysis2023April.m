@@ -440,6 +440,9 @@ AUC_invivo = [0.57,0.68,0.68,0.77,0.64;0.69,0.76,0.76,0.75,0.66;0.76,0.76,0.71,0
 AUC_invivo_allavg = [0.57,0.69,0.72,0.82,0.66;0.73,0.74,0.80,0.77,0.65;0.74,0.77,0.72,0.69,0.59;0.71,0.67,0.68,0.70,0.57];
 AUC_invivo_subjectavg = [0.56,0.67,0.68,0.78,0.64;0.67,0.67,0.70,0.73,0.62;0.65,0.68,0.63,0.62,0.54;0.64,0.58,0.60,0.62,0.52];
 
+% Bootstrap ROC analysis 2026
+AUC_invivo_allavg = [0.57,0.69,0.72,0.82,0.66;0.73,0.74,0.80,0.77,0.65;0.74,0.77,0.72,0.69,0.59;0.71,0.67,0.68,0.70,0.57];
+
 AUC_avg16_array = AUC_avg16(:);
 AUC_invivo_array = AUC_invivo(:);
 
@@ -460,22 +463,22 @@ tbl = table(X, Y);
 modelfun = @(b,x) b(1) + b(2)*exp(b(3)*x);
 %modelfun = @(b,x) b(1) + b(2)*x.^b(3);
 beta0 = [0 0 0];
-mdl = fitnlm(tbl,modelfun,beta0);
+%mdl = fitnlm(tbl,modelfun,beta0);
 
 
-ci = coefCI(mdl);
-b = mdl.Coefficients.Estimate;
+% ci = coefCI(mdl);
+% b = mdl.Coefficients.Estimate;
 
-Y_pred = modelfun(b, X)
+%Y_pred = modelfun(b, X)
 B_avg16 = B;
 B_avg16(1) = 0.3 * 0.3 * 2;
 plotHandles_auc(:,1) = plot(B_avg16, AUC_avg16_array(I),'o'); grid on;
 hold on;
-plot(X, Y_pred); %ylim([0.5 1])
-Y_lb = modelfun(ci(:,1), X);
-Y_ub = modelfun(ci(:,2), X);
-plot(X, Y_lb);
-plot(X, Y_ub);
+%plot(X, Y_pred); %ylim([0.5 1])
+% Y_lb = modelfun(ci(:,1), X);
+% Y_ub = modelfun(ci(:,2), X);
+%plot(X, Y_lb);
+%plot(X, Y_ub);
 set(plotHandles_auc(:,1), 'LineWidth', 1, 'Marker', 'o', 'MarkerSize', 12, ...
     'MarkerEdgeColor', [0 0 0], 'MarkerFaceColor' , [.75 .75 1]);
 %set(plotHandles_auc(:,1), 'Visible','off');

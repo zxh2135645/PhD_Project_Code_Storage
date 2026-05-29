@@ -199,7 +199,8 @@ switch Trajectory
     fbp_window=fftshift(logical(repmat(reshape(st.w,Ny,1,Nz),[1 Nx 1])));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
     composite_fbp=sqrt(sum(abs(fbp).^2,4));
-    implay(composite_fbp/max(abs(composite_fbp(:))));
+    %implay(composite_fbp/max(abs(composite_fbp(:))));
+    disp('Bypassed implay for composite_fbp');
 end
 
 %% estimate SEs

@@ -5,23 +5,33 @@ close all;
 % Mostly based off Lisbon Acute Data
 %% Load Data
 [fid_file, fid_path] = uigetfile('*.mat');
-load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params', 'Hidx', 'RR_int');
+load(strcat(fid_path, fid_file), 'dispim', 'Gr', 'Phi', 'L', 'U', 'Ny', 'Nx', 'Nz', 'vec','params', 'Hidx', 'RR_int', 'U_init_guess', 'U_tv', 'U_tvls');
 %% single slice - slice dimension
-dispim = @(x)fftshift(x(:,:,19,:),1);
+dispim = @(x)fftshift(x(:,:,16,:),1);
 resp_phase = 1;
-card_phase = 1;
-temp = Gr\reshape(Phi(:,201,:,resp_phase,end), L, []);
+card_phase = 20;
+temp = Gr\reshape(Phi(:,:,card_phase,resp_phase,end), L, []);
 temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
-cw = 0.5*max(vec(abs(temp)));
-
+cw = 0.8*max(vec(abs(temp)));
 
 ax1 = implay(abs(temp/cw));
+%%
+figure();
+factor = 1.8;
+[Nx, Ny, Nz] = size(temp);
+x_start = floor((Nx - floor(Nx/factor))/2) + 1;
+y_start = floor((Ny - floor(Ny/factor))/2) + 1;
+x_start = floor((Nx - floor(Nx/factor))/2) + 1;
+y_start = floor((Ny - floor(Ny/factor))/2) + 1;
+target_lge_cropped = imrotate(temp(x_start:x_start+floor(Nx/factor)-21, y_start:y_start+floor(Ny/factor)-1,:), 270);
+cw = 0.8*max(vec(abs(target_lge_cropped)));
+montage(abs(target_lge_cropped/cw), 'Size', [1 10]);
 % figure();
 % ax2 = imagesc(abs(temp(:,:,1)/cw)); axis image; colormap gray;axis off;
 %% Whole heart
 for i = 1:Nz
     dispim = @(x)fftshift(x(:,:,i,:),1);
-    temp = Gr\reshape(Phi(:,101,card_phase,resp_phase,end), L, []);
+    temp = Gr\reshape(Phi(:,81,card_phase,resp_phase,end), L, []);
     temp = reshape(reshape(dispim(reshape(U,Ny,Nx,Nz,[])),[],L)*temp, Ny, Nx, [], params.NEco);
     if i == 1
         temp_wholeheart = temp;
@@ -33,7 +43,7 @@ cw = 0.5*max(vec(abs(temp_wholeheart)));
 temp = fftshift(temp_wholeheart,3);
 %% Save representative images as gif
 % Save representative images as gif
-delay_time = 0.1;
+delay_time = 1;
 save_path = cat(2, fid_path, 'representative_gif/');
 if ~exist(save_path, 'dir')
     mkdir(save_path);
@@ -42,7 +52,7 @@ end
 % Crop temp to Nx/2 x Ny/2 at the center before GIF creation
 crop_Nx = floor(Nx/2);
 crop_Ny = floor(Ny/2);
-center_x = floor(Nx/2) + 1+20;
+center_x = floor(Nx/2) + 1 + 10;
 center_y = floor(Ny/2) + 1;
 x_start = center_x - floor(crop_Nx/2);
 y_start = center_y - floor(crop_Ny/2);
@@ -64,7 +74,7 @@ for n = 1:size(temp_cropped , 3)
     frame = getframe(fh);
     im = frame2im(frame);
     [imind,cm] = rgb2ind(im,256);
-    filename = cat(2, fid_file(1:17), ['_representative_#_Seg192_Cart_T1.gif']);
+    filename = cat(2, fid_file(1:17), ['_representative_#_Seg192_Enhance.gif']);
     if n == 1
         imwrite(imind,cm,cat(2,save_path,filename),'gif', 'DelayTime',delay_time, 'Loopcount',inf);
     else

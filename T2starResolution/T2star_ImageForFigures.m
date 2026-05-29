@@ -121,14 +121,23 @@ gt = perc_all16(1,:) > 0.1;
 lb = 0.5;
 figure('Position', [100 0 1600 1600]);
 k = ([229, 240, 248] - [0, 113, 188]) / (1 - lb); % Light Blue % Dark blue
+CI95_array_avg16 = zeros(size(perc_all16, 1), 2);
+auc_mean_array_avg16 = zeros(size(perc_all16, 1), 1);
+perc_all16(isnan(perc_all16)) = 0;
+gt(isnan(gt)) = 0;
 
 for i = 1:size(perc_all16, 1)
     [X,Y,T,AUC,OPTROCPT] = perfcurve(gt,perc_all16(i,:), 1);
+    [auc, ci95, se] = auc_delong_ci(gt, perc_all16(i,:));
+    CI95_array_avg16(i,:) = ci95;
+    auc_mean_array_avg16(i) = AUC;
     subplot(4,7,i);
     plot(X,Y, 'LineWidth', 3, 'color', [246, 101, 72]/255);
     %xlabel('FPR');
     %ylabel('TPR');
-    text(0.6,0.2,num2str(round(AUC, 2)),'FontSize',24);
+    text(0.9,0.5,num2str(round(AUC, 2)),'FontSize',22, 'HorizontalAlignment', 'right');
+    %text(0.4,0.4,cat(2, '95% CI'),'FontSize',18);
+    text(0.95,0.3,cat(2, '[', num2str(round(ci95(1), 2)), ',', num2str(round(ci95(2), 2)), ']'),'FontSize',20, 'HorizontalAlignment', 'right');
     % title('ROC for Classification')
     set(gca, 'FontSize', 16);
     set(gca, 'Xcolor', 'w', 'Ycolor', 'w')
@@ -148,18 +157,41 @@ for i = 1:size(perc_all16, 1)
     end
 end
 
+%% delong test
+addpath('../function/delong/');
+C = nchoosek(1:size(perc_all16,1), 2);
+p_matr = zeros(size(perc_all16,1));
+
+for idx = 1:length(C)
+    idx1 = C(idx,1);
+    idx2 = C(idx,2);
+    [~,p] = delong(perc_all16(idx1,:), perc_all16(idx2,:), gt);
+    p_matr(idx2, idx1) = p;
+end
+
+p_matr = tril(p_matr) + tril(p_matr,-1)';  % keep diagonal, mirror lower
 %% 2.2. Invivo (Longitudinal)
 lb = 0.5;
 figure('Position', [100 0 1000 1600]);
 k = ([229, 240, 248] - [0, 113, 188]) / (1 - lb); % Light Blue % Dark blue
+perc_allvivo(isnan(perc_allvivo)) = 0;
+gt(isnan(gt)) = 0;
 
+CI95_array = zeros(size(perc_allvivo, 1), 2);
+auc_mean_array = zeros(size(perc_allvivo, 1), 1);
 for i = 1:size(perc_allvivo, 1)
     [X,Y,T,AUC,OPTROCPT] = perfcurve(gt,perc_allvivo(i,:), 1);
+    [auc, ci95, se] = auc_delong_ci(gt, perc_allvivo(i,:));
+    CI95_array(i,:) = ci95;
+    auc_mean_array(i) = AUC;
     subplot(4,5,i);
     plot(X,Y, 'LineWidth', 3, 'color', [246, 101, 72]/255);
     %xlabel('FPR');
     %ylabel('TPR');
-    text(0.6,0.2,num2str(round(AUC, 2)),'FontSize',24);
+    % text(0.6,0.2,num2str(round(AUC, 2)),'FontSize',24);
+    text(0.9,0.5,num2str(round(AUC, 2)),'FontSize',22, 'HorizontalAlignment', 'right');
+    %text(0.4,0.4,cat(2, '95% CI'),'FontSize',18);
+    text(0.95,0.3,cat(2, '[', num2str(round(ci95(1), 2)), ',', num2str(round(ci95(2), 2)), ']'),'FontSize',20, 'HorizontalAlignment', 'right');
     % title('ROC for Classification')
     set(gca, 'FontSize', 16);
     set(gca, 'Xcolor', 'w', 'Ycolor', 'w')
@@ -180,14 +212,32 @@ for i = 1:size(perc_allvivo, 1)
     axis tight;
 end
 
+%% delong test
+addpath('../function/delong/');
+C = nchoosek(1:size(perc_allvivo,1), 2);
+p_matr = zeros(size(perc_allvivo,1));
+
+for idx = 1:length(C)
+    idx1 = C(idx,1);
+    idx2 = C(idx,2);
+    [~,p] = delong(perc_allvivo(idx1,:), perc_allvivo(idx2,:), gt);
+    p_matr(idx2, idx1) = p;
+end
+
+p_matr = tril(p_matr) + tril(p_matr,-1)';  % keep diagonal, mirror lower
 %% 2.2.2 Invivo (Longitudinal, averaged AUC is across 10 subjects)
 lb = 0.5;
 figure('Position', [100 0 1000 1600]);
 k = ([229, 240, 248] - [0, 113, 188]) / (1 - lb); % Light Blue % Dark blue
 AUC_array = zeros(size(perc_allvivo, 1), size(perc_subjects_invivo_cell, 1));
 for j = 1:size(perc_subjects_invivo_cell, 1)
+%for j = 4:4
     perc_invivo = perc_subjects_invivo_cell{j};
+    perc_invivo(isnan(perc_invivo)) = 0;
+
     gt = perc_subjects_avg16_cell{j} > 0.1;
+    gt(isnan(gt)) = 0;
+
     for i = 1:size(perc_allvivo, 1)
         [X,Y,T,AUC,OPTROCPT] = perfcurve(gt(1,:),perc_invivo(i,:), 1);
         AUC_array(i,j) = AUC;

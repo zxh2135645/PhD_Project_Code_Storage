@@ -65,8 +65,8 @@ iMag = sqrt(sum(abs(iField).^2,4));
 delta_TE = TE(2) - TE(1);
 
 if nargin < 7
-    dfat = -3.5e-6*CF;
-    % dfat = [-244.3, -221.7, -175.4, -119.3, -32.1, 34] / (42.58*1.5) * 10^(-6) * CF;
+    %dfat = -3.5e-6*CF;
+    dfat = [-244.3, -221.7, -175.4, -119.3, -32.1, 34] / (42.58*1.5) * 10^(-6) * CF;
 end
 
 if length(dfat) > 1
@@ -101,7 +101,8 @@ if (w1 < 0)
     % [unwphw,iter,erglist] = phase_unwrap_3d_UNIC(iFreq_raw1,p,iMag,voxel_size,Mask); 
     [unwphw] = qualityGuidedUnwrapping_CenF_Correction(iFreq_raw1, Mask);
     %energy = erglist;
-    %[wkappa,wm_fat,wunwph_uf,iter,erglist,wkiter] = unwrap_unfat_3dN(voxel_size,iMag,w,unwphw,p);
+    % [wkappa,wm_fat,wunwph_uf,iter,erglist,wkiter] = unwrap_unfat_3dN(voxel_size,iMag,w,unwphw,p);
+    %[wkappa,wm_fat,wunwph_uf,iter,erglist] = unwrap_unfat_3dN(voxel_size,iMag,w,unwphw,p);
     %energy = [energy erglist];
 end
 
@@ -157,8 +158,8 @@ elseif LABEL == 2
     [xx yy zz] = size(wunwph_uf);
     R2s = zeros([1 xx*yy*zz]);
     % note that when include R2s in IDEAL, the result may contain may noisey point
-    [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, wunwph_uf/(2*pi*delta_TE),R2s,30);
-    % [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, unwphw/(2*pi*delta_TE),R2s,30);
+    [wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, (wunwph_uf-2*pi)/(2*pi*delta_TE),R2s,30);
+    %[wwater wfat wfreq R2s] = fit_IDEAL_R2((iField(:,:,:,:)), TE, dfat, unwphw/(2*pi*delta_TE),R2s,30);
     %% maybe try the following: but need choosing the filter parameter of hann_low for different dataset
 %   [wwater wfat wfreq R2s] = fit_IDEAL_R2(conj(iField(:,:,:,:)), TE, dfat, (wunwph_uf)/(2*pi*delta_TE),R2s,5);
 %    R2s(R2s>100)=0;

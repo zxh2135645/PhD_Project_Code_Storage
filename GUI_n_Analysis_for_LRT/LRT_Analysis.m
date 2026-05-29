@@ -3,6 +3,7 @@ close all;
 
 %% Linear regression and Bland-Altman
 %% Cardiac Function (Ejection Fraction)
+rmpath('/Users/jameszhang/Documents/RYLab/src/spm12/external/fieldtrip/external/stats/')
 color_cell1 = {[254,240,217]/255, [253,204,138]/255, [252,141,89]/255, [227,74,51]/255, [179,0,0]/255};
 color_cell2 = {[241, 238, 246]/255, [189, 201, 225]/255, [116, 169, 207]/255, [43, 140, 190]/255, [4, 90, 141]/255};
 
@@ -81,7 +82,38 @@ gnames = {territories, states_chronic}; % names of groups in data {dimension 1 a
 [cr_chronic, fig_chronic, statsStruct_chronic] = BlandAltman_Customized(data1_chronic, data2_chronic,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48, 'MarkerFaceColors', cc,...
     'AxesLimits', axesLimits);
 
+%% 11/13/2025 Confidence Interval
+% To get confidence intervals
+% Fit y ~ 1 + x  (1 means intercept)
+x = data1(:);
+y = data2(:);
+tbl = table(x, y);
+x(isnan(x)) = [];
+y(isnan(y)) = [];
+lm  = fitlm(tbl, 'y ~ x');      % or: fitlm(x,y)
 
+% 95% CIs for coefficients
+CI = coefCI(lm);
+
+x = data1_acute(:);
+y = data2_acute(:);
+tbl = table(x, y);
+x(isnan(x)) = [];
+y(isnan(y)) = [];
+lm  = fitlm(tbl, 'y ~ x');      % or: fitlm(x,y)
+
+% 95% CIs for coefficients
+CI_acute = coefCI(lm);
+
+x = data1_chronic(:);
+y = data2_chronic(:);
+tbl = table(x, y);
+x(isnan(x)) = [];
+y(isnan(y)) = [];
+lm  = fitlm(tbl, 'y ~ x');      % or: fitlm(x,y)
+
+% 95% CIs for coefficients
+CI_chronic = coefCI(lm);
 %% Infarct Size
 
 % Heart muscle territories per patient
@@ -217,7 +249,7 @@ gnames = {territories, states_chronic}; % names of groups in data {dimension 1 a
     'AxesLimits', axesLimits);
 
 
-%% MVO
+%% Persistent MVO
 % Heart muscle territories per patient
 territories = {''};
 nterritories = length(territories);

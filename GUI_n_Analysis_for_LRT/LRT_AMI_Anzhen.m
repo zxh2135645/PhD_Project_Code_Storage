@@ -13,11 +13,15 @@ load(strcat(fid_path, fid_file));
 addpath('../function/')
 params = FitParams.params;
 reconOptions = FitParams.reconOptions;
-[curves, T1s] = genCurveSubspace_for_ParamFit(params, FitParams, reconOptions);
 
 cutoff = 10;
-Mz_dict_norm_abs = abs(squeeze(curves(:,:,1,1,end,end))) ./ max(max(abs(squeeze(curves(:,:,1,1,end,end)))));
-Mz_dict_norm_abs_truc = Mz_dict_norm_abs((cutoff+1):end,:);
+dictOptions = reconOptions;
+dictOptions.cutoff = cutoff;
+dict = genT1Dictionary_VTR(params, FitParams, dictOptions);
+curves = dict.curves;
+T1s = dict.T1s;
+Mz_dict_norm_abs = dict.Mz_dict_norm_abs;
+Mz_dict_norm_abs_truc = dict.Mz_dict_norm_abs_truc;
 %Mz_dict_norm_abs_truc = Mz_dict_norm_abs(:,(cutoff+1):2:end);
 
 %% This is trying to fit from reconstructed images
@@ -156,5 +160,4 @@ end
 %%
 figure(); plot(squeeze(t1_map_3d_nt_shifted(77,105,slc,:)));
 hold on; plot(squeeze(t1_map_3d_nt_shifted(92,95,slc,:)));
-
 

@@ -46,11 +46,17 @@ dicom_fields = {...
 
 sequence_label = {'BOOST', 'LGE'};
 sequence_label = {'BOOST2', 'LGE', 'T2'};
-
+sequence_label = {'BOOST2'};
+sequence_label = {'LGE', 'T2'};
 % sequence_label = {'temp'};
 %% Name check
 name_check = 'BAI_YAN_SHENG';
-name_check = 'CHENG_YONG';
+%name_check = 'LIANG_JI_CHUN';
+%name_check = 'WANG_SHU_LI';
+%name_check = 'CHENG_YONG';
+%name_check = 'ZHENG_YI';
+name_check = 'SHU_WEN_LI';
+name_check =   'XU_YONG';
 name_check = 'ZHENG_YI';
 starting_point = find(strcmp(name_check, Names),1);
 
@@ -60,13 +66,15 @@ starting_point = find(strcmp(name_check, Names),1);
 
 % Missing LGE: JING_AN_KUN
 
-% Something wrong with 'PEI_LI_YAN', 'XU_JI_JIE', 'YUAN_BAI_KUN', 'ZHAO_ZHONG_FU'
+% Something wrong with 'PEI_LI_YAN' - LGE - excludeContour
+% 'XU_JI_JIE', - LGE - excludeContour
+% 'ZHAO_ZHONG_FU' - T2 - excludeContour
 
 %
 % Make it not always overwrite
 %for n = starting_point:length(Names)
 for n = starting_point:length(Names)
-    % for n = starting_point:starting_point
+%for n = starting_point:starting_point
     name = Names{n};
     real_name_temp = strsplit(name, '_');
     real_name = real_name_temp{1};

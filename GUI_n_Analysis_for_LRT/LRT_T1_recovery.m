@@ -4,9 +4,11 @@ close all;
 %% T1 recovery of the current LRT parameters settings
 % Updated in July 11, 2022
 % Dictionary fitting looks more promising to me
-
+TR1 = 0.0114;
+TR2 = 0.0035;
 Nseg = 192;
 TR = 0.0131;
+TR = TR1 + TR2;
 alpha_deg = 5;
 alpha0_deg = 180; % For IR
 % alpha0_deg = 90; % For SR
@@ -14,15 +16,15 @@ TI = 0.0105;
 
 % Nseg = 680;
 % TR = 0.00357;
-Nseg = 680/2;
-TR = 0.00357*2;
+%Nseg = 680/2;
+%TR = 0.00357*2;
 
-Nseg = 500;
-TR = 0.00357;
-alpha_deg = 5;
-alpha0_deg = 180; % For IR
-% alpha0_deg = 90; % For SR
-TI = 0.0105;
+% Nseg = 500;
+% TR = 0.00357;
+% alpha_deg = 5;
+% alpha0_deg = 180; % For IR
+% % alpha0_deg = 90; % For SR
+% TI = 0.0105;
 
 alpha = 5 * pi / 180;
 e = @(R1) exp(-TR*R1);
@@ -140,9 +142,9 @@ N_nt = 8;
 N_nt = size(Phi, 5);
 slc = 5;
 t1_map_3d_nt = zeros(Ny, Nx, Nz, N_nt);
-card_phase_array = [12];
+card_phase_array = [24];
 %card_phase = 9;
-resp_phase = 4;
+resp_phase = 1;
 t1_map_4d_nt = zeros(Ny, Nx, Nz, N_nt, length(card_phase_array));
 
 
@@ -213,6 +215,7 @@ for i = 1:size(t1_map_3d_nt, 3)
 end
 
 %% Check images
+slc = 5;
 figure();
 for i = 1:size(t1_map_3d_nt, 4)
     subplot(3,5,i);
@@ -269,7 +272,7 @@ if ~exist(save_dir, 'dir')
 end
 
 %save(cat(2, save_dir, 'T1Map_PostCon_Seg15_June26th_', num2str(card_phase), '.mat'), 't1_map_3d_nt_shifted');
-save(cat(2, save_dir, 'T1Map_PostCon_Seg8', '.mat'), 't1_map_3d_nt_shifted');
+save(cat(2, save_dir, 'T1Map_PostCon_Seg10', '.mat'), 't1_map_3d_nt_shifted');
 
 %% ImageJ
 % Convert mat to dicom (T1 map)

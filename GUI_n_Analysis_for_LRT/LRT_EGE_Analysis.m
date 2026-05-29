@@ -206,7 +206,7 @@ min13_ege = [y_sofia(n), y_lisbon(n), y_paris(n), y_jesse(n), y_george(n), y_chi
 color_cell1 = {[254,240,217]/255, [253,204,138]/255, [252,141,89]/255, [227,74,51]/255, [179,0,0]/255};
 color_cell2 = {[241, 238, 246]/255, [189, 201, 225]/255, [116, 169, 207]/255, [43, 140, 190]/255, [4, 90, 141]/255};
 
-%% MVO
+%% Early MVO
 addpath('../function/BlandAltman/');
 % Heart muscle territories per patient
 territories = {''};
@@ -247,6 +247,16 @@ end
 label = {'CMR-MVO','LRT-MVO','%'}; % Names of data sets
 [cr_acute, fig_acute, statsStruct_acute] = BlandAltman_Customized(data2_acute, data1_acute,label,tit,gnames,'corrInfo',corrinfo,'baInfo',BAinfo,'axesLimits',limits,'colors',colors, 'showFitCI',' on', 'MarkerSize', 48, 'MarkerFaceColors', color_palette_marker);
 
+%%
+x = data2_acute(:);
+y = data1_acute(:);
+tbl = table(x, y);
+x(isnan(x)) = [];
+y(isnan(y)) = [];
+lm  = fitlm(tbl, 'y ~ x');      % or: fitlm(x,y)
+
+% 95% CIs for coefficients
+CI_acute = coefCI(lm);
 %% MVO
 addpath('../function/BlandAltman/');
 % Heart muscle territories per patient

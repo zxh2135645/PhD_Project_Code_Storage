@@ -80,8 +80,10 @@ match_count2 = 0;
 
     % [mask_heart, mask_myocardium, mask_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count, contour_idx] = ...
     %     CMR42ContourMatrixGenerator3(con, volume_image, slice_data, dstFolder, old_freeROI_label);
-    [mask_heart, mask_myocardium, mask_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count, contour_idx] = ...
-        CMR42ContourMatrixGenerator4(con, volume_image, slice_data, dstFolder, old_freeROI_label);
+    % [mask_heart, mask_myocardium, mask_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count, contour_idx] = ...
+    %     CMR42ContourMatrixGenerator4(con, volume_image, slice_data, dstFolder, old_freeROI_label);
+    [mask_heart, mask_myocardium, mask_blood, excludeContour, myoRefCell, noReflowCell, freeROICell, match_count, contour_idx, refPoint, inferPoint] = ...
+        CMR42ContourMatrixGenerator5(con, volume_image, slice_data, dstFolder, old_freeROI_label);
 
     % get all contours from excludeContour
     excludeMask_3Ds = zeros(size(volume_image));
@@ -380,6 +382,14 @@ if total_match ~= 0
         dstPath = cat(2, dstFolder, '/', dsts{3});
         save(cat(2, dstPath, '/excludeMask_te.mat'), 'excludeMask_3D_te');
     end
+    
+    %nonEmptyIdx = ~cellfun(@isempty, refPoint);
+    refPoints = struct;
+    dstPath = cat(2, dstFolder, '/', labelo, '_refPoints.mat');
+    refPoints.refPoint = refPoint;
+    refPoints.inferPoint = inferPoint;
+    save(dstPath, 'refPoints');
+
 
     disp(cat(2, name, ':   ', label));
     disp('Done!')
